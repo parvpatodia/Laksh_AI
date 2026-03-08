@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Apex.ai | Enterprise Sports Analytics Terminal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0df246",
+                        "background-light": "#f5f8f6",
+                        "background-dark": "#000000",
+                        "surface": "#0a0a0a",
+                        "border-mute": "#1a1a1a",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-display { font-family: 'Space Grotesk', sans-serif; }
+        .mono-data { font-family: 'JetBrains Mono', monospace; }
+        .glass-header {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #1a1a1a;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0df246; }
+    </style>
+</head>
+<body class="bg-background-dark text-slate-100 antialiased selection:bg-primary selection:text-black">
+<div class="flex h-screen overflow-hidden">
+<!-- Ultra-slim Fixed Navigation Sidebar -->
+<aside class="w-16 flex flex-col items-center py-6 border-r border-border-mute bg-black z-50">
+<button type="button" id="btn-sidebar-restart" class="mb-10 text-primary hover:scale-110 transition-transform focus:outline-none" title="System Reset">
+<span class="material-symbols-outlined text-3xl">restart_alt</span>
+</button>
+<nav class="flex flex-col gap-8">
+<button type="button" id="btn-sidebar-global" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-primary focus:outline-none p-0">
+<span class="material-symbols-outlined">language</span>
+<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Global Terminal</span>
+</button>
+<button type="button" id="btn-sidebar-portfolio" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-slate-500 hover:text-primary transition-colors focus:outline-none p-0">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Verified Portfolio</span>
+</button>
+<button type="button" id="btn-sidebar-analytics" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-slate-500 hover:text-primary transition-colors focus:outline-none p-0">
+<span class="material-symbols-outlined">analytics</span>
+<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Analytics</span>
+</button>
+<button type="button" id="btn-sidebar-layers" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-slate-500 hover:text-primary transition-colors focus:outline-none p-0">
+<span class="material-symbols-outlined">layers</span>
+<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Layers</span>
+</button>
+</nav>
+<div class="mt-auto">
+<div class="size-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+<span class="text-[10px] font-bold text-primary">APX</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col relative overflow-hidden">
+<!-- Glassmorphism Top Nav Bar -->
+<header class="glass-header h-16 flex items-center justify-between px-8 sticky top-0 z-40">
+<div class="flex items-center gap-6">
+<input type="file" id="video-input" accept="video/*" class="hidden"/>
+                    <button type="button" id="btn-target-ingestion" class="text-xs font-display tracking-widest uppercase text-slate-400 hover:text-primary transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">input</span>
+                        target ingestion
+                    </button>
+<div class="h-4 w-px bg-border-mute"></div>
+<div class="flex items-center gap-2">
+<span class="size-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-[10px] uppercase tracking-tighter text-slate-500">Live Telemetry Active</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-right mr-4">
+<p class="text-[10px] text-slate-500 uppercase">Neural Processing</p>
+<p class="text-xs font-mono text-primary">98.4 Gigaflops</p>
+</div>
+<button type="button" id="btn-execute-oracle" class="bg-primary text-black font-display font-bold text-xs px-6 py-2 rounded-sm hover:brightness-110 transition-all uppercase tracking-wider">
+                        EXECUTE ORACLE LOOP
+                    </button>
+</div>
+</header>
+<!-- Workspace Bento Grid -->
+<div class="flex-1 p-4 grid grid-cols-12 gap-2 overflow-y-auto">
+<!-- Primary Bento Workspace (Left & Center) -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-2">
+<!-- Central Node: Video Telemetry -->
+<div id="video-container" class="relative aspect-video bg-surface rounded-lg border border-primary/20 shadow-[0_0_15px_rgba(13,242,70,0.05)] overflow-hidden group">
+<div class="absolute inset-0 bg-black/20 z-10 pointer-events-none"></div>
+<img id="video-placeholder" class="absolute inset-0 w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 transition-all duration-700" alt="Select a video via Target Ingestion" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAxjJYytCqTaUeSSoaggnBhIY-5G2gIKRNqN45okyfBGyXQnqfCpZ94N-pWfR6d0CPyFu819q58hhhugNGf6riwTw5YnqP_yiRgO6J3Cd1Ttk3KueCd22neG796faaOciZvV9yhJ_rrw1R1rUOHRtyoFfqrwCw8p7GGBmHxQoRkTbYAJ2QeeuDx17sVTpZh3Q0z8kaXfZzilUyIhuieJr-IsNnJb5ESdEVP5Xi_iqJeD8Q_tn_GE4F26Zt5s_R91J-QuZEXu5QdzE"/>
+<video id="video-preview" class="absolute inset-0 w-full h-full object-contain bg-black hidden" controls playsinline></video>
+<!-- Overlay UI -->
+<div class="absolute inset-0 z-20 p-6 flex flex-col justify-between pointer-events-none">
+<div class="flex justify-between items-start">
+<div class="bg-black/60 backdrop-blur-md p-3 border border-border-mute rounded">
+<p class="text-[10px] uppercase text-primary mb-1">Subject_ID</p>
+<p id="ui-subject-id" class="font-display font-bold text-xl">PRO-2949-X</p>
+</div>
+<div class="flex flex-col items-end gap-2">
+<span class="bg-primary text-black px-2 py-0.5 text-[10px] font-bold uppercase">REC ●</span>
+<span id="ui-video-time" class="bg-black/60 backdrop-blur-md px-2 py-1 text-[10px] text-slate-300 font-mono border border-border-mute">00:00</span>
+</div>
+</div>
+<div class="flex justify-center items-center gap-12 pointer-events-auto">
+<button type="button" id="btn-video-play" class="size-16 rounded-full bg-primary/10 border border-primary/40 flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all focus:outline-none" title="Play / Pause">
+<span id="icon-video-play" class="material-symbols-outlined text-4xl translate-x-1">play_arrow</span>
+</button>
+</div>
+<div class="w-full space-y-2">
+<div class="flex justify-between text-[10px] font-mono text-slate-400">
+<span>FRAME_SYNC_01</span>
+<span id="ui-buffer-label">No video loaded</span>
+</div>
+<div class="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+<div id="video-progress-bar" class="h-full bg-primary shadow-[0_0_8px_#0df246] transition-all duration-150" style="width: 0%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Bento Row -->
+<div class="grid grid-cols-3 gap-2">
+<div class="bg-surface border border-border-mute p-5 rounded-lg flex flex-col justify-center">
+<p class="text-slate-400 text-xs uppercase tracking-widest mb-2">Release Velocity</p>
+<p class="text-3xl mono-data text-white font-bold"><span id="ui-release-velocity">—</span><span class="text-primary text-lg ml-1">ms</span></p>
+<div class="mt-4 h-1 w-full bg-border-mute rounded-full">
+<div class="h-full bg-primary w-[70%]"></div>
+</div>
+</div>
+<div class="bg-surface border border-border-mute p-5 rounded-lg flex flex-col justify-center">
+<p class="text-slate-400 text-xs uppercase tracking-widest mb-2">NIL Market Val.</p>
+<p class="text-3xl mono-data text-white font-bold"><span id="ui-nil-value">—</span><span class="text-primary text-lg ml-1">M</span></p>
+<div class="mt-4 flex gap-1 items-end h-6">
+<div class="w-full bg-primary/20 h-2"></div>
+<div class="w-full bg-primary/40 h-4"></div>
+<div class="w-full bg-primary h-6"></div>
+<div class="w-full bg-primary/60 h-3"></div>
+</div>
+</div>
+<div class="bg-surface border border-border-mute p-5 rounded-lg flex flex-col justify-center">
+<p class="text-slate-400 text-xs uppercase tracking-widest mb-2">Global Rank</p>
+<p class="text-3xl mono-data text-white font-bold">TOP <span id="ui-global-rank" class="text-primary">—</span>%</p>
+<div class="mt-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">trending_up</span>
+<span class="text-[10px] text-primary uppercase">+2.4% vs L_WEEK</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Intelligence Panel (Right Column) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-2">
+<!-- Oracle Match Card -->
+<div class="bg-surface border border-primary/30 p-5 rounded-lg relative overflow-hidden group">
+<div class="absolute -top-10 -right-10 size-32 bg-primary/5 rounded-full blur-3xl"></div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-tighter">8D Verified</span>
+<h3 class="text-xl font-display font-bold mt-2">NBA Legend Match</h3>
+<p class="text-slate-400 text-xs">Oracle Synthesis Analysis</p>
+</div>
+<span class="material-symbols-outlined text-primary">auto_awesome</span>
+</div>
+<div class="flex items-center gap-4 bg-black/40 p-3 border border-border-mute rounded-lg">
+<img class="size-16 rounded object-cover grayscale" data-alt="Portrait of an iconic basketball legend for comparison" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEYJtsjv0AVFJB2ba3U3KmEnL2mtWNkuzq2nhX4hWD30oy21DFwauSzmtFKRJ6r0ut_FxC9-MEjtmtIo1QRG_Ee485R2wiy_e4Q_sA8cMUlKpIPhjrwT3ZRwD6AvO4dvktAkSVmbLxuco8UsagMr0Ph0S0o6KzXTcXIpsYfQMOOFjX7zdlc_vD2p-zDv9QV5fqikJf1uG7gLsbX0f9OCNIHd32DeGv1u6tr1CmfPgTO7Ypq6xtpnw76ayjNdNbdYzTRxd-fTVcI8w"/>
+<div class="flex-1">
+<p class="text-xs text-slate-400 uppercase">Profile correlation</p>
+<p id="ui-pro-match" class="font-display font-bold text-white">—</p>
+<div class="flex items-center gap-1 mt-1">
+<div class="h-1 flex-1 bg-border-mute rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[94%]"></div>
+</div>
+<span class="text-[10px] font-mono text-primary">94.2%</span>
+</div>
+</div>
+</div>
+<button type="button" id="btn-open-4d" class="w-full mt-4 py-2 bg-border-mute hover:bg-primary hover:text-black transition-all text-xs font-display font-bold uppercase tracking-widest">
+                            View Deep Metadata
+                        </button>
+</div>
+<!-- Dynamic Intelligence Feed -->
+<div class="bg-surface border border-border-mute rounded-lg flex-1 flex flex-col min-h-[400px] relative">
+<div class="flex border-b border-border-mute">
+<button type="button" id="tab-scout" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-primary text-primary bg-primary/5">Scout Report</button>
+<button type="button" id="tab-athlete" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300">Athlete Feedback</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4">
+<div id="panel-scout" class="space-y-1">
+<p class="text-[10px] text-primary uppercase tracking-widest mb-2">Scout perspective — Technical evaluation</p>
+<p id="ui-scout-report" class="text-xs text-slate-300 leading-relaxed border-l-2 border-primary/40 pl-3">Run Oracle Loop to load the scout report (technical, evaluative view).</p>
+</div>
+<div id="panel-athlete" class="space-y-1 hidden">
+<p class="text-[10px] text-primary uppercase tracking-widest mb-2">Athlete perspective — Your feedback</p>
+<p id="ui-athlete-feedback" class="text-xs text-slate-300 leading-relaxed border-l-2 border-primary/40 pl-3">Run Oracle Loop to load personalized athlete feedback (actionable, encouraging view).</p>
+</div>
+</div>
+<!-- Floating Button -->
+<div class="absolute bottom-4 left-0 right-0 px-4">
+<button type="button" id="btn-audio-brief" class="w-full bg-primary/10 border border-primary/30 backdrop-blur-md text-primary py-3 rounded-full flex items-center justify-center gap-2 hover:bg-primary hover:text-black transition-all group shadow-lg">
+<span class="material-symbols-outlined text-sm">mic</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Synthesize Audio Brief</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Asset Generation Modal (4D Card) -->
+<div id="modal-4d-card" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 invisible opacity-0 pointer-events-none transition-all duration-300">
+<div class="max-w-md w-full bg-surface border border-primary/20 rounded-xl overflow-hidden shadow-[0_0_50px_rgba(13,242,70,0.1)]">
+<div class="p-4 flex justify-between items-center border-b border-border-mute">
+<span class="text-[10px] font-display font-bold tracking-widest text-primary uppercase">Asset Generation // Gen-4D</span>
+<button type="button" id="btn-close-modal" class="text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-8 flex flex-col items-center">
+<div class="relative w-full aspect-[3/4] rounded-lg border-2 border-primary/50 overflow-hidden group shadow-[0_0_30px_rgba(13,242,70,0.2)]">
+<div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
+<img id="img-generated-card" class="w-full h-full object-cover" alt="Generated 4D sports asset" src=""/>
+<div class="absolute bottom-0 inset-x-0 p-6 z-20 space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<h4 class="text-2xl font-display font-bold leading-none">ALPHA_01</h4>
+<p class="text-primary text-[10px] font-mono tracking-widest mt-1">GEN_ID: #FF-029</p>
+</div>
+<div class="size-12 rounded border border-primary/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">qr_code_2</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="bg-white/5 backdrop-blur-md p-2 rounded">
+<p class="text-[8px] uppercase text-slate-400">Rarity</p>
+<p class="text-xs font-bold text-white">Ethereal</p>
+</div>
+<div class="bg-white/5 backdrop-blur-md p-2 rounded">
+<p class="text-[8px] uppercase text-slate-400">Mint Phase</p>
+<p class="text-xs font-bold text-white">Pre-Launch</p>
+</div>
+</div>
+</div>
+<!-- Decorative Scan Lines -->
+<div class="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]"></div>
+</div>
+<div class="mt-8 w-full space-y-4">
+<div class="flex items-center gap-3">
+<div class="flex-1 h-px bg-border-mute"></div>
+<span class="text-[10px] font-mono text-slate-500">SYSTEM_READY</span>
+<div class="flex-1 h-px bg-border-mute"></div>
+</div>
+<button type="button" id="btn-generate-card" class="w-full bg-primary text-black font-display font-bold py-4 rounded-sm tracking-widest uppercase hover:scale-[1.02] transition-transform">
+                        Confirm 4D Synthesis
+                    </button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function() {
+    const API = 'http://127.0.0.1:8000';
+    const videoInput = document.getElementById('video-input');
+    const videoPreview = document.getElementById('video-preview');
+    const videoPlaceholder = document.getElementById('video-placeholder');
+    const btnVideoPlay = document.getElementById('btn-video-play');
+    const iconVideoPlay = document.getElementById('icon-video-play');
+    const videoProgressBar = document.getElementById('video-progress-bar');
+    const uiVideoTime = document.getElementById('ui-video-time');
+    const uiBufferLabel = document.getElementById('ui-buffer-label');
+    const btnTarget = document.getElementById('btn-target-ingestion');
+    const btnExecute = document.getElementById('btn-execute-oracle');
+    const tabScout = document.getElementById('tab-scout');
+    const tabAthlete = document.getElementById('tab-athlete');
+    const panelScout = document.getElementById('panel-scout');
+    const panelAthlete = document.getElementById('panel-athlete');
+    const btnAudio = document.getElementById('btn-audio-brief');
+    const modal = document.getElementById('modal-4d-card');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnGenerateCard = document.getElementById('btn-generate-card');
+    const imgCard = document.getElementById('img-generated-card');
+
+    let lastData = null;
+    let activeTab = 'scout';
+    let videoObjectUrl = null;
+
+    function formatTime(s) {
+        if (s === undefined || isNaN(s)) return '00:00';
+        var m = Math.floor(s / 60);
+        var sec = Math.floor(s % 60);
+        return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+    function updateVideoUI() {
+        if (!videoPreview.src) return;
+        var t = videoPreview.currentTime;
+        var d = videoPreview.duration;
+        if (d > 0) {
+            videoProgressBar.style.width = (100 * t / d) + '%';
+            uiVideoTime.textContent = formatTime(t) + ' / ' + formatTime(d);
+            uiBufferLabel.textContent = Math.round(100 * (videoPreview.buffered.length ? videoPreview.buffered.end(0) / d : 0)) + '% buffered';
+        }
+    }
+    videoPreview.addEventListener('timeupdate', updateVideoUI);
+    videoPreview.addEventListener('loadedmetadata', updateVideoUI);
+    videoPreview.addEventListener('play', function() { iconVideoPlay.textContent = 'pause'; });
+    videoPreview.addEventListener('pause', function() { iconVideoPlay.textContent = 'play_arrow'; });
+
+    btnVideoPlay.addEventListener('click', function() {
+        if (!videoPreview.src) return;
+        if (videoPreview.paused) {
+            videoPreview.play();
+            iconVideoPlay.textContent = 'pause';
+        } else {
+            videoPreview.pause();
+            iconVideoPlay.textContent = 'play_arrow';
+        }
+    });
+
+    btnTarget.addEventListener('click', function() { videoInput.click(); });
+    videoInput.addEventListener('change', function() {
+        if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+        videoObjectUrl = null;
+        if (!videoInput.files || !videoInput.files[0]) return;
+        var file = videoInput.files[0];
+        videoObjectUrl = URL.createObjectURL(file);
+        videoPreview.src = videoObjectUrl;
+        videoPreview.load();
+        videoPlaceholder.classList.add('hidden');
+        videoPreview.classList.remove('hidden');
+        videoProgressBar.style.width = '0%';
+        uiVideoTime.textContent = '00:00';
+        uiBufferLabel.textContent = 'Ready';
+        iconVideoPlay.textContent = 'play_arrow';
+        btnExecute.textContent = 'EXECUTE ORACLE LOOP (' + file.name + ')';
+    });
+
+    document.getElementById('btn-sidebar-restart').addEventListener('click', function() { location.reload(); });
+    document.getElementById('btn-sidebar-global').addEventListener('click', function() {
+        document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
+    });
+    document.getElementById('btn-sidebar-portfolio').addEventListener('click', function() {
+        var el = document.getElementById('ui-pro-match');
+        if (el) el.closest('.bg-surface').scrollIntoView({ behavior: 'smooth' });
+    });
+    document.getElementById('btn-sidebar-analytics').addEventListener('click', function() {
+        document.getElementById('ui-release-velocity').closest('.grid').scrollIntoView({ behavior: 'smooth' });
+    });
+    document.getElementById('btn-sidebar-layers').addEventListener('click', function() {
+        document.getElementById('panel-scout').closest('.bg-surface').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    btnExecute.addEventListener('click', async function() {
+        if (!videoInput.files || !videoInput.files[0]) {
+            videoInput.click();
+            return;
+        }
+        const file = videoInput.files[0];
+        btnExecute.disabled = true;
+        btnExecute.textContent = 'ANALYZING…';
+        try {
+            const form = new FormData();
+            form.append('video', file);
+            const r = await fetch(API + '/analyze-video', { method: 'POST', body: form });
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.detail || data.message || 'Analysis failed');
+            lastData = data;
+            document.getElementById('ui-release-velocity').textContent = (data.stats && data.stats.release_velocity) || '—';
+            document.getElementById('ui-nil-value').textContent = (data.stats && data.stats.nil_valuation) || '—';
+            document.getElementById('ui-global-rank').textContent = (data.stats && data.stats.fluidity) != null ? data.stats.fluidity : '—';
+            document.getElementById('ui-pro-match').textContent = data.pro_match || '—';
+            document.getElementById('ui-scout-report').textContent = data.scout_report || '—';
+            document.getElementById('ui-athlete-feedback').textContent = data.athlete_feedback || '—';
+        } catch (e) {
+            alert('Oracle Loop failed: ' + (e.message || e));
+        }
+        btnExecute.disabled = false;
+        btnExecute.textContent = 'EXECUTE ORACLE LOOP';
+    });
+
+    tabScout.addEventListener('click', function() {
+        activeTab = 'scout';
+        panelScout.classList.remove('hidden');
+        panelAthlete.classList.add('hidden');
+        tabScout.classList.add('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
+        tabScout.classList.remove('text-slate-500');
+        tabAthlete.classList.remove('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
+        tabAthlete.classList.add('text-slate-500');
+    });
+    tabAthlete.addEventListener('click', function() {
+        activeTab = 'athlete';
+        panelAthlete.classList.remove('hidden');
+        panelScout.classList.add('hidden');
+        tabAthlete.classList.add('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
+        tabAthlete.classList.remove('text-slate-500');
+        tabScout.classList.remove('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
+        tabScout.classList.add('text-slate-500');
+    });
+
+    btnAudio.addEventListener('click', async function() {
+        const text = activeTab === 'scout' ? (lastData && lastData.scout_report) : (lastData && lastData.athlete_feedback);
+        if (!text || text === '—') {
+            alert('Run Oracle Loop first to load report or feedback.');
+            return;
+        }
+        btnAudio.disabled = true;
+        try {
+            const r = await fetch(API + '/generate-audio-brief', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            const data = await r.json();
+            if (data.status === 'success' && data.audio_base64) {
+                const audio = new Audio('data:audio/mp3;base64,' + data.audio_base64);
+                audio.play();
+            } else {
+                alert(data.message || 'Audio synthesis failed');
+            }
+        } catch (e) {
+            alert('Audio failed: ' + (e.message || e));
+        }
+        btnAudio.disabled = false;
+    });
+
+    function openModal() {
+        modal.classList.remove('invisible', 'opacity-0', 'pointer-events-none');
+        modal.classList.add('pointer-events-auto');
+    }
+    function closeModal() {
+        modal.classList.add('invisible', 'opacity-0', 'pointer-events-none');
+        modal.classList.remove('pointer-events-auto');
+    }
+    btnCloseModal.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+    async function generate4DCard() {
+        const match = (lastData && lastData.pro_match) ? lastData.pro_match : 'Prospect';
+        const score = (lastData && lastData.stats && lastData.stats.fluidity != null) ? lastData.stats.fluidity : 0;
+        btnGenerateCard.disabled = true;
+        imgCard.src = '';
+        imgCard.alt = 'Generating…';
+        openModal();
+        try {
+            const r = await fetch(API + '/generate-metric-card', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ match: match, score: score })
+            });
+            const data = await r.json();
+            if (data.status === 'success' && data.image_base64) {
+                imgCard.src = 'data:image/jpeg;base64,' + data.image_base64;
+                imgCard.alt = 'Generated 4D sports asset';
+            } else if (data.image_base64) {
+                imgCard.src = 'data:image/svg+xml;base64,' + data.image_base64;
+                imgCard.alt = 'Placeholder card (generation unavailable)';
+            } else {
+                imgCard.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533"><rect width="400" height="533" fill="#0a0a0a" stroke="#0df246" stroke-width="2"/><text x="200" y="260" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="12">Generation unavailable</text></svg>'
+                )));
+                imgCard.alt = 'Placeholder';
+            }
+        } catch (e) {
+            imgCard.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533"><rect width="400" height="533" fill="#0a0a0a" stroke="#0df246" stroke-width="2"/><text x="200" y="260" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="12">Request failed</text></svg>'
+            )));
+            imgCard.alt = 'Request failed';
+        }
+        btnGenerateCard.disabled = false;
+    }
+    document.getElementById('btn-open-4d').addEventListener('click', generate4DCard);
+    btnGenerateCard.addEventListener('click', generate4DCard);
+})();
+</script>
+</body></html>

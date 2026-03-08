@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+temp_*.mp4
+.env
+.venv/
+venv/
+*.egg-info/
+.idea/
+.DS_Store
