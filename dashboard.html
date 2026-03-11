@@ -1,499 +1,1052 @@
 <!DOCTYPE html>
-
-<html class="dark" lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Apex.ai | Enterprise Sports Analytics Terminal</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#0df246",
-                        "background-light": "#f5f8f6",
-                        "background-dark": "#000000",
-                        "surface": "#0a0a0a",
-                        "border-mute": "#1a1a1a",
-                    },
-                    fontFamily: {
-                        "display": ["Space Grotesk", "sans-serif"],
-                        "body": ["Inter", "sans-serif"],
-                        "mono": ["JetBrains Mono", "monospace"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                },
-            },
-        }
-    </script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no"/>
+<title>Laksh.ai // Oracle Engine</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-        body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3, .font-display { font-family: 'Space Grotesk', sans-serif; }
-        .mono-data { font-family: 'JetBrains Mono', monospace; }
-        .glass-header {
-            background: rgba(10, 10, 10, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #1a1a1a;
-        }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000000; }
-        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #0df246; }
-    </style>
+  *, *::before, *::after { box-sizing:border-box; }
+  html,body,#root { height:100%; }
+  body  { font-family:'Inter',sans-serif; background:#07080B; color:#F9FAFB; margin:0; padding:0; overflow-x:hidden; }
+  .mono { font-family:'Roboto Mono',monospace; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#1F222E; border-radius:4px; }
+  ::-webkit-scrollbar-thumb:hover { background:#2D3147; }
+
+  /* Glow text effects */
+  .glow-cyan  { text-shadow:0 0 24px rgba(0,229,255,.75); }
+  .glow-green { text-shadow:0 0 24px rgba(57,255,20,.75);  }
+
+  /* Pulse dot */
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.75)} }
+  .pulse-dot { animation:pulse-dot 2s ease-in-out infinite; }
+
+  /* Scanlines on video */
+  .scanlines::after {
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:4;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+  }
+
+  /* Smooth page transitions */
+  .page-enter { animation:pageFade .4s ease; }
+  @keyframes pageFade { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Card hover */
+  .metric-card { transition:border-color .3s, box-shadow .3s, transform .3s; cursor:default; }
+  .metric-card:hover { border-color:rgba(57,255,20,.35)!important; transform:translateY(-2px);
+                       box-shadow:0 8px 32px rgba(57,255,20,.07); }
+
+  /* Premium Glassmorphism */
+  .glass-panel {
+    background: rgba(18, 20, 28, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Loading spinner */
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .spin { animation:spin 1s linear infinite; }
+
+  /* Drag zone */
+  .drag-active { border-color:#00E5FF!important; background:rgba(0,229,255,.04)!important; }
+
+  /* Nav link */
+  .nav-link { transition:color .2s; padding:.5rem 1.25rem; border-radius:.5rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:.9rem; }
+  .nav-link:hover { color:#00E5FF; background:rgba(0,229,255,.06); }
+  .nav-link.active { color:#00E5FF; border-bottom:2px solid #00E5FF; }
+
+  /* Toast */
+  @keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .toast-anim { animation:slideUp .25s ease; }
+
+  /* Video glow */
+  .video-wrap { box-shadow:0 0 60px rgba(0,229,255,.06),0 0 0 1px #1F222E; }
+
+  /* Button styles */
+  .btn-primary {
+    background:transparent; border:1.5px solid rgba(57,255,20,.5); color:#39FF14;
+    box-shadow:0 0 0 1px rgba(57,255,20,.15),0 0 24px rgba(57,255,20,.08);
+    transition:all .25s; cursor:pointer; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  }
+  .btn-primary:hover { background:rgba(57,255,20,.08); border-color:#39FF14; box-shadow:0 0 30px rgba(57,255,20,.18); }
+  .btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-secondary {
+    background:transparent; border:1.5px solid rgba(0,229,255,.3); color:#00E5FF;
+    transition:all .25s; cursor:pointer; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  }
+  .btn-secondary:hover { background:rgba(0,229,255,.07); border-color:#00E5FF; }
+  .btn-ghost {
+    background:transparent; border:1px solid #1F222E; color:#6B7280;
+    transition:all .2s; cursor:pointer; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  }
+  .btn-ghost:hover { border-color:rgba(0,229,255,.3); color:#00E5FF; }
+
+  /* Desktop UI Scaling (90%) */
+  @media (min-width: 1024px) {
+    body { zoom: 0.9; }
+  }
+</style>
 </head>
-<body class="bg-background-dark text-slate-100 antialiased selection:bg-primary selection:text-black">
-<div class="flex h-screen overflow-hidden">
-<!-- Ultra-slim Fixed Navigation Sidebar -->
-<aside class="w-16 flex flex-col items-center py-6 border-r border-border-mute bg-black z-50">
-<button type="button" id="btn-sidebar-restart" class="mb-10 text-primary hover:scale-110 transition-transform focus:outline-none" title="System Reset">
-<span class="material-symbols-outlined text-3xl">restart_alt</span>
-</button>
-<nav class="flex flex-col gap-8">
-<button type="button" id="btn-sidebar-global" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-primary focus:outline-none p-0">
-<span class="material-symbols-outlined">language</span>
-<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Global Terminal</span>
-</button>
-<button type="button" id="btn-sidebar-portfolio" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-slate-500 hover:text-primary transition-colors focus:outline-none p-0">
-<span class="material-symbols-outlined">verified_user</span>
-<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Verified Portfolio</span>
-</button>
-<button type="button" id="btn-sidebar-analytics" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-slate-500 hover:text-primary transition-colors focus:outline-none p-0">
-<span class="material-symbols-outlined">analytics</span>
-<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Analytics</span>
-</button>
-<button type="button" id="btn-sidebar-layers" class="group relative flex items-center justify-center bg-transparent border-none cursor-pointer text-slate-500 hover:text-primary transition-colors focus:outline-none p-0">
-<span class="material-symbols-outlined">layers</span>
-<span class="absolute left-14 bg-surface border border-border-mute px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Layers</span>
-</button>
-</nav>
-<div class="mt-auto">
-<div class="size-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-<span class="text-[10px] font-bold text-primary">APX</span>
-</div>
-</div>
-</aside>
-<!-- Main Content Area -->
-<main class="flex-1 flex flex-col relative overflow-hidden">
-<!-- Glassmorphism Top Nav Bar -->
-<header class="glass-header h-16 flex items-center justify-between px-8 sticky top-0 z-40">
-<div class="flex items-center gap-6">
-<input type="file" id="video-input" accept="video/*" class="hidden"/>
-                    <button type="button" id="btn-target-ingestion" class="text-xs font-display tracking-widest uppercase text-slate-400 hover:text-primary transition-colors flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm">input</span>
-                        target ingestion
-                    </button>
-<div class="h-4 w-px bg-border-mute"></div>
-<div class="flex items-center gap-2">
-<span class="size-2 rounded-full bg-primary animate-pulse"></span>
-<span class="text-[10px] uppercase tracking-tighter text-slate-500">Live Telemetry Active</span>
-</div>
-</div>
-<div class="flex items-center gap-4">
-<div class="text-right mr-4">
-<p class="text-[10px] text-slate-500 uppercase">Neural Processing</p>
-<p class="text-xs font-mono text-primary">98.4 Gigaflops</p>
-</div>
-<button type="button" id="btn-execute-oracle" class="bg-primary text-black font-display font-bold text-xs px-6 py-2 rounded-sm hover:brightness-110 transition-all uppercase tracking-wider">
-                        EXECUTE ORACLE LOOP
-                    </button>
-</div>
-</header>
-<!-- Workspace Bento Grid -->
-<div class="flex-1 p-4 grid grid-cols-12 gap-2 overflow-y-auto">
-<!-- Primary Bento Workspace (Left & Center) -->
-<div class="col-span-12 lg:col-span-8 flex flex-col gap-2">
-<!-- Central Node: Video Telemetry -->
-<div id="video-container" class="relative aspect-video bg-surface rounded-lg border border-primary/20 shadow-[0_0_15px_rgba(13,242,70,0.05)] overflow-hidden group">
-<div class="absolute inset-0 bg-black/20 z-10 pointer-events-none"></div>
-<img id="video-placeholder" class="absolute inset-0 w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 transition-all duration-700" alt="Select a video via Target Ingestion" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAxjJYytCqTaUeSSoaggnBhIY-5G2gIKRNqN45okyfBGyXQnqfCpZ94N-pWfR6d0CPyFu819q58hhhugNGf6riwTw5YnqP_yiRgO6J3Cd1Ttk3KueCd22neG796faaOciZvV9yhJ_rrw1R1rUOHRtyoFfqrwCw8p7GGBmHxQoRkTbYAJ2QeeuDx17sVTpZh3Q0z8kaXfZzilUyIhuieJr-IsNnJb5ESdEVP5Xi_iqJeD8Q_tn_GE4F26Zt5s_R91J-QuZEXu5QdzE"/>
-<video id="video-preview" class="absolute inset-0 w-full h-full object-contain bg-black hidden" controls playsinline></video>
-<!-- Overlay UI -->
-<div class="absolute inset-0 z-20 p-6 flex flex-col justify-between pointer-events-none">
-<div class="flex justify-between items-start">
-<div class="bg-black/60 backdrop-blur-md p-3 border border-border-mute rounded">
-<p class="text-[10px] uppercase text-primary mb-1">Subject_ID</p>
-<p id="ui-subject-id" class="font-display font-bold text-xl">PRO-2949-X</p>
-</div>
-<div class="flex flex-col items-end gap-2">
-<span class="bg-primary text-black px-2 py-0.5 text-[10px] font-bold uppercase">REC ●</span>
-<span id="ui-video-time" class="bg-black/60 backdrop-blur-md px-2 py-1 text-[10px] text-slate-300 font-mono border border-border-mute">00:00</span>
-</div>
-</div>
-<div class="flex justify-center items-center gap-12 pointer-events-auto">
-<button type="button" id="btn-video-play" class="size-16 rounded-full bg-primary/10 border border-primary/40 flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all focus:outline-none" title="Play / Pause">
-<span id="icon-video-play" class="material-symbols-outlined text-4xl translate-x-1">play_arrow</span>
-</button>
-</div>
-<div class="w-full space-y-2">
-<div class="flex justify-between text-[10px] font-mono text-slate-400">
-<span>FRAME_SYNC_01</span>
-<span id="ui-buffer-label">No video loaded</span>
-</div>
-<div class="h-1 w-full bg-white/10 rounded-full overflow-hidden">
-<div id="video-progress-bar" class="h-full bg-primary shadow-[0_0_8px_#0df246] transition-all duration-150" style="width: 0%"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Telemetry Bento Row -->
-<div class="grid grid-cols-3 gap-2">
-<div class="bg-surface border border-border-mute p-5 rounded-lg flex flex-col justify-center">
-<p class="text-slate-400 text-xs uppercase tracking-widest mb-2">Release Velocity</p>
-<p class="text-3xl mono-data text-white font-bold"><span id="ui-release-velocity">—</span><span class="text-primary text-lg ml-1">ms</span></p>
-<div class="mt-4 h-1 w-full bg-border-mute rounded-full">
-<div class="h-full bg-primary w-[70%]"></div>
-</div>
-</div>
-<div class="bg-surface border border-border-mute p-5 rounded-lg flex flex-col justify-center">
-<p class="text-slate-400 text-xs uppercase tracking-widest mb-2">NIL Market Val.</p>
-<p class="text-3xl mono-data text-white font-bold"><span id="ui-nil-value">—</span><span class="text-primary text-lg ml-1">M</span></p>
-<div class="mt-4 flex gap-1 items-end h-6">
-<div class="w-full bg-primary/20 h-2"></div>
-<div class="w-full bg-primary/40 h-4"></div>
-<div class="w-full bg-primary h-6"></div>
-<div class="w-full bg-primary/60 h-3"></div>
-</div>
-</div>
-<div class="bg-surface border border-border-mute p-5 rounded-lg flex flex-col justify-center">
-<p class="text-slate-400 text-xs uppercase tracking-widest mb-2">Global Rank</p>
-<p class="text-3xl mono-data text-white font-bold">TOP <span id="ui-global-rank" class="text-primary">—</span>%</p>
-<div class="mt-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-sm">trending_up</span>
-<span class="text-[10px] text-primary uppercase">+2.4% vs L_WEEK</span>
-</div>
-</div>
-</div>
-</div>
-<!-- Intelligence Panel (Right Column) -->
-<div class="col-span-12 lg:col-span-4 flex flex-col gap-2">
-<!-- Oracle Match Card -->
-<div class="bg-surface border border-primary/30 p-5 rounded-lg relative overflow-hidden group">
-<div class="absolute -top-10 -right-10 size-32 bg-primary/5 rounded-full blur-3xl"></div>
-<div class="flex justify-between items-start mb-6">
-<div>
-<span class="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-tighter">8D Verified</span>
-<h3 class="text-xl font-display font-bold mt-2">NBA Legend Match</h3>
-<p class="text-slate-400 text-xs">Oracle Synthesis Analysis</p>
-</div>
-<span class="material-symbols-outlined text-primary">auto_awesome</span>
-</div>
-<div class="flex items-center gap-4 bg-black/40 p-3 border border-border-mute rounded-lg">
-<img class="size-16 rounded object-cover grayscale" data-alt="Portrait of an iconic basketball legend for comparison" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEYJtsjv0AVFJB2ba3U3KmEnL2mtWNkuzq2nhX4hWD30oy21DFwauSzmtFKRJ6r0ut_FxC9-MEjtmtIo1QRG_Ee485R2wiy_e4Q_sA8cMUlKpIPhjrwT3ZRwD6AvO4dvktAkSVmbLxuco8UsagMr0Ph0S0o6KzXTcXIpsYfQMOOFjX7zdlc_vD2p-zDv9QV5fqikJf1uG7gLsbX0f9OCNIHd32DeGv1u6tr1CmfPgTO7Ypq6xtpnw76ayjNdNbdYzTRxd-fTVcI8w"/>
-<div class="flex-1">
-<p class="text-xs text-slate-400 uppercase">Profile correlation</p>
-<p id="ui-pro-match" class="font-display font-bold text-white">—</p>
-<div class="flex items-center gap-1 mt-1">
-<div class="h-1 flex-1 bg-border-mute rounded-full overflow-hidden">
-<div class="h-full bg-primary w-[94%]"></div>
-</div>
-<span class="text-[10px] font-mono text-primary">94.2%</span>
-</div>
-</div>
-</div>
-<button type="button" id="btn-open-4d" class="w-full mt-4 py-2 bg-border-mute hover:bg-primary hover:text-black transition-all text-xs font-display font-bold uppercase tracking-widest">
-                            View Deep Metadata
-                        </button>
-</div>
-<!-- Dynamic Intelligence Feed -->
-<div class="bg-surface border border-border-mute rounded-lg flex-1 flex flex-col min-h-[400px] relative">
-<div class="flex border-b border-border-mute">
-<button type="button" id="tab-scout" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-primary text-primary bg-primary/5">Scout Report</button>
-<button type="button" id="tab-athlete" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300">Athlete Feedback</button>
-</div>
-<div class="flex-1 overflow-y-auto p-4 space-y-4">
-<div id="panel-scout" class="space-y-1">
-<p class="text-[10px] text-primary uppercase tracking-widest mb-2">Scout perspective — Technical evaluation</p>
-<p id="ui-scout-report" class="text-xs text-slate-300 leading-relaxed border-l-2 border-primary/40 pl-3">Run Oracle Loop to load the scout report (technical, evaluative view).</p>
-</div>
-<div id="panel-athlete" class="space-y-1 hidden">
-<p class="text-[10px] text-primary uppercase tracking-widest mb-2">Athlete perspective — Your feedback</p>
-<p id="ui-athlete-feedback" class="text-xs text-slate-300 leading-relaxed border-l-2 border-primary/40 pl-3">Run Oracle Loop to load personalized athlete feedback (actionable, encouraging view).</p>
-</div>
-</div>
-<!-- Floating Button -->
-<div class="absolute bottom-4 left-0 right-0 px-4">
-<button type="button" id="btn-audio-brief" class="w-full bg-primary/10 border border-primary/30 backdrop-blur-md text-primary py-3 rounded-full flex items-center justify-center gap-2 hover:bg-primary hover:text-black transition-all group shadow-lg">
-<span class="material-symbols-outlined text-sm">mic</span>
-<span class="text-[10px] font-bold uppercase tracking-tighter">Synthesize Audio Brief</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</main>
-</div>
-<!-- Asset Generation Modal (4D Card) -->
-<div id="modal-4d-card" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 invisible opacity-0 pointer-events-none transition-all duration-300">
-<div class="max-w-md w-full bg-surface border border-primary/20 rounded-xl overflow-hidden shadow-[0_0_50px_rgba(13,242,70,0.1)]">
-<div class="p-4 flex justify-between items-center border-b border-border-mute">
-<span class="text-[10px] font-display font-bold tracking-widest text-primary uppercase">Asset Generation // Gen-4D</span>
-<button type="button" id="btn-close-modal" class="text-slate-500 hover:text-white transition-colors">
-<span class="material-symbols-outlined">close</span>
-</button>
-</div>
-<div class="p-8 flex flex-col items-center">
-<div class="relative w-full aspect-[3/4] rounded-lg border-2 border-primary/50 overflow-hidden group shadow-[0_0_30px_rgba(13,242,70,0.2)]">
-<div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
-<img id="img-generated-card" class="w-full h-full object-cover" alt="Generated 4D sports asset" src=""/>
-<div class="absolute bottom-0 inset-x-0 p-6 z-20 space-y-4">
-<div class="flex justify-between items-end">
-<div>
-<h4 class="text-2xl font-display font-bold leading-none">ALPHA_01</h4>
-<p class="text-primary text-[10px] font-mono tracking-widest mt-1">GEN_ID: #FF-029</p>
-</div>
-<div class="size-12 rounded border border-primary/40 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary">qr_code_2</span>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-2">
-<div class="bg-white/5 backdrop-blur-md p-2 rounded">
-<p class="text-[8px] uppercase text-slate-400">Rarity</p>
-<p class="text-xs font-bold text-white">Ethereal</p>
-</div>
-<div class="bg-white/5 backdrop-blur-md p-2 rounded">
-<p class="text-[8px] uppercase text-slate-400">Mint Phase</p>
-<p class="text-xs font-bold text-white">Pre-Launch</p>
-</div>
-</div>
-</div>
-<!-- Decorative Scan Lines -->
-<div class="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]"></div>
-</div>
-<div class="mt-8 w-full space-y-4">
-<div class="flex items-center gap-3">
-<div class="flex-1 h-px bg-border-mute"></div>
-<span class="text-[10px] font-mono text-slate-500">SYSTEM_READY</span>
-<div class="flex-1 h-px bg-border-mute"></div>
-</div>
-<button type="button" id="btn-generate-card" class="w-full bg-primary text-black font-display font-bold py-4 rounded-sm tracking-widest uppercase hover:scale-[1.02] transition-transform">
-                        Confirm 4D Synthesis
-                    </button>
-</div>
-</div>
-</div>
+
+<body>
+
+<!-- Loading screen -->
+<div id="apex-loader" style="position:fixed;inset:0;background:#07080B;display:flex;flex-direction:column;
+     align-items:center;justify-content:center;gap:20px;z-index:9999">
+  <div style="width:44px;height:44px;border:2px solid #1F222E;border-top-color:#00E5FF;border-radius:50%"
+       class="spin"></div>
+  <p class="mono glow-cyan" style="font-size:13px;letter-spacing:.22em;color:#00E5FF;text-transform:uppercase">
+    Laksh.ai // Initializing…
+  </p>
 </div>
 
+<div id="root"></div>
+
+<!-- React 18 UMD (pinned) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script>
-(function() {
-    const API = 'http://127.0.0.1:8000';
-    const videoInput = document.getElementById('video-input');
-    const videoPreview = document.getElementById('video-preview');
-    const videoPlaceholder = document.getElementById('video-placeholder');
-    const btnVideoPlay = document.getElementById('btn-video-play');
-    const iconVideoPlay = document.getElementById('icon-video-play');
-    const videoProgressBar = document.getElementById('video-progress-bar');
-    const uiVideoTime = document.getElementById('ui-video-time');
-    const uiBufferLabel = document.getElementById('ui-buffer-label');
-    const btnTarget = document.getElementById('btn-target-ingestion');
-    const btnExecute = document.getElementById('btn-execute-oracle');
-    const tabScout = document.getElementById('tab-scout');
-    const tabAthlete = document.getElementById('tab-athlete');
-    const panelScout = document.getElementById('panel-scout');
-    const panelAthlete = document.getElementById('panel-athlete');
-    const btnAudio = document.getElementById('btn-audio-brief');
-    const modal = document.getElementById('modal-4d-card');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-    const btnGenerateCard = document.getElementById('btn-generate-card');
-    const imgCard = document.getElementById('img-generated-card');
-
-    let lastData = null;
-    let activeTab = 'scout';
-    let videoObjectUrl = null;
-
-    function formatTime(s) {
-        if (s === undefined || isNaN(s)) return '00:00';
-        var m = Math.floor(s / 60);
-        var sec = Math.floor(s % 60);
-        return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
-    }
-    function updateVideoUI() {
-        if (!videoPreview.src) return;
-        var t = videoPreview.currentTime;
-        var d = videoPreview.duration;
-        if (d > 0) {
-            videoProgressBar.style.width = (100 * t / d) + '%';
-            uiVideoTime.textContent = formatTime(t) + ' / ' + formatTime(d);
-            uiBufferLabel.textContent = Math.round(100 * (videoPreview.buffered.length ? videoPreview.buffered.end(0) / d : 0)) + '% buffered';
-        }
-    }
-    videoPreview.addEventListener('timeupdate', updateVideoUI);
-    videoPreview.addEventListener('loadedmetadata', updateVideoUI);
-    videoPreview.addEventListener('play', function() { iconVideoPlay.textContent = 'pause'; });
-    videoPreview.addEventListener('pause', function() { iconVideoPlay.textContent = 'play_arrow'; });
-
-    btnVideoPlay.addEventListener('click', function() {
-        if (!videoPreview.src) return;
-        if (videoPreview.paused) {
-            videoPreview.play();
-            iconVideoPlay.textContent = 'pause';
-        } else {
-            videoPreview.pause();
-            iconVideoPlay.textContent = 'play_arrow';
-        }
-    });
-
-    btnTarget.addEventListener('click', function() { videoInput.click(); });
-    videoInput.addEventListener('change', function() {
-        if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
-        videoObjectUrl = null;
-        if (!videoInput.files || !videoInput.files[0]) return;
-        var file = videoInput.files[0];
-        videoObjectUrl = URL.createObjectURL(file);
-        videoPreview.src = videoObjectUrl;
-        videoPreview.load();
-        videoPlaceholder.classList.add('hidden');
-        videoPreview.classList.remove('hidden');
-        videoProgressBar.style.width = '0%';
-        uiVideoTime.textContent = '00:00';
-        uiBufferLabel.textContent = 'Ready';
-        iconVideoPlay.textContent = 'play_arrow';
-        btnExecute.textContent = 'EXECUTE ORACLE LOOP (' + file.name + ')';
-    });
-
-    document.getElementById('btn-sidebar-restart').addEventListener('click', function() { location.reload(); });
-    document.getElementById('btn-sidebar-global').addEventListener('click', function() {
-        document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
-    });
-    document.getElementById('btn-sidebar-portfolio').addEventListener('click', function() {
-        var el = document.getElementById('ui-pro-match');
-        if (el) el.closest('.bg-surface').scrollIntoView({ behavior: 'smooth' });
-    });
-    document.getElementById('btn-sidebar-analytics').addEventListener('click', function() {
-        document.getElementById('ui-release-velocity').closest('.grid').scrollIntoView({ behavior: 'smooth' });
-    });
-    document.getElementById('btn-sidebar-layers').addEventListener('click', function() {
-        document.getElementById('panel-scout').closest('.bg-surface').scrollIntoView({ behavior: 'smooth' });
-    });
-
-    btnExecute.addEventListener('click', async function() {
-        if (!videoInput.files || !videoInput.files[0]) {
-            videoInput.click();
-            return;
-        }
-        const file = videoInput.files[0];
-        btnExecute.disabled = true;
-        btnExecute.textContent = 'ANALYZING…';
-        try {
-            const form = new FormData();
-            form.append('video', file);
-            const r = await fetch(API + '/analyze-video', { method: 'POST', body: form });
-            const data = await r.json();
-            if (!r.ok) throw new Error(data.detail || data.message || 'Analysis failed');
-            lastData = data;
-            document.getElementById('ui-release-velocity').textContent = (data.stats && data.stats.release_velocity) || '—';
-            document.getElementById('ui-nil-value').textContent = (data.stats && data.stats.nil_valuation) || '—';
-            document.getElementById('ui-global-rank').textContent = (data.stats && data.stats.fluidity) != null ? data.stats.fluidity : '—';
-            document.getElementById('ui-pro-match').textContent = data.pro_match || '—';
-            document.getElementById('ui-scout-report').textContent = data.scout_report || '—';
-            document.getElementById('ui-athlete-feedback').textContent = data.athlete_feedback || '—';
-        } catch (e) {
-            alert('Oracle Loop failed: ' + (e.message || e));
-        }
-        btnExecute.disabled = false;
-        btnExecute.textContent = 'EXECUTE ORACLE LOOP';
-    });
-
-    tabScout.addEventListener('click', function() {
-        activeTab = 'scout';
-        panelScout.classList.remove('hidden');
-        panelAthlete.classList.add('hidden');
-        tabScout.classList.add('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
-        tabScout.classList.remove('text-slate-500');
-        tabAthlete.classList.remove('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
-        tabAthlete.classList.add('text-slate-500');
-    });
-    tabAthlete.addEventListener('click', function() {
-        activeTab = 'athlete';
-        panelAthlete.classList.remove('hidden');
-        panelScout.classList.add('hidden');
-        tabAthlete.classList.add('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
-        tabAthlete.classList.remove('text-slate-500');
-        tabScout.classList.remove('border-b-2', 'border-primary', 'text-primary', 'bg-primary/5');
-        tabScout.classList.add('text-slate-500');
-    });
-
-    btnAudio.addEventListener('click', async function() {
-        const text = activeTab === 'scout' ? (lastData && lastData.scout_report) : (lastData && lastData.athlete_feedback);
-        if (!text || text === '—') {
-            alert('Run Oracle Loop first to load report or feedback.');
-            return;
-        }
-        btnAudio.disabled = true;
-        try {
-            const r = await fetch(API + '/generate-audio-brief', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
-            });
-            const data = await r.json();
-            if (data.status === 'success' && data.audio_base64) {
-                const audio = new Audio('data:audio/mp3;base64,' + data.audio_base64);
-                audio.play();
-            } else {
-                alert(data.message || 'Audio synthesis failed');
-            }
-        } catch (e) {
-            alert('Audio failed: ' + (e.message || e));
-        }
-        btnAudio.disabled = false;
-    });
-
-    function openModal() {
-        modal.classList.remove('invisible', 'opacity-0', 'pointer-events-none');
-        modal.classList.add('pointer-events-auto');
-    }
-    function closeModal() {
-        modal.classList.add('invisible', 'opacity-0', 'pointer-events-none');
-        modal.classList.remove('pointer-events-auto');
-    }
-    btnCloseModal.addEventListener('click', closeModal);
-    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
-
-    async function generate4DCard() {
-        const match = (lastData && lastData.pro_match) ? lastData.pro_match : 'Prospect';
-        const score = (lastData && lastData.stats && lastData.stats.fluidity != null) ? lastData.stats.fluidity : 0;
-        btnGenerateCard.disabled = true;
-        imgCard.src = '';
-        imgCard.alt = 'Generating…';
-        openModal();
-        try {
-            const r = await fetch(API + '/generate-metric-card', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ match: match, score: score })
-            });
-            const data = await r.json();
-            if (data.status === 'success' && data.image_base64) {
-                imgCard.src = 'data:image/jpeg;base64,' + data.image_base64;
-                imgCard.alt = 'Generated 4D sports asset';
-            } else if (data.image_base64) {
-                imgCard.src = 'data:image/svg+xml;base64,' + data.image_base64;
-                imgCard.alt = 'Placeholder card (generation unavailable)';
-            } else {
-                imgCard.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533"><rect width="400" height="533" fill="#0a0a0a" stroke="#0df246" stroke-width="2"/><text x="200" y="260" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="12">Generation unavailable</text></svg>'
-                )));
-                imgCard.alt = 'Placeholder';
-            }
-        } catch (e) {
-            imgCard.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533"><rect width="400" height="533" fill="#0a0a0a" stroke="#0df246" stroke-width="2"/><text x="200" y="260" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="12">Request failed</text></svg>'
-            )));
-            imgCard.alt = 'Request failed';
-        }
-        btnGenerateCard.disabled = false;
-    }
-    document.getElementById('btn-open-4d').addEventListener('click', generate4DCard);
-    btnGenerateCard.addEventListener('click', generate4DCard);
-})();
+if (typeof React === 'undefined') {
+  document.getElementById('apex-loader').innerHTML =
+    '<p style="color:#ff003c;font-family:monospace;padding:20px">ERROR: React CDN failed. Check network.</p>';
+  throw new Error('React load failed');
+}
 </script>
-</body></html>
+
+<!-- Babel for JSX -->
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback, useMemo } = React;
+const API = 'http://127.0.0.1:8000';
+
+// Parse **bold** markdown from Gemini into neon cyan spans (escape HTML for safety)
+const escapeHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const formatRichText = (text) => {
+  if (!text) return '';
+  return text.split('**').map((part, i) => {
+    const safe = escapeHtml(part);
+    return i % 2 === 1 ? `<strong class="mono" style="color:#00E5FF;font-weight:700">${safe}</strong>` : safe;
+  }).join('');
+};
+
+// ══════════════════════════════════════════════════════════════
+//  HASH ROUTER  — real URL navigation, no library needed
+// ══════════════════════════════════════════════════════════════
+const ROUTES = { HOME:'#/', BIOMECHANICS:'#/biomechanics', ORACLE:'#/oracle-match' };
+
+const useRouter = () => {
+  const getHash = () => window.location.hash || '#/';
+  const [route, setRoute] = useState(getHash);
+  useEffect(() => {
+    const h = () => setRoute(window.location.hash || '#/');
+    window.addEventListener('hashchange', h);
+    return () => window.removeEventListener('hashchange', h);
+  }, []);
+  const navigate = path => { window.location.hash = path; };
+  return { route, navigate };
+};
+
+// ══════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════════════════
+const METRICS = [
+  { key:'release_velocity_mps', label:'Release Velocity', unit:'m/s'  },
+  { key:'shot_arc_deg',         label:'Shot Arc',         unit:'°'    },
+  { key:'knee_angle',           label:'Knee Flexion',     unit:'°'    },
+  { key:'elbow_angle',          label:'Elbow Flexion',    unit:'°'    },
+  { key:'hip_rotation_deg',     label:'Hip Rotation',     unit:'°'    },
+  { key:'kinetic_sync_ms',      label:'Kinetic Sync',     unit:'ms'   },
+  { key:'balance_index',        label:'Balance Index',    unit:'/100' },
+  { key:'fluidity_score',       label:'Fluidity Score',   unit:'/100' },
+];
+
+const COMPARE = [
+  { label:'Shot Arc',      uk:'shot_arc_deg',         pv:45,  mx:60,  dk:'arc_gap'   },
+  { label:'Release Vel',   uk:'release_velocity_mps', pv:8.2, mx:12,  dk:'vel_gap'   },
+  { label:'Knee Flexion',  uk:'knee_angle',            pv:150, mx:180, dk:'knee_gap'  },
+  { label:'Elbow Flexion', uk:'elbow_angle',           pv:165, mx:180, dk:'elbow_gap' },
+  { label:'Fluidity',      uk:'fluidity_score',        pv:85,  mx:100, dk:'fluid_gap' },
+  { label:'Hip Rotation',  uk:'hip_rotation_deg',      pv:5,   mx:45,  dk:'hip_gap'   },
+  { label:'Kinetic Sync',  uk:'kinetic_sync_ms',       pv:150, mx:300, dk:'ksync_gap' },
+  { label:'Balance',       uk:'balance_index',         pv:80,  mx:100, dk:'bal_gap'   },
+];
+
+const CAT_COLOR = cat => {
+  const lc=(cat||'').toLowerCase();
+  if(lc.includes('lower')||lc.includes('knee'))      return '#39FF14';
+  if(lc.includes('upper')||lc.includes('alignment')) return '#bf00ff';
+  if(lc.includes('kinematic')||lc.includes('fluid')) return '#ff003c';
+  return '#00E5FF';
+};
+
+// ══════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════
+const fmt = v => v!=null&&v!==''&&!isNaN(v)
+  ? typeof v==='number'?(Number.isInteger(v)?v:+v.toFixed(2)):v : '—';
+const pct   = (v,mx) => Math.min(100,Math.max(0,((v||0)/mx)*100));
+const norm  = (v,mx) => Math.min(((Math.abs(v||0))/mx)*100,100);
+const fmtT  = s => {
+  if (s == null || s === '') return '00:00';
+  const n = typeof s === 'string' ? parseFloat(s) : s;
+  if (isNaN(n) || n < 0) return '00:00';
+  const m = Math.floor(n / 60), sec = Math.floor(n % 60);
+  return `${m < 10 ? '0' : ''}${m}:${sec < 10 ? '0' : ''}${sec}`;
+};
+
+// ══════════════════════════════════════════════════════════════
+//  SVG ICONS
+// ══════════════════════════════════════════════════════════════
+const I = (d,vb='0 0 24 24') => ({sz=20,cl='',st={}}) => (
+  <svg width={sz} height={sz} viewBox={vb} fill="none" stroke="currentColor"
+       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cl} style={st}>
+    {d}
+  </svg>
+);
+const IcoZap    = I(<><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>);
+const IcoMic    = I(<><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></>);
+const IcoDB     = I(<><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></>);
+const IcoPlay   = ({sz=24}) => <svg width={sz} height={sz} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+const IcoPause  = ({sz=24}) => <svg width={sz} height={sz} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
+const IcoX      = I(<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>);
+const IcoUpload = I(<><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></>);
+const IcoArrow  = I(<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>);
+const IcoSpark  = I(<><path d="M12 2L14.85 9.15 22 12 14.85 14.85 12 22 9.15 14.85 2 12 9.15 9.15Z"/></>);
+
+// ══════════════════════════════════════════════════════════════
+//  LARGE SVG RADAR CHART (no Recharts dependency)
+// ══════════════════════════════════════════════════════════════
+const SvgRadar = ({ userData, proData, labels, proName, size=400 }) => {
+  const cx=size/2, cy=size/2, maxR=size*0.38;
+  const n=labels.length;
+  const angle = i => (i/n)*Math.PI*2 - Math.PI/2;
+  const pt = (r,i) => ({ x:cx+r*Math.cos(angle(i)), y:cy+r*Math.sin(angle(i)) });
+  const toPath = data => data.map((v,i)=>{
+    const r=((v||0)/100)*maxR, p=pt(r,i);
+    return `${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+  }).join(' ')+' Z';
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${size} ${size}`} style={{overflow:'visible',maxWidth:`${size}px`}}>
+      {/* Grid rings */}
+      {[25,50,75,100].map(r=>(
+        <circle key={r} cx={cx} cy={cy} r={r*maxR/100}
+          fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>
+      ))}
+      {/* Axes */}
+      {labels.map((_,i)=>{
+        const o=pt(maxR,i);
+        return <line key={i} x1={cx} y1={cy} x2={o.x} y2={o.y}
+          stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>;
+      })}
+      {/* Pro area */}
+      <path d={toPath(proData)}  fill="rgba(0,229,255,.11)"  stroke="#00E5FF" strokeWidth="2.5"/>
+      {/* User area */}
+      <path d={toPath(userData)} fill="rgba(57,255,20,.14)"  stroke="#39FF14" strokeWidth="2.5"/>
+      {/* Pro dots */}
+      {proData.map((v,i)=>{
+        const p=pt(((v||0)/100)*maxR,i);
+        return <circle key={i} cx={p.x} cy={p.y} r="5" fill="#00E5FF"
+          style={{filter:'drop-shadow(0 0 4px #00E5FF)'}}/>;
+      })}
+      {/* User dots */}
+      {userData.map((v,i)=>{
+        const p=pt(((v||0)/100)*maxR,i);
+        return <circle key={i} cx={p.x} cy={p.y} r="6" fill="#39FF14"
+          style={{filter:'drop-shadow(0 0 5px #39FF14)'}}/>;
+      })}
+      {/* Labels */}
+      {labels.map((lbl,i)=>{
+        const p=pt(maxR+22,i);
+        return (
+          <text key={i} x={p.x} y={p.y} fill="#9CA3AF" fontSize={size>300?12:10}
+            fontFamily="Roboto Mono" textAnchor="middle" dominantBaseline="middle">
+            {lbl}
+          </text>
+        );
+      })}
+      {/* Legend */}
+      <g transform={`translate(${cx-72},${size-8})`}>
+        <circle cx="7" cy="7" r="5" fill="#39FF14" style={{filter:'drop-shadow(0 0 4px #39FF14)'}}/>
+        <text x="17" y="12" fill="#D1D5DB" fontSize="12" fontFamily="Roboto Mono">You</text>
+        <circle cx="72" cy="7" r="5" fill="#00E5FF" style={{filter:'drop-shadow(0 0 4px #00E5FF)'}}/>
+        <text x="82" y="12" fill="#D1D5DB" fontSize="12" fontFamily="Roboto Mono">{proName||'Pro'}</text>
+      </g>
+    </svg>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+//  TOP NAVIGATION (persistent across all pages)
+// ══════════════════════════════════════════════════════════════
+const FALLBACK_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEYJtsjv0AVFJB2ba3U3KmEnL2mtWNkuzq2nhX4hWD30oy21DFwauSzmtFKRJ6r0ut_FxC9-MEjtmtIo1QRG_Ee485R2wiy_e4Q_sA8cMUlKpIPhjrwT3ZRwD6AvO4dvktAkSVmbLxuco8UsagMr0Ph0S0o6KzXTcXIpsYfQMOOFjX7zdlc_vD2p-zDv9QV5fqikJf1uG7gLsbX0f9OCNIHd32DeGv1u6tr1CmfPgTO7Ypq6xtpnw76ayjNdNbdYzTRxd-fTVcI8w';
+
+const TopNav = ({ route, navigate, videoFile, isAnalyzing, onExecute, analysisData, onAudio, onMeta }) => {
+  const links = [
+    { label:'Home',        href: ROUTES.HOME         },
+    { label:'Biomechanics',href: ROUTES.BIOMECHANICS },
+    { label:'Oracle Match',href: ROUTES.ORACLE        },
+  ];
+  return (
+    <nav style={{height:'80px',background:'rgba(7,8,11,.92)',backdropFilter:'blur(16px)',
+                 borderBottom:'1px solid #1F222E',position:'sticky',top:0,zIndex:100}}>
+      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'0 4rem',height:'100%',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        {/* Logo */}
+        <button onClick={()=>navigate(ROUTES.HOME)} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+            <div style={{width:'36px',height:'36px',borderRadius:'10px',background:'rgba(0,229,255,.12)',
+                         border:'1px solid rgba(0,229,255,.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <IcoSpark sz={18} st={{color:'#00E5FF'}}/>
+            </div>
+            <span className="mono glow-cyan" style={{fontSize:'1.5rem',fontWeight:900,letterSpacing:'.16em',color:'#00E5FF'}}>
+              LAKSH.AI
+            </span>
+          </div>
+        </button>
+
+        {/* Route links */}
+        <div style={{display:'flex',gap:'8px'}}>
+          {links.map(l=>(
+            <button key={l.href} onClick={()=>navigate(l.href)}
+              className="nav-link"
+              style={{color: route===l.href||(!route&&l.href===ROUTES.HOME) ? '#00E5FF' : '#9CA3AF',
+                      background:'none', border:'none',
+                      borderBottom: route===l.href ? '2px solid #00E5FF' : '2px solid transparent',
+                      borderRadius: route===l.href ? '4px 4px 0 0' : '8px'}}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Right: status + execute CTA */}
+        <div style={{display:'flex',alignItems:'center',gap:'20px'}}>
+          {/* Audio & Metadata Buttons (Only show if data exists) */}
+          {analysisData && (
+            <div style={{display:'flex', gap:'12px', marginRight:'16px', borderRight:'1px solid #1F222E', paddingRight:'16px'}}>
+              <button onClick={onAudio} className="btn-ghost mono" style={{padding:'.5rem 1rem', borderRadius:'8px', fontSize:'12px', display:'flex', alignItems:'center', gap:'6px'}}>
+                <IcoMic sz={14}/> AUDIO
+              </button>
+              <button onClick={onMeta} className="btn-ghost mono" style={{padding:'.5rem 1rem', borderRadius:'8px', fontSize:'12px', display:'flex', alignItems:'center', gap:'6px'}}>
+                <IcoDB sz={14}/> METADATA
+              </button>
+            </div>
+          )}
+          {analysisData && (
+            <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+              <span className="pulse-dot" style={{width:'8px',height:'8px',borderRadius:'50%',background:'#39FF14',display:'inline-block'}}/>
+              <span className="mono" style={{fontSize:'13px',color:'#39FF14',letterSpacing:'.12em'}}>ANALYSIS READY</span>
+            </div>
+          )}
+          {videoFile && !analysisData && (
+            <button onClick={onExecute} disabled={isAnalyzing}
+              className="btn-primary mono"
+              style={{padding:'.65rem 1.75rem',borderRadius:'10px',fontSize:'13px',display:'flex',alignItems:'center',gap:'8px'}}>
+              <IcoZap sz={15}/>{isAnalyzing?'Analyzing…':'Run Oracle'}
+            </button>
+          )}
+          {!videoFile && (
+            <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+              <span className="pulse-dot" style={{width:'7px',height:'7px',borderRadius:'50%',background:'#00E5FF',display:'inline-block'}}/>
+              <span className="mono" style={{fontSize:'12px',color:'#6B7280',letterSpacing:'.14em'}}>SYSTEM ONLINE</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE 1 — INGESTION  (#/)
+// ══════════════════════════════════════════════════════════════
+const IngestionPage = ({ videoFile, onFileSelect, onExecute, isAnalyzing, navigate, athleteName, setAthleteName }) => {
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef(null);
+
+  const onDrop = e => {
+    e.preventDefault(); setDragging(false);
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('video/')) onFileSelect(f);
+  };
+
+  return (
+    <div className="page-enter" style={{minHeight:'calc(100vh - 80px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem 2rem'}}>
+      <div style={{maxWidth:'1000px',width:'100%',textAlign:'center'}}>
+
+        <div style={{marginBottom:'4rem'}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:'10px',padding:'.5rem 1.5rem', borderRadius:'9999px',background:'rgba(0,229,255,.05)',border:'1px solid rgba(0,229,255,.3)',marginBottom:'2rem'}}>
+            <span className="pulse-dot" style={{width:'8px',height:'8px',borderRadius:'50%',background:'#39FF14',display:'inline-block'}}/>
+            <span className="mono" style={{color:'#00E5FF',fontSize:'14px',letterSpacing:'.2em', fontWeight:600}}>LAKSH.AI // PROPRIETARY ORACLE ENGINE</span>
+          </div>
+
+          <h1 style={{fontSize:'clamp(4rem, 8vw, 6.5rem)',fontWeight:900,lineHeight:1.05,marginBottom:'2rem',letterSpacing:'-0.03em', color:'#fff'}}>
+            The Future of <br/>
+            <span style={{color:'transparent', WebkitTextStroke:'1px #00E5FF', backgroundImage:'linear-gradient(90deg, #00E5FF, #39FF14)', WebkitBackgroundClip:'text', backgroundClip:'text'}}>Biomechanical</span> Intelligence.
+          </h1>
+
+          <p style={{fontSize:'1.4rem',color:'#9CA3AF',maxWidth:'700px',margin:'0 auto',lineHeight:1.6}}>
+            Upload a jump shot. Our 8D vector space maps your kinematics against active NBA professionals in real-time.
+          </p>
+        </div>
+
+        <div style={{marginBottom:'2rem', display:'flex', justifyContent:'center'}}>
+          <input
+            type="text"
+            placeholder="ENTER ATHLETE NAME (e.g., PARV)"
+            value={athleteName}
+            onChange={(e) => setAthleteName(e.target.value.toUpperCase())}
+            style={{background:'rgba(18,20,28,0.6)', border:'1px solid #1F222E', borderRadius:'12px', padding:'1rem 2rem', color:'#00E5FF', fontSize:'1.2rem', textAlign:'center', width:'100%', maxWidth:'400px', letterSpacing:'0.1em', outline:'none'}}
+            className="mono focus:border-[#00E5FF] transition-colors"
+          />
+        </div>
+
+        <div onDrop={onDrop} onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onClick={()=>inputRef.current?.click()}
+          style={{border:'2px dashed',borderColor:dragging?'#00E5FF':'#1F222E', borderRadius:'30px',padding:'6rem 3rem',cursor:'pointer',marginBottom:'3rem', background:dragging?'rgba(0,229,255,.05)':'rgba(18,20,28,0.4)', backdropFilter:'blur(10px)', transition:'all .3s',position:'relative'}}>
+          <input ref={inputRef} type="file" accept="video/*" style={{display:'none'}} onChange={e=>{const f=e.target.files[0];if(f)onFileSelect(f);e.target.value='';}}/>
+
+          {videoFile ? (
+            <div>
+              <p style={{fontSize:'2rem',fontWeight:800,color:'#39FF14',marginBottom:'.5rem'}}>{videoFile.name}</p>
+              <p style={{color:'#6B7280',fontSize:'1.2rem'}}>{(videoFile.size/1024/1024).toFixed(1)} MB — Ready for synthesis</p>
+            </div>
+          ) : (
+            <div>
+              <div style={{width:'80px',height:'80px',borderRadius:'20px',background:'rgba(0,229,255,.1)', border:'1px solid rgba(0,229,255,.3)',display:'flex',alignItems:'center',justifyContent:'center', margin:'0 auto 2rem'}}>
+                <IcoUpload sz={36} st={{color:'#00E5FF'}}/>
+              </div>
+              <p style={{fontSize:'2rem',fontWeight:800,color:'#fff',marginBottom:'.5rem'}}>Drop targeting video here</p>
+              <p style={{color:'#6B7280',fontSize:'1.2rem'}}>or click to browse local files</p>
+            </div>
+          )}
+        </div>
+
+        {videoFile && (
+          <button onClick={onExecute} disabled={isAnalyzing} className="btn-primary mono" style={{padding:'1.5rem 4rem',borderRadius:'16px',fontSize:'1.2rem',display:'inline-flex',alignItems:'center',gap:'12px', margin:'0 auto'}}>
+            <IcoZap sz={24}/>{isAnalyzing ? 'SYNTHESIZING... PLEASE WAIT' : 'INITIALIZE ORACLE ENGINE'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE 2 — BIOMECHANICS  (#/biomechanics)
+//  NOTE: videoRef/canvasRef live here (in App) and are passed down
+//        so the video element is never unmounted by routing
+// ══════════════════════════════════════════════════════════════
+const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisible }) => {
+  const s = stats || {};
+  return (
+    <div className="page-enter" style={{display:isVisible?'block':'none'}}>
+      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'3rem 4rem 6rem'}}>
+
+        {/* Section header */}
+        <div style={{marginBottom:'3rem'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'1rem'}}>
+            <span style={{width:'4px',height:'48px',background:'linear-gradient(#39FF14,#00E5FF)',borderRadius:'2px',display:'inline-block'}}/>
+            <div>
+              <p className="mono" style={{color:'#6B7280',fontSize:'14px',letterSpacing:'.2em',marginBottom:'4px'}}>MOTION CAPTURE ANALYSIS</p>
+              <h2 style={{fontSize:'2.5rem',fontWeight:900,letterSpacing:'-.01em',margin:0}}>Biomechanics</h2>
+            </div>
+          </div>
+        </div>
+
+        {/* Video player — massive, centred */}
+        <div style={{borderRadius:'24px',overflow:'hidden',position:'relative',
+                     background:'#000',maxWidth:'900px',margin:'0 auto 4rem',
+                     aspectRatio:'16/9',boxShadow:'0 0 80px rgba(0,229,255,.07),0 0 0 1px #1F222E'}}
+             className="scanlines">
+          {!videoObjectUrl && (
+            <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',
+                         alignItems:'center',justifyContent:'center',gap:'16px',zIndex:10}}>
+              <IcoUpload sz={48} st={{color:'#374151'}}/>
+              <p style={{color:'#374151',fontSize:'1.2rem',fontWeight:500}}>No video loaded — go to Home to upload</p>
+            </div>
+          )}
+          <video ref={videoRef}
+            style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain',
+                    background:'#000',display:videoObjectUrl?'block':'none',zIndex:1}}
+            playsInline controls/>
+          <canvas ref={canvasRef}
+            style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:15}}/>
+        </div>
+
+        {/* 8 Telemetry cards */}
+        <div style={{marginBottom:'2rem',display:'flex',alignItems:'center',gap:'12px'}}>
+          <span style={{width:'4px',height:'32px',background:'#39FF14',borderRadius:'2px',display:'inline-block',
+                        boxShadow:'0 0 12px rgba(57,255,20,.5)'}}/>
+          <h3 style={{fontSize:'1.5rem',fontWeight:800,letterSpacing:'.06em',margin:0,textTransform:'uppercase'}}>
+            Live Telemetry
+          </h3>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'20px'}}>
+          {METRICS.map(m=>(
+            <div key={m.key} className="metric-card glass-panel"
+              style={{borderRadius:'20px',padding:'2rem',
+                      display:'flex',flexDirection:'column',gap:'12px'}}>
+              <span className="mono" style={{fontSize:'13px',color:'#6B7280',letterSpacing:'.18em',textTransform:'uppercase',fontWeight:700}}>
+                {m.label}
+              </span>
+              <p className="mono" style={{fontSize:'clamp(3rem, 5vw, 4.5rem)',fontWeight:700,lineHeight:1,color:'#fff',margin:0}}>
+                {fmt(s[m.key])}
+                <span style={{fontSize:'1.2rem',color:'#374151',fontWeight:400,marginLeft:'8px'}}>{m.unit}</span>
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE 3 — ORACLE MATCH  (#/oracle-match)
+// ══════════════════════════════════════════════════════════════
+const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutReport,
+                           assetImg, assetStatus, onGenAsset, isGenAsset, confidence, athleteName, wittyCatchphrase }) => {
+  const s  = stats  || {};
+  const vs = matchedPro?.vector_stats || {};
+  const d  = deltas || {};
+
+  const radarUser = [
+    norm(s.release_velocity_mps,10), norm(s.shot_arc_deg,75),  s.fluidity_score||0,
+    norm(s.kinetic_sync_ms,400),     norm(s.knee_angle,180),   norm(s.elbow_angle,180),
+    s.balance_index||0,              norm(s.hip_rotation_deg,45),
+  ];
+  const radarPro = [
+    norm(vs.release_velocity_mps,10), norm(vs.shot_arc_deg,75),  vs.fluidity_score||0,
+    norm(vs.kinetic_sync_ms,400),     norm(vs.knee_angle,180),   norm(vs.elbow_angle,180),
+    vs.balance_index||0,              norm(vs.hip_rotation_deg,45),
+  ];
+  const radarLabels = ['Velocity','Arc','Fluidity','Sync','Knee','Elbow','Balance','Hip'];
+
+  const noData = !proMatch;
+
+  return (
+    <div className="page-enter">
+      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'3rem 4rem 6rem'}}>
+
+        {noData ? (
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'50vh',gap:'24px',textAlign:'center'}}>
+            <IcoSpark sz={64} st={{color:'#1F222E'}}/>
+            <h2 style={{fontSize:'2.5rem',fontWeight:900,color:'#374151'}}>No Analysis Yet</h2>
+            <p style={{fontSize:'1.2rem',color:'#6B7280',maxWidth:'480px'}}>
+              Upload a video on the Home page and run the Oracle Engine to see your biomechanical match.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Page header */}
+            <div style={{marginBottom:'3.5rem'}}>
+              <p className="mono" style={{color:'#6B7280',fontSize:'14px',letterSpacing:'.2em',marginBottom:'8px'}}>PRO BIOMECHANICAL COMPARISON</p>
+              <h2 style={{fontSize:'2.75rem',fontWeight:900,letterSpacing:'-.01em',margin:0}}>Oracle Match</h2>
+            </div>
+
+            {/* Main responsive grid — wraps on narrow screens */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(450px, 1fr))',gap:'48px',marginBottom:'64px'}}>
+
+              {/* LEFT — Pro Identity + Radar */}
+              <div style={{display:'flex',flexDirection:'column',gap:'32px'}}>
+
+                {/* Pro card */}
+                <div className="glass-panel" style={{borderRadius:'24px',padding:'2.5rem',
+                             display:'flex',gap:'28px',alignItems:'center'}}>
+                  <img src={matchedPro?.image_url||FALLBACK_IMG}
+                       onError={e=>e.target.src=FALLBACK_IMG}
+                       alt="Pro"
+                       style={{width:'120px',height:'120px',borderRadius:'16px',objectFit:'cover',flexShrink:0,
+                               border:'2px solid rgba(0,229,255,.3)',boxShadow:'0 0 24px rgba(0,229,255,.15)'}}/>
+                  <div>
+                    <p className="mono" style={{fontSize:'12px',color:'#6B7280',letterSpacing:'.2em',marginBottom:'8px'}}>NEAREST VECTOR MATCH</p>
+                    <p style={{fontSize:'clamp(1.8rem,3vw,2.5rem)',fontWeight:900,lineHeight:1.15,marginBottom:'10px'}}>
+                      {proMatch || '—'}
+                    </p>
+                    <span className="mono glow-green" style={{fontSize:'14px',color:'#39FF14',fontWeight:700}}>
+                      {s.market_index || 'Market Index: —'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Match Confidence & Camera Calibration */}
+                <div className="glass-panel" style={{borderRadius:'20px', padding:'1.5rem', display:'flex', flexDirection:'column', gap:'12px'}}>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                    <span className="mono" style={{fontSize:'12px', color:'#9CA3AF', letterSpacing:'.15em'}}>VECTOR MATCH CONFIDENCE</span>
+                    <span className="mono glow-cyan" style={{fontSize:'18px', fontWeight:800, color:'#00E5FF'}}>{confidence ?? 91.2}%</span>
+                  </div>
+                  <div style={{width:'100%', height:'6px', background:'#1F222E', borderRadius:'3px', overflow:'hidden'}}>
+                    <div style={{width:`${confidence ?? 91.2}%`, height:'100%', background:'linear-gradient(90deg, #39FF14, #00E5FF)', borderRadius:'3px'}}></div>
+                  </div>
+                  <div style={{marginTop:'8px', padding:'12px', background:'rgba(255,255,255,0.03)', borderRadius:'12px', borderLeft:'3px solid #00E5FF'}}>
+                    <p style={{fontSize:'0.9rem', color:'#D1D5DB', lineHeight:1.6, margin:0}}>
+                      <strong style={{color:'#fff'}}>Camera Calibration Note:</strong> Pure 2D side-profiles can compress joint depth (Knee/Hip). For a 95%+ confidence match, record your next session from a <strong style={{color:'#00E5FF'}}>45-degree front-offset angle</strong> to unlock true 3D volumetric mapping.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Radar — 500px container */}
+                <div style={{background:'#12141C',border:'1px solid #1F222E',borderRadius:'24px',padding:'2rem',
+                             height:'500px',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <SvgRadar userData={radarUser} proData={radarPro} labels={radarLabels}
+                             proName={proMatch||'Pro'} size={420}/>
+                </div>
+
+                {/* Compare bars */}
+                <div style={{background:'#12141C',border:'1px solid #1F222E',borderRadius:'24px',padding:'2rem',display:'flex',flexDirection:'column',gap:'20px'}}>
+                  <p className="mono" style={{fontSize:'12px',color:'#6B7280',letterSpacing:'.2em',marginBottom:'4px'}}>8D VECTOR COMPARISON</p>
+                  {COMPARE.map(m=>{
+                    const uv=s[m.uk], pv=vs[m.uk]!=null?vs[m.uk]:m.pv, g=parseFloat(d[m.dk]);
+                    return (
+                      <div key={m.label} style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                          <span style={{fontSize:'16px',fontWeight:600,color:'#D1D5DB'}}>{m.label}</span>
+                          <div style={{display:'flex',gap:'10px',alignItems:'center'}} className="mono">
+                            <span style={{color:'#9CA3AF',fontSize:'15px'}}>{fmt(uv)}</span>
+                            <span style={{color:'#374151'}}>vs</span>
+                            <span style={{color:'#00E5FF',fontSize:'15px'}}>{fmt(pv)}</span>
+                            {!isNaN(g)&&g!=null&&(
+                              <span className="mono" style={{fontSize:'11px',padding:'2px 8px',borderRadius:'4px',
+                                background:'#1F222E',color:g===0?'#39FF14':'#9CA3AF'}}>
+                                {g===0?'[OPT]':g>0?`+${g}`:g}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:'4px'}}>
+                          <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                            <span className="mono" style={{fontSize:'10px',color:'#4B5563',width:'28px'}}>YOU</span>
+                            <div style={{flex:1,height:'6px',background:'#1F222E',borderRadius:'3px',overflow:'hidden'}}>
+                              <div style={{height:'100%',width:`${pct(uv,m.mx)}%`,
+                                background:'linear-gradient(90deg,#39FF14,#00E5FF)',
+                                borderRadius:'3px',transition:'width .6s'}}/>
+                            </div>
+                          </div>
+                          <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                            <span className="mono" style={{fontSize:'10px',color:'#4B5563',width:'28px'}}>PRO</span>
+                            <div style={{flex:1,height:'6px',background:'#1F222E',borderRadius:'3px',overflow:'hidden'}}>
+                              <div style={{height:'100%',width:`${pct(pv,m.mx)}%`,
+                                background:'rgba(0,229,255,.35)',
+                                borderRadius:'3px',transition:'width .6s'}}/>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* RIGHT — Coaching cards */}
+              <div style={{display:'flex',flexDirection:'column',gap:'24px'}}>
+
+                {/* Scout report */}
+                {scoutReport && (
+                  <div style={{background:'#12141C',border:'1px solid #1F222E',borderRadius:'24px',padding:'2rem'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'1.25rem'}}>
+                      <span style={{width:'3px',height:'32px',background:'#00E5FF',borderRadius:'2px',display:'inline-block',
+                                    boxShadow:'0 0 12px rgba(0,229,255,.5)'}}/>
+                      <p className="mono" style={{fontSize:'12px',color:'#6B7280',letterSpacing:'.2em'}}>SCOUT REPORT</p>
+                    </div>
+                    <p style={{fontSize:'1.2rem',lineHeight:1.8,color:'#D1D5DB'}}
+                      dangerouslySetInnerHTML={{__html: formatRichText(scoutReport)}} />
+                  </div>
+                )}
+
+                {/* Coaching feedback cards */}
+                <div style={{display:'flex',alignItems:'center',gap:'10px',marginTop:'8px',marginBottom:'4px'}}>
+                  <span style={{width:'3px',height:'32px',background:'#39FF14',borderRadius:'2px',display:'inline-block',
+                                boxShadow:'0 0 12px rgba(57,255,20,.5)'}}/>
+                  <p className="mono" style={{fontSize:'12px',color:'#6B7280',letterSpacing:'.2em'}}>COACHING INSIGHTS</p>
+                </div>
+                {Array.isArray(feedback) && feedback.length > 0 ? (
+                  <div style={{display:'flex',flexDirection:'column',gap:'20px'}}>
+                    {feedback.map((f,i)=>(
+                      <div key={i} className="glass-panel"
+                        style={{borderLeft:`3px solid ${CAT_COLOR(f.category)}`,
+                                borderRadius:'0 20px 20px 0',padding:'1.75rem 2rem',
+                                transition:'background .2s'}}
+                        onMouseEnter={e=>{e.currentTarget.style.background='rgba(24,26,38,0.75)';e.currentTarget.style.backdropFilter='blur(14px)'}}
+                        onMouseLeave={e=>{e.currentTarget.style.background='';e.currentTarget.style.backdropFilter='';}}>
+                        <div style={{display:'flex',gap:'12px',marginBottom:'12px',alignItems:'center'}}>
+                          <span className="mono" style={{fontSize:'12px',fontWeight:700,letterSpacing:'.18em',
+                            color:CAT_COLOR(f.category),textTransform:'uppercase'}}>
+                            {(f.category||'general').toUpperCase()}
+                          </span>
+                          {f.timestamp != null && f.timestamp !== '' && (
+                            <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                              <span style={{color:'#4B5563', fontSize:'14px'}}>🕒</span>
+                              <span className="mono" style={{fontSize:'12px',color:'#4B5563'}}>
+                                {fmtT(f.timestamp)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <p style={{fontSize:'1.2rem',lineHeight:1.8,color:'#D1D5DB'}}
+                          dangerouslySetInnerHTML={{__html: formatRichText(f.observation)}} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{background:'#12141C',border:'1px solid #1F222E',borderRadius:'24px',padding:'3rem',
+                               display:'flex',flexDirection:'column',alignItems:'center',gap:'16px',textAlign:'center'}}>
+                    <IcoSpark sz={48} st={{color:'#1F222E'}}/>
+                    <p style={{color:'#4B5563',fontSize:'1.1rem'}}>Run Oracle Engine to generate coaching feedback.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* GEN-4D ASSET — full width below */}
+            <div style={{background:'#12141C',border:'1px solid #1F222E',borderRadius:'24px',padding:'3rem'}}>
+              <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'2rem'}}>
+                <span style={{width:'3px',height:'36px',background:'#bf00ff',borderRadius:'2px',display:'inline-block',
+                              boxShadow:'0 0 12px rgba(191,0,255,.5)'}}/>
+                <div>
+                  <p className="mono" style={{fontSize:'12px',color:'#6B7280',letterSpacing:'.2em',marginBottom:'4px'}}>GENERATIVE AI</p>
+                  <h3 style={{fontSize:'1.75rem',fontWeight:800,margin:0}}>Gen-4D Biometric Asset</h3>
+                </div>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'32px',alignItems:'start'}}>
+                {/* Image display with CSS Overlay */}
+                <div style={{background:'#090A0F',border:'1px solid #1F222E',borderRadius:'16px',overflow:'hidden',
+                             minHeight:'450px', aspectRatio:'9/16', position:'relative', display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  {assetImg ? (
+                    <>
+                      <img src={assetImg} alt="Laksh.ai 4D Asset" style={{width:'100%', height:'100%', objectFit:'cover', display:'block', position:'absolute', inset:0}}/>
+                      {/* Dynamic HTML Text Overlay with Personalization & Catchphrase */}
+                      <div style={{position:'absolute', inset:0, padding:'2.5rem', display:'flex', flexDirection:'column', justifyContent:'space-between', background:'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 40%, rgba(0,0,0,0.9) 100%)'}}>
+                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                          <div style={{display:'flex', flexDirection:'column'}}>
+                            <span className="mono" style={{color:'#39FF14', fontSize:'0.9rem', letterSpacing:'0.2em'}}>LAKSH.AI // SIGNATURE</span>
+                            <span style={{color:'#FFF', fontSize:'2.8rem', fontVariantCaps:'all-petite-caps', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.05em', textShadow:'0 2px 10px rgba(0,0,0,0.5)'}}>{athleteName || 'ATHLETE'}</span>
+                          </div>
+                          <IcoSpark sz={24} st={{color:'#00E5FF'}}/>
+                        </div>
+
+                        {/* Witty/Trendy Catchphrase from Gemini at bottom-center */}
+                        {wittyCatchphrase && (
+                          <div style={{textAlign:'center', marginBottom:'1.5rem'}}>
+                            <p style={{fontSize:'1.3rem', fontWeight:600, color:'#FFF', lineHeight:1.4, textShadow:'0 0 8px rgba(0,229,255,0.6)', margin:0}}>
+                              "{wittyCatchphrase}"
+                            </p>
+                          </div>
+                        )}
+
+                        {/* The Nutshell Comparison Matrix */}
+                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', borderTop:'1px solid rgba(255,255,255,0.2)', paddingTop:'1rem'}}>
+
+                          {/* Left Side: Biometric Deltas */}
+                          <div style={{display:'flex', gap:'2.5rem'}}>
+                            <div>
+                              <span className="mono" style={{color:'#9CA3AF', fontSize:'0.75rem', display:'block', letterSpacing:'0.1em'}}>SHOT ARC</span>
+                              <div style={{display:'flex', alignItems:'baseline', gap:'8px'}}>
+                                <span className="mono glow-green" style={{color:'#39FF14', fontSize:'1.6rem', fontWeight:800}}>{fmt(s?.shot_arc_deg)}°</span>
+                                <span className="mono" style={{color:'#6B7280', fontSize:'0.9rem'}}>vs {fmt(matchedPro?.vector_stats?.shot_arc_deg)}°</span>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="mono" style={{color:'#9CA3AF', fontSize:'0.75rem', display:'block', letterSpacing:'0.1em'}}>VELOCITY</span>
+                              <div style={{display:'flex', alignItems:'baseline', gap:'8px'}}>
+                                <span className="mono glow-green" style={{color:'#39FF14', fontSize:'1.6rem', fontWeight:800}}>{fmt(s?.release_velocity_mps)}<span style={{fontSize:'0.8rem'}}>m/s</span></span>
+                                <span className="mono" style={{color:'#6B7280', fontSize:'0.9rem'}}>vs {fmt(matchedPro?.vector_stats?.release_velocity_mps)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Side: Matched Identity */}
+                          <div style={{textAlign:'right'}}>
+                            <span className="mono" style={{color:'#9CA3AF', fontSize:'0.75rem', display:'block', letterSpacing:'0.1em'}}>ORACLE MATCH</span>
+                            <span className="mono glow-cyan" style={{color:'#00E5FF', fontSize:'1.6rem', fontWeight:800, textTransform:'uppercase'}}>{proMatch}</span>
+                          </div>
+
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mono" style={{color:'#4B5563',fontSize:'14px',letterSpacing:'.15em',textTransform:'uppercase',padding:'3rem',textAlign:'center'}}>
+                      {assetStatus}
+                    </p>
+                  )}
+                </div>
+                {/* Controls */}
+                <div style={{display:'flex',flexDirection:'column',gap:'24px',justifyContent:'center',padding:'1rem 0'}}>
+                  <div>
+                    <h4 style={{fontSize:'1.5rem',fontWeight:800,marginBottom:'12px', color:'#fff'}}>
+                      Synthesize <span style={{color:'#39FF14'}}>Laksh.ai Biometric Signature</span>
+                    </h4>
+                    <p style={{fontSize:'1.1rem',color:'#9CA3AF',lineHeight:1.7}}>
+                      Powered by Google Imagen 4. Generates a personalized, holographic data card embedding your unique kinematics (Velocity, Arc) directly into the pixels.
+                    </p>
+                  </div>
+                  <button onClick={onGenAsset} disabled={isGenAsset}
+                    className="btn-secondary mono"
+                    style={{padding:'1.25rem 2.5rem',borderRadius:'14px',fontSize:'1rem',
+                            display:'flex',alignItems:'center',gap:'12px',width:'fit-content'}}>
+                    <IcoSpark sz={20}/>{isGenAsset?'Synthesizing…':'Confirm 4D Synthesis'}
+                  </button>
+                  <p className="mono" style={{fontSize:'12px',color:'#374151',letterSpacing:'.1em'}}>
+                    MINT PHASE: PRE-LAUNCH // RARITY: ETHEREAL
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+//  METADATA MODAL
+// ══════════════════════════════════════════════════════════════
+const MetaModal = ({ open, onClose, payload }) => !open ? null : (
+  <div onClick={onClose} style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(0,0,0,.88)',
+       backdropFilter:'blur(14px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'2rem'}}>
+    <div onClick={e=>e.stopPropagation()}
+      style={{background:'#0D0E14',border:'1px solid #1F222E',borderRadius:'20px',width:'100%',maxWidth:'860px',
+              maxHeight:'80vh',overflow:'hidden',display:'flex',flexDirection:'column',
+              boxShadow:'0 0 0 1px rgba(0,229,255,.12),0 32px 80px rgba(0,0,0,.6)'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'1.5rem 2rem',
+                   borderBottom:'1px solid #1F222E',background:'#090A0F'}}>
+        <span className="mono glow-cyan" style={{fontSize:'15px',fontWeight:700,letterSpacing:'.2em',color:'#00E5FF'}}>
+          ◈ RAW TELEMETRY PAYLOAD
+        </span>
+        <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',color:'#6B7280',transition:'color .2s'}}
+          onMouseEnter={e=>e.target.style.color='#fff'} onMouseLeave={e=>e.target.style.color='#6B7280'}>
+          <IcoX sz={22} st={{display:'block'}}/>
+        </button>
+      </div>
+      <div style={{padding:'1.5rem 2rem',overflowY:'auto',flex:1}}>
+        <pre className="mono" style={{fontSize:'13px',color:'#39FF14',lineHeight:1.7,whiteSpace:'pre-wrap',margin:0}}>
+          {JSON.stringify(payload,null,2)}
+        </pre>
+      </div>
+    </div>
+  </div>
+);
+
+// ══════════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════════
+const Toast = ({ msg }) => !msg ? null : (
+  <div className="toast-anim mono"
+    style={{position:'fixed',bottom:'28px',right:'28px',zIndex:200,padding:'1rem 1.5rem',
+            borderRadius:'14px',border:'1px solid #1F222E',background:'#0D0E14',
+            fontSize:'15px',color:'#D1D5DB',boxShadow:'0 8px 32px rgba(0,0,0,.5)'}}>
+    {msg}
+  </div>
+);
+
+// ══════════════════════════════════════════════════════════════
+//  APP ROOT — all state lives here
+// ══════════════════════════════════════════════════════════════
+const App = () => {
+  const { route, navigate } = useRouter();
+
+  // Global state
+  const [athleteName,  setAthleteName]  = useState('');
+  const [videoFile,    setVideoFile]    = useState(null);
+  const [videoObjUrl,  setVideoObjUrl]  = useState(null);
+  const [isAnalyzing,  setIsAnalyzing]  = useState(false);
+  const [data,         setData]         = useState(null);
+  const [assetImg,     setAssetImg]     = useState(null);
+  const [assetStatus,  setAssetStatus]  = useState('AWAITING SYNTHESIS');
+  const [isGenAsset,   setIsGenAsset]   = useState(false);
+  const [showMeta,     setShowMeta]     = useState(false);
+  const [toast,        setToast]        = useState('');
+
+  // Video & canvas refs — live here so they persist across route changes
+  const videoRef  = useRef(null);
+  const canvasRef = useRef(null);
+  const rafRef    = useRef(null);
+  const telRef    = useRef(null);
+
+  useEffect(() => {
+    telRef.current = data?.telemetry?.dip ? data.telemetry : null;
+  }, [data]);
+
+  // Load video src when object URL changes
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !videoObjUrl) return;
+    v.src = videoObjUrl;
+    v.load();
+  }, [videoObjUrl]);
+
+  // Canvas rAF skeleton loop — starts once, runs forever
+  useEffect(() => {
+    const drawSkel = (ctx, canvas, video, joints, color) => {
+      if (!joints?.wrist) return;
+      const vr=video.videoWidth/video.videoHeight, cr=canvas.width/canvas.height;
+      let rw=canvas.width, rh=canvas.height, ox=0, oy=0;
+      if (vr>cr) { rh=canvas.width/vr; oy=(canvas.height-rh)/2; }
+      else       { rw=canvas.height*vr; ox=(canvas.width-rw)/2;  }
+      const c = j => ({x:ox+j[0]*rw, y:oy+j[1]*rh});
+      const [w,e,s,h,k,a] = [c(joints.wrist),c(joints.elbow),c(joints.shoulder),
+                              c(joints.hip),c(joints.knee),c(joints.ankle)];
+      ctx.beginPath();
+      ctx.moveTo(w.x,w.y); ctx.lineTo(e.x,e.y); ctx.lineTo(s.x,s.y);
+      ctx.lineTo(h.x,h.y); ctx.lineTo(k.x,k.y); ctx.lineTo(a.x,a.y);
+      ctx.strokeStyle=color; ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke();
+      [w,e,s,h,k,a].forEach(p=>{
+        ctx.beginPath(); ctx.arc(p.x,p.y,6,0,2*Math.PI);
+        ctx.fillStyle='#111'; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle=color; ctx.stroke();
+      });
+    };
+    const loop = () => {
+      rafRef.current = requestAnimationFrame(loop);
+      const video=videoRef.current, canvas=canvasRef.current;
+      if (!video||!canvas) return;
+      const rect=video.getBoundingClientRect();
+      if (rect.width===0) return;
+      const rw=Math.round(rect.width), rh=Math.round(rect.height);
+      if (canvas.width!==rw||canvas.height!==rh) { canvas.width=rw; canvas.height=rh; }
+      const tel=telRef.current;
+      const ctx=canvas.getContext('2d');
+      if (!tel?.dip) { ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+      const t=video.currentTime, dip=tel.dip.time_sec, rel=tel.release.time_sec;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if      (t>=dip-.1&&t<rel)  drawSkel(ctx,canvas,video,tel.dip.joints,'#39FF14');
+      else if (t>=rel&&t<rel+1.5) drawSkel(ctx,canvas,video,tel.release.joints,'#00E5FF');
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const showToast = msg => { setToast(msg); setTimeout(()=>setToast(''),3500); };
+
+  const handleFileSelect = useCallback(file => {
+    if (videoObjUrl) URL.revokeObjectURL(videoObjUrl);
+    setVideoFile(file);
+    setVideoObjUrl(URL.createObjectURL(file));
+  }, [videoObjUrl]);
+
+  const handleExecute = useCallback(async () => {
+    if (!videoFile) { showToast('Select a video first.'); return; }
+    setIsAnalyzing(true);
+    navigate(ROUTES.BIOMECHANICS);
+    try {
+      const form = new FormData();
+      form.append('video', videoFile);
+      const r = await fetch(`${API}/analyze-video`, { method:'POST', body:form });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || d.message || 'Analysis failed');
+      setData(d);
+    } catch (e) {
+      showToast(`Oracle failed: ${e.message}`);
+    }
+    setIsAnalyzing(false);
+  }, [videoFile]);
+
+  const handleAudio = useCallback(async () => {
+    const fb = data?.athlete_feedback;
+    let text = data?.scout_report || '';
+    if (Array.isArray(fb)) text = fb.map(i=>i.observation||'').join('. ');
+    if (!text) { showToast('Run Oracle first.'); return; }
+
+    // EXTREME SANITIZATION: Strip asterisks, underscores, and newlines so the TTS speaks fluidly
+    const cleanText = text.replace(/[*_]/g, '').replace(/\n/g, ' ');
+
+    try {
+      const r = await fetch(`${API}/generate-audio-brief`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text: cleanText}),
+      });
+      const d = await r.json();
+      if (d.status==='success'&&d.audio_base64) new Audio(`data:audio/mp3;base64,${d.audio_base64}`).play();
+      else showToast(d.message||'Audio failed.');
+    } catch (e) { showToast(`Audio: ${e.message}`); }
+  }, [data]);
+
+  // ── 4D Asset — hyper-personalized data card ───────────────────
+  const handleGenAsset = useCallback(async () => {
+    setIsGenAsset(true); setAssetImg(null); setAssetStatus('SYNTHESIZING LAKSH.AI SIGNATURE FOR USER...');
+    try {
+      const r = await fetch(`${API}/generate-metric-card`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          match: data?.pro_match,
+          arc: data?.stats?.shot_arc_deg,
+          vel: data?.stats?.release_velocity_mps,
+        }),
+      });
+      const d = await r.json();
+      console.log('Imagen response:', d);
+      // ── Explicit Data URI construction (the fix) ──
+      if (d.status === 'success' && d.image_base64) {
+        const imgSrc = `data:image/jpeg;base64,${d.image_base64}`;
+        setAssetImg(imgSrc);
+        setAssetStatus('');
+      } else if (d.image_base64) {
+        // SVG fallback from backend placeholder
+        setAssetImg(`data:image/svg+xml;base64,${d.image_base64}`);
+        setAssetStatus('');
+      } else {
+        setAssetStatus(`Failed: ${d.message || 'No image data returned'}`);
+      }
+    } catch (e) {
+      console.error('4D error:', e);
+      setAssetStatus('Network error during synthesis');
+    }
+    setIsGenAsset(false);
+  }, [data]);
+
+  const metaPayload = useMemo(() => ({
+    timestamp: new Date().toISOString(),
+    engine:    'Laksh.ai Oracle v7 — Cosine Space',
+    telemetry: telRef.current||{},
+    stats:     data?.stats||{},
+    deltas:    data?.kinematic_deltas||{},
+    pro:       data?.matched_pro||{},
+  }), [data, showMeta]);
+
+  const s = data?.stats || {};
+  const isHome = route === ROUTES.HOME || route === '#/' || route === '';
+  const isBio  = route === ROUTES.BIOMECHANICS;
+  const isOracle = route === ROUTES.ORACLE;
+
+  return (
+    <div style={{minHeight:'100vh',background:'#07080B'}}>
+      {/* Persistent navbar */}
+      <TopNav route={route} navigate={navigate} videoFile={videoFile}
+              isAnalyzing={isAnalyzing} onExecute={handleExecute} analysisData={data}
+              onAudio={handleAudio} onMeta={()=>setShowMeta(true)}/>
+
+      {/* PAGES — all mounted, controlled by display to keep video alive */}
+      {isHome   && <IngestionPage videoFile={videoFile} onFileSelect={handleFileSelect}
+                     onExecute={handleExecute} isAnalyzing={isAnalyzing} navigate={navigate}
+                     athleteName={athleteName} setAthleteName={setAthleteName}/>}
+
+      {/* Biomechanics page — always mounted when video loaded, hidden otherwise */}
+      <div style={{display: isBio ? 'block' : 'none'}}>
+        <BiomechanicsPage stats={s} videoRef={videoRef} canvasRef={canvasRef}
+                          videoObjectUrl={videoObjUrl} isVisible={isBio}/>
+      </div>
+
+      {isOracle && <OracleMatchPage stats={s} proMatch={data?.pro_match}
+                     matchedPro={data?.matched_pro} deltas={data?.kinematic_deltas}
+                     feedback={data?.athlete_feedback} scoutReport={data?.scout_report}
+                     assetImg={assetImg} assetStatus={assetStatus}
+                     onGenAsset={handleGenAsset} isGenAsset={isGenAsset}
+                     confidence={data?.confidence} athleteName={athleteName}
+                     wittyCatchphrase={data?.witty_catchphrase}/>}
+
+      <MetaModal open={showMeta} onClose={()=>setShowMeta(false)} payload={metaPayload}/>
+      <Toast msg={toast}/>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+document.getElementById('apex-loader').style.display = 'none';
+</script>
+</body>
+</html>

@@ -1,10 +1,23 @@
+# Secrets (CRITICAL)
+.env
+
+# Heavy / generated artifacts
+chroma_db/
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
-temp_*.mp4
-.env
+*.egg-info/
+
+# Virtual environments
 .venv/
 venv/
-*.egg-info/
+env/
+
+# IDE / OS
 .idea/
 .DS_Store
+
+# Temporary media
+temp_*.mp4

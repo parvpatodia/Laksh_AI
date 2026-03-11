@@ -1,7 +1,25 @@
+# Web framework
 fastapi
 uvicorn[standard]
 python-multipart
+
+# Environment & config
+python-dotenv
+
+# AI / ML
 google-genai
 chromadb
+
+# TTS (primary: Studio Voices; fallback: gTTS)
+google-cloud-texttospeech
 gtts
-browserbase
+
+# Physics engine & computer vision (headless for server deployment)
+opencv-python-headless
+mediapipe>=0.10.30
+numpy
+pandas
+scipy
+
+# NBA data (db_seeder)
+nba_api
