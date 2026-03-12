@@ -299,7 +299,7 @@ const TopNav = ({ route, navigate, videoFile, isAnalyzing, onExecute, analysisDa
   return (
     <nav style={{height:'80px',background:'rgba(7,8,11,.92)',backdropFilter:'blur(16px)',
                  borderBottom:'1px solid #1F222E',position:'sticky',top:0,zIndex:100}}>
-      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'0 4rem',height:'100%',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'0 clamp(1rem, 3vw, 4rem)',height:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',overflowX:'auto',whiteSpace:'nowrap'}}>
         {/* Logo */}
         <button onClick={()=>navigate(ROUTES.HOME)} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
           <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
@@ -379,7 +379,7 @@ const IngestionPage = ({ videoFile, onFileSelect, onExecute, isAnalyzing, naviga
   };
 
   return (
-    <div className="page-enter" style={{minHeight:'calc(100vh - 80px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem 2rem'}}>
+    <div className="page-enter" style={{minHeight:'calc(100vh - 80px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'clamp(1rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem)'}}>
       <div style={{maxWidth:'1000px',width:'100%',textAlign:'center'}}>
 
         <div style={{marginBottom:'4rem'}}>
@@ -388,7 +388,7 @@ const IngestionPage = ({ videoFile, onFileSelect, onExecute, isAnalyzing, naviga
             <span className="mono" style={{color:'#00E5FF',fontSize:'14px',letterSpacing:'.2em', fontWeight:600}}>LAKSH.AI // PROPRIETARY ORACLE ENGINE</span>
           </div>
 
-          <h1 style={{fontSize:'clamp(4rem, 8vw, 6.5rem)',fontWeight:900,lineHeight:1.05,marginBottom:'2rem',letterSpacing:'-0.03em', color:'#fff'}}>
+          <h1 style={{fontSize:'clamp(2.5rem, 8vw, 6.5rem)',fontWeight:900,lineHeight:1.05,marginBottom:'2rem',letterSpacing:'-0.03em', color:'#fff'}}>
             The Future of <br/>
             <span style={{color:'transparent', WebkitTextStroke:'1px #00E5FF', backgroundImage:'linear-gradient(90deg, #00E5FF, #39FF14)', WebkitBackgroundClip:'text', backgroundClip:'text'}}>Biomechanical</span> Intelligence.
           </h1>
@@ -410,7 +410,7 @@ const IngestionPage = ({ videoFile, onFileSelect, onExecute, isAnalyzing, naviga
         </div>
 
         <div onDrop={onDrop} onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onClick={()=>inputRef.current?.click()}
-          style={{border:'2px dashed',borderColor:dragging?'#00E5FF':'#1F222E', borderRadius:'30px',padding:'6rem 3rem',cursor:'pointer',marginBottom:'3rem', background:dragging?'rgba(0,229,255,.05)':'rgba(18,20,28,0.4)', backdropFilter:'blur(10px)', transition:'all .3s',position:'relative'}}>
+          style={{border:'2px dashed',borderColor:dragging?'#00E5FF':'#1F222E', borderRadius:'30px',padding:'clamp(2rem, 8vw, 6rem) clamp(1rem, 4vw, 3rem)',cursor:'pointer',marginBottom:'3rem', background:dragging?'rgba(0,229,255,.05)':'rgba(18,20,28,0.4)', backdropFilter:'blur(10px)', transition:'all .3s',position:'relative'}}>
           <input ref={inputRef} type="file" accept="video/*" style={{display:'none'}} onChange={e=>{const f=e.target.files[0];if(f)onFileSelect(f);e.target.value='';}}/>
 
           {videoFile ? (
@@ -448,7 +448,7 @@ const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisibl
   const s = stats || {};
   return (
     <div className="page-enter" style={{display:isVisible?'block':'none'}}>
-      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'3rem 4rem 6rem'}}>
+      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'clamp(1rem, 5vw, 3rem) clamp(1rem, 4vw, 4rem) clamp(1.5rem, 6vw, 6rem)'}}>
 
         {/* Section header */}
         <div style={{marginBottom:'3rem'}}>
@@ -489,7 +489,7 @@ const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisibl
             Live Telemetry
           </h3>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'20px'}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',gap:'20px'}}>
           {METRICS.map(m=>(
             <div key={m.key} className="metric-card glass-panel"
               style={{borderRadius:'20px',padding:'2rem',
@@ -534,7 +534,7 @@ const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutR
 
   return (
     <div className="page-enter">
-      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'3rem 4rem 6rem'}}>
+      <div style={{maxWidth:'1600px',margin:'0 auto',padding:'clamp(1rem, 5vw, 3rem) clamp(1rem, 4vw, 4rem) clamp(1.5rem, 6vw, 6rem)'}}>
 
         {noData ? (
           <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'50vh',gap:'24px',textAlign:'center'}}>
@@ -553,7 +553,7 @@ const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutR
             </div>
 
             {/* Main responsive grid — wraps on narrow screens */}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(450px, 1fr))',gap:'48px',marginBottom:'64px'}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',gap:'48px',marginBottom:'64px'}}>
 
               {/* LEFT — Pro Identity + Radar */}
               <div style={{display:'flex',flexDirection:'column',gap:'32px'}}>
@@ -715,7 +715,7 @@ const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutR
                   <h3 style={{fontSize:'1.75rem',fontWeight:800,margin:0}}>Gen-4D Biometric Asset</h3>
                 </div>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'32px',alignItems:'start'}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',gap:'32px',alignItems:'start'}}>
                 {/* Image display with CSS Overlay */}
                 <div style={{background:'#090A0F',border:'1px solid #1F222E',borderRadius:'16px',overflow:'hidden',
                              minHeight:'450px', aspectRatio:'9/16', position:'relative', display:'flex',alignItems:'center',justifyContent:'center'}}>
