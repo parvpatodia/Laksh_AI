@@ -926,6 +926,14 @@ const App = () => {
   const showToast = msg => { setToast(msg); setTimeout(()=>setToast(''),3500); };
 
   const handleFileSelect = useCallback(file => {
+    // SECURITY: Enforce 50MB file size limit to protect cloud server RAM
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 Megabytes in bytes
+    
+    if (file && file.size > MAX_FILE_SIZE) {
+      showToast('⚠️ Video exceeds 50MB limit. Please trim your clip.');
+      return; // Abort the upload process
+    }
+
     if (videoObjUrl) URL.revokeObjectURL(videoObjUrl);
     setVideoFile(file);
     setVideoObjUrl(URL.createObjectURL(file));
