@@ -21,3 +21,6 @@ env/
 
 # Temporary media
 temp_*.mp4
+
+# Cursor worktree apply artifact (prevents "Unable to read file .sh" error)
+.sh
