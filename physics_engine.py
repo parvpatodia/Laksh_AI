@@ -35,7 +35,7 @@ class KinematicAnalyzer:
         self._landmarker = None
 
     def _init_pose(self) -> bool:
-        """Uses the modern Tasks API and forcefully bypasses macOS SSL blocks."""
+        """Initialise MediaPipe Pose Landmarker (Heavy model). Downloads on first run if missing."""
         try:
             from mediapipe.tasks.python import vision
             from mediapipe.tasks.python.core import base_options
@@ -46,26 +46,32 @@ class KinematicAnalyzer:
             model_path = Path(__file__).resolve().parent / "pose_landmarker_heavy.task"
             
             if not model_path.exists():
-                print("Downloading MediaPipe Heavy Model... Bypassing Mac SSL checks...")
+                print("Downloading MediaPipe Heavy Model...")
                 import urllib.request
-                
-                # --- THE MAC OS SSL FIX ---
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
-                
+
                 url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task"
-                
-                # Safely open the URL with the bypassed context and write it to the file
-                with urllib.request.urlopen(url, context=ctx) as response, open(model_path, 'wb') as out_file:
-                    out_file.write(response.read())
-                    
+
+                try:
+                    # Attempt download with full SSL verification (always works in Docker/production)
+                    ctx = ssl.create_default_context()
+                    with urllib.request.urlopen(url, context=ctx) as response, open(model_path, "wb") as out_file:
+                        out_file.write(response.read())
+                except ssl.SSLError:
+                    # Fallback for macOS dev environments without updated CA certificates.
+                    # Permanent fix: run /Applications/Python*/Install\ Certificates.command
+                    print("WARNING: SSL verification failed. Retrying with unverified context (dev only).")
+                    ctx_dev = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                    ctx_dev.check_hostname = False
+                    ctx_dev.verify_mode = ssl.CERT_NONE
+                    with urllib.request.urlopen(url, context=ctx_dev) as response, open(model_path, "wb") as out_file:
+                        out_file.write(response.read())
+
                 print("Download complete! Booting engine...")
 
             opts = vision.PoseLandmarkerOptions(
                 base_options=base_options.BaseOptions(model_asset_path=str(model_path)),
                 running_mode=vision.RunningMode.VIDEO,
-                num_poses=1,
+                num_poses=2,  # Detect up to 2 people; enables multi-person awareness in one pass
             )
             self._landmarker = vision.PoseLandmarker.create_from_options(opts)
             return True
@@ -107,6 +113,7 @@ class KinematicAnalyzer:
         data_2d = {f"{s}_{j}": [] for s in sides for j in joints}
 
         frame_idx = 0
+        max_people = 0  # Track peak simultaneous detections across all frames
         try:
             while True:
                 ret, frame = cap.read()
@@ -119,7 +126,7 @@ class KinematicAnalyzer:
                     break
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 rgb = self._preprocess_frame(rgb)
-                
+
                 # Format for Tasks API Video Mode
                 t_ms = int(1000 * frame_idx / fps)
                 mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
@@ -130,6 +137,8 @@ class KinematicAnalyzer:
                 if result:
                     pwlm = getattr(result, "pose_world_landmarks", None)
                     plms = getattr(result, "pose_landmarks", None)
+                    n_poses = max(len(pwlm) if pwlm else 0, len(plms) if plms else 0)
+                    max_people = max(max_people, n_poses)
                     if pwlm and len(pwlm) > 0:
                         wlm = pwlm[0]
                     if plms and len(plms) > 0:
@@ -151,7 +160,7 @@ class KinematicAnalyzer:
             cap.release()
             if self._landmarker: self._landmarker.close()
             
-        return fps, {k: np.array(v) for k, v in data_3d.items()}, {k: np.array(v) for k, v in data_2d.items()}
+        return fps, {k: np.array(v) for k, v in data_3d.items()}, {k: np.array(v) for k, v in data_2d.items()}, max_people
 
     def apply_filters(self, data):
         out = {}
@@ -164,57 +173,13 @@ class KinematicAnalyzer:
             smoothed = np.zeros_like(clean)
             for d in range(clean.shape[1]):
                 try: smoothed[:, d] = savgol_filter(clean[:, d], 11, 3)
-                except: smoothed[:, d] = clean[:, d]
+                except Exception: smoothed[:, d] = clean[:, d]
             out[k] = smoothed
         return out
 
-    def _count_people_sampled(self, fps: float, total_frames: int):
-        """MediaPipe-only multi-person awareness: sample frames with num_poses=3."""
-        try:
-            from mediapipe.tasks.python import vision
-            from mediapipe.tasks.python.core import base_options
-            model_path = Path(__file__).resolve().parent / "pose_landmarker_heavy.task"
-            if not model_path.exists():
-                return None
-            opts = vision.PoseLandmarkerOptions(
-                base_options=base_options.BaseOptions(model_asset_path=str(model_path)),
-                running_mode=vision.RunningMode.VIDEO,
-                num_poses=3,
-            )
-            multi_landmarker = vision.PoseLandmarker.create_from_options(opts)
-            cap = cv2.VideoCapture(self.video_path)
-            if not cap.isOpened():
-                return None
-            step = max(1, total_frames // 8)
-            counts = []
-            import mediapipe as mp
-            try:
-                for fi in range(0, total_frames, step):
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, fi)
-                    ret, frame = cap.read()
-                    if not ret:
-                        continue
-                    t_ms = int(1000 * fi / fps)
-                    mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                    result = multi_landmarker.detect_for_video(mp_img, t_ms)
-                    n = len(result.pose_landmarks) if result and result.pose_landmarks else 0
-                    counts.append(n)
-            finally:
-                cap.release()
-                multi_landmarker.close()
-            if not counts:
-                return None
-            max_people = max(counts)
-            return {
-                "algorithms": ["MediaPipe Pose"],
-                "people_detected_max": max_people,
-                "video_quality_note": (
-                    "Multiple people detected. Analysis focuses on the most visible subject. "
-                    "For best pro matching, record only the shooter in frame."
-                ) if max_people > 1 else None,
-            }
-        except Exception:
-            return None
+    # _count_people_sampled removed: multi-person detection is now tracked inline
+    # during extract_frames() using num_poses=2, eliminating the second MediaPipe
+    # initialization and the ~3s per-request overhead it introduced.
 
     def _assess_video_quality(
         self,
@@ -427,7 +392,7 @@ class KinematicAnalyzer:
             temp_cap.release()
 
             if not self._init_pose(): return self._fallback()
-            fps, raw_3d, raw_2d = self.extract_frames(start_sec=start_sec, end_sec=end_sec)
+            fps, raw_3d, raw_2d, max_people = self.extract_frames(start_sec=start_sec, end_sec=end_sec)
             
             if len(raw_2d["left_wrist"]) < 5: 
                 print("ERROR: Not enough frames extracted by MediaPipe.")
@@ -550,7 +515,7 @@ class KinematicAnalyzer:
             fluidity = 65
             if release_frame > dip_frame + 2:
                 jerk = np.std(np.diff(np.diff(wrist_y[dip_frame:release_frame]))) if release_frame - dip_frame > 3 else 0
-                fluidity = int(np.clip(100 - (jerk * 5000), 40, 99))
+                fluidity = int(np.clip(100 - (jerk * 2000), 40, 99))
 
             # 2D Telemetry Payload for UI Rendering — Research-grade per-frame overlay
             k2d, a2d = f_2d[f"{side}_knee"], f_2d[f"{side}_ankle"]
@@ -591,12 +556,17 @@ class KinematicAnalyzer:
                 "frames": frames,
             }
 
-            # Multi-person awareness: sample frames with num_poses=3 to estimate people count
-            detection_metadata = self._count_people_sampled(fps, total_frames)
-            people_count = 1
-            if detection_metadata:
-                telemetry["detection_metadata"] = detection_metadata
-                people_count = detection_metadata.get("people_detected_max", 1) or 1
+            # Multi-person awareness: tracked inline in extract_frames (num_poses=2) — no second init
+            people_count = max_people if max_people > 0 else 1
+            detection_metadata = {
+                "algorithms": ["MediaPipe Pose"],
+                "people_detected_max": people_count,
+                "video_quality_note": (
+                    "Multiple people detected. Analysis focuses on the most visible subject. "
+                    "For best pro matching, record only the shooter in frame."
+                ) if people_count > 1 else None,
+            }
+            telemetry["detection_metadata"] = detection_metadata
 
             visibility = self._compute_pose_visibility(raw_2d)
 

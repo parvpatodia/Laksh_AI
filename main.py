@@ -5,6 +5,8 @@ import uuid
 import base64
 import io
 import logging
+import tempfile
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -37,34 +39,45 @@ COLLECTION_NAME = "apex_oracle_v7"
 # Use absolute path: ./chroma_db is ambiguous when cwd differs in deployment (Railway, Docker)
 PERSIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
 
-# Module-level client and collection — populated in startup_event
+# Module-level client and collection — populated in lifespan startup
 chroma_client = None
 _collection = None
 
 
 def _get_collection():
-    """Return the live collection; raises clearly if startup hasn't run yet."""
+    """Return the live collection; raises clearly if lifespan startup hasn't run yet."""
     if _collection is None:
-        raise RuntimeError("ChromaDB collection not initialised — startup_event may have failed")
+        raise RuntimeError("ChromaDB collection not initialised — lifespan startup may have failed")
     return _collection
 
 
 def calculate_market_index(vector: list[float], match_distance: float) -> str:
     """
-    Deterministic valuation from L2 distance to nearest NBA pro.
-    Thresholds calibrated for the v7 8D schema where units are:
-      vel (m/s), arc (°), knee (°), elbow (°), ksync (ms), fluidity, hip (°), balance.
-    Typical well-matched L2 ≈ 30-80; poor match > 300.
+    Deterministic valuation from cosine distance to nearest NBA pro.
+    ChromaDB with hnsw:space='cosine' returns cosine distance in [0, 2]
+    (1 − cosine_similarity). For well-matched weighted 8D vectors:
+      0.00–0.15 = near-identical mechanics  (Elite)
+      0.15–0.35 = strong stylistic overlap  (D1 Prospect)
+      0.35–0.55 = moderate similarity       (High School Elite)
+      0.55–0.75 = weak overlap              (Developmental)
+      0.75+     = divergent mechanics       (Amateur)
     """
-    if match_distance < 40:
+    if match_distance < 0.15:
         return "$1.2M - Elite Tier"
-    if match_distance < 100:
+    if match_distance < 0.35:
         return "$450k - D1 Prospect"
-    if match_distance < 200:
+    if match_distance < 0.55:
         return "$180k - High School Elite"
-    if match_distance < 350:
+    if match_distance < 0.75:
         return "$45k - Developmental"
     return "$8k - Amateur"
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialise ChromaDB on startup; yield for request handling; clean up on shutdown."""
+    _init_chroma()
+    yield
+
 
 # CORS: Production URL + local dev. Set CORS_ORIGINS env to override (comma-separated).
 _DEFAULT_ORIGINS = [
@@ -80,8 +93,7 @@ _CORS_ORIGINS = [
     o.strip() for o in os.environ.get("CORS_ORIGINS", ",".join(_DEFAULT_ORIGINS)).split(",") if o.strip()
 ]
 
-app = FastAPI()
-
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
@@ -89,6 +101,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 _DASHBOARD = Path(__file__).resolve().parent / "dashboard.html"
@@ -151,11 +164,6 @@ def _init_chroma():
         logger.info("ChromaDB health: OK | pre_seeded=%s | players=%s", db_healthy, cnt)
     except Exception:
         logger.info("Collection '%s' ready.", COLLECTION_NAME)
-
-
-@app.on_event("startup")
-async def startup_event():
-    _init_chroma()
 
 
 @app.get("/")
@@ -299,9 +307,11 @@ async def analyze_video(
     video: UploadFile = File(...),
     start_sec: Optional[str] = Form(None),
     end_sec: Optional[str] = Form(None),
+    athlete_name: Optional[str] = Form(None),
+    sport: Optional[str] = Form(None),
 ):
     """Analyze video. Optional start_sec/end_sec restrict to user-selected clip (single shot)."""
-    safe_name = f"temp_{uuid.uuid4()}.mp4"
+    safe_name = os.path.join(tempfile.gettempdir(), f"laksh_{uuid.uuid4()}.mp4")
     with open(safe_name, "wb") as b:
         b.write(await video.read())
     try:
@@ -355,7 +365,9 @@ async def analyze_video(
             if dists and len(dists) > 0 and len(dists[0]) > 0:
                 distance = dists[0][0]
                 match_distance = float(distance)
-                confidence_score = round(max(0.0, min(100.0, 100.0 - (distance * 150))), 1)
+                # Cosine distance ∈ [0, 2]; 0.0 = identical, ~1.0 = orthogonal.
+                # Map to 0–100% confidence: 0.0→100%, 1.0→0% (clamped).
+                confidence_score = round(max(0.0, min(100.0, 100.0 - (distance * 100))), 1)
             if docs and len(docs) > 0 and len(docs[0]) > 0:
                 match_name = str(docs[0][0])
             if metas and len(metas) > 0 and len(metas[0]) > 0 and metas[0][0]:
@@ -408,10 +420,12 @@ async def analyze_video(
             except Exception:
                 deltas = {"error": "Delta calc failed"}
 
+        athlete_label = (athlete_name or "").strip() or "the athlete"
         prompt = f"""
 Act as an elite NBA Biomechanics Director with PhD-level expertise. Authoritative tone. Focus ruthlessly on causality (how input distortions affect output numbers).
 
-The user matched with NBA Pro: {match_name}.
+Athlete: {athlete_label}
+Oracle Match (nearest NBA pro by kinematic fingerprint): {match_name}.
 
 USER STATS: {json.dumps(user_stats)}
 PRO BASELINE: {json.dumps(pro_stats)}
@@ -450,6 +464,8 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         data["kinematic_deltas"] = deltas
 
         out = _normalize_analysis(data, biomech, market_index, match_name, matched_pro)
+        out["athlete_name"] = (athlete_name or "").strip() or "Athlete"
+        out["sport"] = sport or "basketball"
         # Reduce confidence when multiple people detected (improves pro-match reliability)
         det = (biomech.get("telemetry") or {}).get("detection_metadata") or {}
         if det.get("people_detected_max", 1) > 1:

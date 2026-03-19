@@ -801,7 +801,9 @@ const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutR
             {/* Page header */}
             <div style={{marginBottom:'3.5rem'}}>
               <p className="mono" style={{color:'#6B7280',fontSize:'14px',letterSpacing:'.2em',marginBottom:'8px'}}>PRO BIOMECHANICAL COMPARISON</p>
-              <h2 style={{fontSize:'2.75rem',fontWeight:900,letterSpacing:'-.01em',margin:0}}>Oracle Match</h2>
+              <h2 style={{fontSize:'2.75rem',fontWeight:900,letterSpacing:'-.01em',margin:0}}>
+                Oracle Match{athleteName ? <span style={{color:'#00E5FF'}}> — {athleteName}</span> : ''}
+              </h2>
             </div>
 
             {/* Main responsive grid — wraps on narrow screens */}
@@ -1329,6 +1331,8 @@ const App = () => {
     try {
       const form = new FormData();
       form.append('video', videoFile);
+      if (athleteName?.trim()) form.append('athlete_name', athleteName.trim());
+      if (sport) form.append('sport', sport);
       // Clip selection: pass start_sec/end_sec when user selected a range
       const dur = videoDuration;
       const start = clipRange?.start ?? 0;
