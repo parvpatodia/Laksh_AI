@@ -6,6 +6,9 @@ import math
 import cv2
 import numpy as np
 import pandas as pd
+import subprocess
+import tempfile
+import os
 from pathlib import Path
 from scipy.signal import savgol_filter
 
@@ -34,17 +37,57 @@ class KinematicAnalyzer:
         self.video_path = video_path
         self._landmarker = None
 
+    def _prepare_video(self) -> str:
+        """
+        Normalise input video for reliable MediaPipe detection.
+        Fixes the three most common phone-video failure modes in one FFmpeg pass:
+          1. HEVC/H.265 (iPhone default) — re-encode to H.264 which OpenCV decodes reliably
+          2. Variable Frame Rate (VFR) — force constant 30 fps so MediaPipe timestamps are monotonic
+          3. Rotation metadata — bake rotation into pixels so OpenCV sees the correct orientation
+        Returns path to normalised file (caller must clean up).
+        """
+        suffix = Path(self.video_path).suffix or ".mp4"
+        tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        tmp.close()
+        out_path = tmp.name
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", self.video_path,
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-crf", "20",
+            "-vf", "scale=-2:min'(720,ih)',fps=30",   # max 720p, constant 30 fps
+            "-an",                                      # drop audio (not needed)
+            "-movflags", "+faststart",
+            out_path,
+        ]
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=120)
+            if result.returncode != 0 or not os.path.exists(out_path) or os.path.getsize(out_path) < 1024:
+                print(f"FFmpeg normalisation failed (rc={result.returncode}). Using original video.")
+                print(result.stderr.decode(errors="replace")[-800:])
+                os.unlink(out_path)
+                return self.video_path
+            print(f"FFmpeg normalisation OK → {out_path} ({os.path.getsize(out_path)//1024} KB)")
+            return out_path
+        except Exception as exc:
+            print(f"FFmpeg not available or timed out: {exc}. Using original video.")
+            try: os.unlink(out_path)
+            except OSError: pass
+            return self.video_path
+
     def _init_pose(self) -> bool:
         """Initialise MediaPipe Pose Landmarker (Heavy model). Downloads on first run if missing."""
         try:
             from mediapipe.tasks.python import vision
             from mediapipe.tasks.python.core import base_options
-            import ssl 
+            import ssl
             from pathlib import Path
 
             # Use the heavy model for maximum lab-grade accuracy
             model_path = Path(__file__).resolve().parent / "pose_landmarker_heavy.task"
-            
+
             if not model_path.exists():
                 print("Downloading MediaPipe Heavy Model...")
                 import urllib.request
@@ -68,14 +111,20 @@ class KinematicAnalyzer:
 
                 print("Download complete! Booting engine...")
 
+            # Lower thresholds from 0.5 → 0.3 for fast sports motion (validated by PMC 9397457).
+            # At 0.5 many mid-motion frames fail detection; 0.3 recovers ~40% more detections
+            # while staying above noise floor. Biological plausibility check downstream handles outliers.
             opts = vision.PoseLandmarkerOptions(
                 base_options=base_options.BaseOptions(model_asset_path=str(model_path)),
                 running_mode=vision.RunningMode.VIDEO,
                 num_poses=2,  # Detect up to 2 people; enables multi-person awareness in one pass
+                min_pose_detection_confidence=0.3,
+                min_pose_presence_score=0.3,
+                min_tracking_confidence=0.3,
             )
             self._landmarker = vision.PoseLandmarker.create_from_options(opts)
             return True
-            
+
         except Exception as e:
             import traceback
             print(f"FATAL: MediaPipe Tasks API failed to initialize:\n{traceback.format_exc()}")
@@ -92,11 +141,28 @@ class KinematicAnalyzer:
         new_w, new_h = int(w * scale), int(h * scale)
         return cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
-    def extract_frames(self, start_sec: float | None = None, end_sec: float | None = None):
-        """Extract pose data. Optional start_sec/end_sec restrict analysis to a clip (user-selected range)."""
+    def extract_frames(
+        self,
+        start_sec: float | None = None,
+        end_sec: float | None = None,
+        video_path_override: str | None = None,
+    ):
+        """
+        Extract pose data from video.
+        Optional start_sec/end_sec restrict analysis to a clip (user-selected range).
+        video_path_override lets analyze() pass the FFmpeg-normalised path without changing self.video_path.
+
+        Timestamp strategy (VFR fix):
+          Read CAP_PROP_POS_MSEC BEFORE cap.read() so we get the actual container
+          presentation timestamp of the frame about to be decoded — not a synthetic
+          frame_idx/fps estimate. This is critical for MediaPipe VIDEO mode which
+          requires strictly monotonic timestamps; synthetic estimates fail badly on
+          VFR (iPhone) footage. Monotonicity is enforced with last_t_ms.
+        """
         import mediapipe as mp
-        cap = cv2.VideoCapture(self.video_path)
-        if not cap.isOpened(): raise ValueError("Could not open video")
+        path = video_path_override or self.video_path
+        cap = cv2.VideoCapture(path)
+        if not cap.isOpened(): raise ValueError(f"Could not open video: {path}")
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
 
@@ -105,7 +171,7 @@ class KinematicAnalyzer:
         end_frame = total_frames if total_frames > 0 else 999999
         if start_sec is not None and start_sec >= 0:
             start_frame = min(int(start_sec * fps), total_frames - 1) if total_frames > 0 else int(start_sec * fps)
-        if end_sec is not None and end_sec > start_sec:
+        if end_sec is not None and end_sec > (start_sec or 0):
             end_frame = min(int(end_sec * fps), total_frames) if total_frames > 0 else int(end_sec * fps)
 
         joints, sides = ["wrist", "elbow", "shoulder", "hip", "knee", "ankle"], ["left", "right"]
@@ -113,24 +179,32 @@ class KinematicAnalyzer:
         data_2d = {f"{s}_{j}": [] for s in sides for j in joints}
 
         frame_idx = 0
-        max_people = 0  # Track peak simultaneous detections across all frames
+        last_t_ms = -1          # monotonicity guard for MediaPipe VIDEO mode
+        max_people = 0
         try:
             while True:
+                # Read container timestamp BEFORE decoding the frame (VFR-correct)
+                t_ms_raw = int(cap.get(cv2.CAP_PROP_POS_MSEC))
                 ret, frame = cap.read()
-                if not ret: break
+                if not ret:
+                    break
                 # Only process frames within selected clip
                 if frame_idx < start_frame:
                     frame_idx += 1
                     continue
                 if frame_idx >= end_frame:
                     break
+
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 rgb = self._preprocess_frame(rgb)
 
-                # Format for Tasks API Video Mode
-                t_ms = int(1000 * frame_idx / fps)
+                # Enforce strict monotonicity required by MediaPipe VIDEO mode
+                t_ms = max(t_ms_raw, last_t_ms + 1)
+                last_t_ms = t_ms
+
                 mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
                 result = self._landmarker.detect_for_video(mp_img, t_ms)
+
                 # Safe extraction: MediaPipe can return empty lists when no person detected
                 wlm = None
                 plm = None
@@ -143,23 +217,28 @@ class KinematicAnalyzer:
                         wlm = pwlm[0]
                     if plms and len(plms) > 0:
                         plm = plms[0]
-                
-                indices = [(LEFT_WRIST, RIGHT_WRIST, "wrist"), (LEFT_ELBOW, RIGHT_ELBOW, "elbow"),
-                           (LEFT_SHOULDER, RIGHT_SHOULDER, "shoulder"), (LEFT_HIP, RIGHT_HIP, "hip"),
-                           (LEFT_KNEE, RIGHT_KNEE, "knee"), (LEFT_ANKLE, RIGHT_ANKLE, "ankle")]
-                
+
+                indices = [
+                    (LEFT_WRIST, RIGHT_WRIST, "wrist"),
+                    (LEFT_ELBOW, RIGHT_ELBOW, "elbow"),
+                    (LEFT_SHOULDER, RIGHT_SHOULDER, "shoulder"),
+                    (LEFT_HIP, RIGHT_HIP, "hip"),
+                    (LEFT_KNEE, RIGHT_KNEE, "knee"),
+                    (LEFT_ANKLE, RIGHT_ANKLE, "ankle"),
+                ]
+
                 for li, ri, name in indices:
                     data_3d[f"left_{name}"].append(_to_vec3(wlm[li]) if wlm and li < len(wlm) else np.array([np.nan]*3))
                     data_3d[f"right_{name}"].append(_to_vec3(wlm[ri]) if wlm and ri < len(wlm) else np.array([np.nan]*3))
-                    
                     data_2d[f"left_{name}"].append(np.array([plm[li].x, plm[li].y, plm[li].visibility]) if plm and li < len(plm) else np.array([np.nan]*3))
                     data_2d[f"right_{name}"].append(np.array([plm[ri].x, plm[ri].y, plm[ri].visibility]) if plm and ri < len(plm) else np.array([np.nan]*3))
-                
+
                 frame_idx += 1
         finally:
             cap.release()
-            if self._landmarker: self._landmarker.close()
-            
+            if self._landmarker:
+                self._landmarker.close()
+
         return fps, {k: np.array(v) for k, v in data_3d.items()}, {k: np.array(v) for k, v in data_2d.items()}, max_people
 
     def apply_filters(self, data):
@@ -383,6 +462,7 @@ class KinematicAnalyzer:
 
     def analyze(self, start_sec: float | None = None, end_sec: float | None = None):
         """Analyze video. Optional start_sec/end_sec restrict to user-selected clip (e.g. single shot)."""
+        norm_path = None
         try:
             # Extract physical aspect ratio to fix normalized coordinate distortion
             temp_cap = cv2.VideoCapture(self.video_path)
@@ -391,11 +471,30 @@ class KinematicAnalyzer:
             aspect_ratio = (w / h) if h > 0 else 1.0
             temp_cap.release()
 
+            # Normalise video: fix HEVC codec, VFR timestamps, rotation metadata
+            norm_path = self._prepare_video()
+            norm_is_tmp = norm_path != self.video_path
+
             if not self._init_pose(): return self._fallback()
-            fps, raw_3d, raw_2d, max_people = self.extract_frames(start_sec=start_sec, end_sec=end_sec)
-            
-            if len(raw_2d["left_wrist"]) < 5: 
+            fps, raw_3d, raw_2d, max_people = self.extract_frames(
+                start_sec=start_sec, end_sec=end_sec, video_path_override=norm_path
+            )
+
+            if len(raw_2d["left_wrist"]) < 5:
                 print("ERROR: Not enough frames extracted by MediaPipe.")
+                return self._fallback()
+
+            # Actual detection count: count frames where wrist was genuinely detected (not NaN).
+            # Silent fake-success guard: MediaPipe may run but return all-NaN landmarks when it
+            # can't find a pose (fast motion, bad lighting). Downstream angles will use the
+            # hardcoded k_ang < 10 → 135° fallback and look plausible, but telemetry.frames will
+            # be empty after NaN filtering → correction video fails with "no pose frames".
+            lw_det = int(np.sum(~np.isnan(raw_2d["left_wrist"][:, 0])))
+            rw_det = int(np.sum(~np.isnan(raw_2d["right_wrist"][:, 0])))
+            actual_detections = lw_det + rw_det
+            print(f"Actual wrist detections: L={lw_det} R={rw_det} total={actual_detections}")
+            if actual_detections < 5:
+                print("ERROR: Too few real pose detections — returning fallback.")
                 return self._fallback()
             
             f_3d, f_2d = self.apply_filters(raw_3d), self.apply_filters(raw_2d)
@@ -617,8 +716,15 @@ class KinematicAnalyzer:
             }
         except Exception as e:
             import traceback
-            print(f"FATAL KINEMATIC CRASH:\n{traceback.format_exc()}") 
+            print(f"FATAL KINEMATIC CRASH:\n{traceback.format_exc()}")
             return self._fallback()
+        finally:
+            # Clean up the FFmpeg-normalised temp file
+            if norm_path and norm_path != self.video_path:
+                try:
+                    os.unlink(norm_path)
+                except OSError:
+                    pass
 
     def _fallback(self):
         telemetry = {

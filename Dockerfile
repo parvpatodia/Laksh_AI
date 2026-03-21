@@ -3,8 +3,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# System dependencies for MediaPipe/OpenCV
-RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+# System dependencies for MediaPipe/OpenCV + FFmpeg (codec normalisation, VFR fix, rotation)
+RUN apt-get update && apt-get install -y \
+    libgl1 libglib2.0-0 \
+    ffmpeg libavcodec-extra \
+    && rm -rf /var/lib/apt/lists/*
 
 # Python dependencies
 COPY requirements.txt .
