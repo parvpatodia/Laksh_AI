@@ -566,13 +566,14 @@ async def generate_audio_brief(body: dict = None):
 
 @app.post("/generate-correction-video")
 async def generate_correction_video_endpoint(
-    video:            UploadFile = File(None),
-    telemetry_json:   str        = Form(...),
-    stats_json:       str        = Form(...),
-    athlete_name:     str        = Form("Athlete"),
-    kinematic_deltas_json: str   = Form("{}"),
-    sport:            str        = Form("basketball"),
-    pro_match:        str        = Form(""),
+    video:                 UploadFile = File(None),
+    telemetry_json:        str        = Form(...),
+    stats_json:            str        = Form(...),
+    athlete_name:          str        = Form("Athlete"),
+    kinematic_deltas_json: str        = Form("{}"),
+    sport:                 str        = Form("basketball"),
+    pro_match:             str        = Form(""),
+    clip_start_sec:        float      = Form(0.0),
 ):
     """
     Phase 1 correction video endpoint.
@@ -623,6 +624,7 @@ async def generate_correction_video_endpoint(
             sport            = sport or "basketball",
             pro_match        = pro_match or None,
             video_path       = video_path,
+            clip_start_sec   = float(clip_start_sec or 0.0),
         )
         if not video_bytes:
             return {"status": "error", "message": "Correction video could not be rendered (no pose frames available)."}

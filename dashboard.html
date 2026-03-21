@@ -1469,6 +1469,7 @@ const App = () => {
       form.append('kinematic_deltas_json', JSON.stringify(data.kinematic_deltas || {}));
       form.append('sport',                 sport || 'basketball');
       form.append('pro_match',             data.pro_match || '');
+      form.append('clip_start_sec',        String(clipRange?.start || 0));
 
       const r = await fetch(`${API}/generate-correction-video`, {
         method: 'POST',
@@ -1486,7 +1487,7 @@ const App = () => {
       setToast('Network error generating correction video');
     }
     setIsCorrectionLoading(false);
-  }, [data, athleteName, sport, videoFile]);
+  }, [data, athleteName, sport, videoFile, clipRange]);
 
   const handleDownloadCard = useCallback(() => {
     if (!assetImg) return;
