@@ -644,7 +644,7 @@ const IngestionPage = ({ videoFile, onFileSelect, onExecute, isAnalyzing, naviga
 //  NOTE: videoRef/canvasRef live here (in App) and are passed down
 //        so the video element is never unmounted by routing
 // ══════════════════════════════════════════════════════════════
-const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisible, detectionMetadata, validationWarnings, overlayConfig, setOverlayConfig, onVideoMetadataLoaded, videoQualityScore, videoQualityLabel }) => {
+const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisible, detectionMetadata, validationWarnings, overlayConfig, setOverlayConfig, onVideoMetadataLoaded, videoQualityScore, videoQualityLabel, onGenCorrectionVideo, isCorrectionLoading, correctionVideoB64 }) => {
   const s = stats || {};
   const vw = validationWarnings || [];
   const det = detectionMetadata || {};
@@ -750,12 +750,67 @@ const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisibl
             Live Telemetry
           </h3>
         </div>
-        <div className="metric-grid" style={{marginBottom:'2rem'}}>
+        <div className="metric-grid" style={{marginBottom:'3rem'}}>
           {METRICS.map(m=>(
             <MetricCardWithTooltip key={m.key} m={m} value={s[m.key]}
               uncertainty={m.key==='knee_angle'?s.knee_angle_uncertainty:m.key==='elbow_angle'?s.elbow_angle_uncertainty:undefined} />
           ))}
         </div>
+
+        {/* ── Phase 1 Correction Video ─────────────────────────────────── */}
+        {videoObjectUrl && (
+          <div style={{marginBottom:'3rem'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'1.5rem'}}>
+              <span style={{width:'4px',height:'32px',background:'linear-gradient(#00E5FF,#39FF14)',borderRadius:'2px',display:'inline-block',boxShadow:'0 0 12px rgba(0,229,255,.5)'}}/>
+              <h3 style={{fontSize:'1.5rem',fontWeight:800,letterSpacing:'.06em',margin:0,textTransform:'uppercase'}}>
+                Form Correction Preview
+              </h3>
+            </div>
+            <p style={{color:'#9CA3AF',fontSize:'0.95rem',marginBottom:'1.5rem',maxWidth:'640px'}}>
+              Side-by-side comparison of your actual form vs. biomechanically corrected ideal — joints color-coded by quality.
+            </p>
+            <button
+              onClick={onGenCorrectionVideo}
+              disabled={isCorrectionLoading}
+              style={{
+                display:'inline-flex',alignItems:'center',gap:'10px',
+                padding:'14px 28px',borderRadius:'12px',border:'1px solid #00E5FF',
+                background: isCorrectionLoading ? 'rgba(0,229,255,.05)' : 'rgba(0,229,255,.1)',
+                color: isCorrectionLoading ? '#6B7280' : '#00E5FF',
+                fontSize:'14px',fontWeight:700,cursor: isCorrectionLoading ? 'not-allowed' : 'pointer',
+                fontFamily:'Roboto Mono',letterSpacing:'.08em',
+                boxShadow: isCorrectionLoading ? 'none' : '0 0 20px rgba(0,229,255,.15)',
+                transition:'all .2s',
+              }}>
+              {isCorrectionLoading
+                ? <><span style={{display:'inline-block',width:'14px',height:'14px',border:'2px solid #6B7280',borderTopColor:'#00E5FF',borderRadius:'50%',animation:'spin 1s linear infinite'}}/>GENERATING...</>
+                : <>⚡ GENERATE CORRECTION VIDEO</>}
+            </button>
+
+            {correctionVideoB64 && (
+              <div style={{marginTop:'2rem',borderRadius:'16px',overflow:'hidden',border:'1px solid #1F222E',
+                           boxShadow:'0 0 60px rgba(0,229,255,.08)',background:'#000',maxWidth:'1284px'}}>
+                <div style={{padding:'12px 20px',background:'rgba(18,20,28,.9)',borderBottom:'1px solid #1F222E',
+                             display:'flex',alignItems:'center',gap:'12px'}}>
+                  <span className="mono" style={{fontSize:'11px',color:'#6B7280',letterSpacing:'.15em'}}>CORRECTION PREVIEW</span>
+                  <span className="mono" style={{fontSize:'11px',color:'#39FF14'}}>YOUR FORM</span>
+                  <span style={{color:'#374151',fontSize:'11px'}}>◀ ▶</span>
+                  <span className="mono" style={{fontSize:'11px',color:'#00E5FF'}}>CORRECTED FORM</span>
+                  <a href={`data:video/mp4;base64,${correctionVideoB64}`} download="laksh_correction.mp4"
+                     style={{marginLeft:'auto',padding:'4px 12px',borderRadius:'6px',border:'1px solid #1F222E',
+                             background:'rgba(57,255,20,.08)',color:'#39FF14',fontSize:'11px',fontFamily:'Roboto Mono',
+                             fontWeight:700,textDecoration:'none',letterSpacing:'.1em'}}>
+                    ↓ DOWNLOAD
+                  </a>
+                </div>
+                <video
+                  src={`data:video/mp4;base64,${correctionVideoB64}`}
+                  controls loop playsInline autoPlay
+                  style={{width:'100%',display:'block',background:'#000'}}/>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -765,7 +820,7 @@ const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisibl
 //  PAGE 3 — ORACLE MATCH  (#/oracle-match)
 // ══════════════════════════════════════════════════════════════
 const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutReport,
-                           assetImg, assetStatus, onGenAsset, isGenAsset, confidence, athleteName, wittyCatchphrase, validationWarnings, confidenceFactors }) => {
+                           assetImg, assetStatus, onGenAsset, isGenAsset, onDownloadCard, onShareCard, confidence, athleteName, wittyCatchphrase, validationWarnings, confidenceFactors }) => {
   const s  = stats  || {};
   const vs = matchedPro?.vector_stats || {};
   const d  = deltas || {};
@@ -1078,6 +1133,32 @@ const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutR
                             display:'flex',alignItems:'center',gap:'12px',width:'fit-content'}}>
                     <IcoSpark sz={20}/>{isGenAsset?'Synthesizing…':'Confirm 4D Synthesis'}
                   </button>
+
+                  {assetImg && (
+                    <div style={{display:'flex',gap:'12px',flexWrap:'wrap'}}>
+                      <button onClick={onDownloadCard}
+                        style={{display:'inline-flex',alignItems:'center',gap:'8px',
+                                padding:'12px 22px',borderRadius:'10px',
+                                border:'1px solid rgba(57,255,20,.4)',
+                                background:'rgba(57,255,20,.08)',color:'#39FF14',
+                                fontSize:'13px',fontWeight:700,cursor:'pointer',
+                                fontFamily:'Roboto Mono',letterSpacing:'.08em',
+                                boxShadow:'0 0 16px rgba(57,255,20,.1)',transition:'all .2s'}}>
+                        ↓ Download Card
+                      </button>
+                      <button onClick={onShareCard}
+                        style={{display:'inline-flex',alignItems:'center',gap:'8px',
+                                padding:'12px 22px',borderRadius:'10px',
+                                border:'1px solid rgba(0,229,255,.4)',
+                                background:'rgba(0,229,255,.08)',color:'#00E5FF',
+                                fontSize:'13px',fontWeight:700,cursor:'pointer',
+                                fontFamily:'Roboto Mono',letterSpacing:'.08em',
+                                boxShadow:'0 0 16px rgba(0,229,255,.1)',transition:'all .2s'}}>
+                        ↗ Share
+                      </button>
+                    </div>
+                  )}
+
                   <p className="mono" style={{fontSize:'12px',color:'#374151',letterSpacing:'.1em'}}>
                     MINT PHASE: PRE-LAUNCH // RARITY: ETHEREAL
                   </p>
@@ -1158,6 +1239,8 @@ const App = () => {
   const [videoDuration, setVideoDuration] = useState(null);
   const [clipRange, setClipRange] = useState({ start: 0, end: null });
   const [sport, setSport] = useState('basketball');
+  const [correctionVideoB64, setCorrectionVideoB64] = useState(null);
+  const [isCorrectionLoading, setIsCorrectionLoading] = useState(false);
 
   // Video & canvas refs — live here so they persist across route changes
   const videoRef  = useRef(null);
@@ -1371,6 +1454,84 @@ const App = () => {
   }, [data]);
 
   // ── 4D Asset — hyper-personalized data card ───────────────────
+  const handleGenCorrectionVideo = useCallback(async () => {
+    if (!data?.telemetry) return;
+    setIsCorrectionLoading(true);
+    setCorrectionVideoB64(null);
+    try {
+      // Send as multipart/form-data so the backend can overlay on the actual
+      // user video frame-by-frame. JSON fields are serialized as form strings.
+      const form = new FormData();
+      if (videoFile) form.append('video', videoFile);
+      form.append('telemetry_json',        JSON.stringify(data.telemetry));
+      form.append('stats_json',            JSON.stringify(data.stats || {}));
+      form.append('athlete_name',          athleteName || 'Athlete');
+      form.append('kinematic_deltas_json', JSON.stringify(data.kinematic_deltas || {}));
+      form.append('sport',                 sport || 'basketball');
+      form.append('pro_match',             data.pro_match || '');
+
+      const r = await fetch(`${API}/generate-correction-video`, {
+        method: 'POST',
+        body: form,
+        // DO NOT set Content-Type header — browser sets it with correct boundary
+      });
+      const d = await r.json();
+      if (d.status === 'success' && d.video_base64) {
+        setCorrectionVideoB64(d.video_base64);
+      } else {
+        setToast(`Correction video: ${d.message || 'Unknown error'}`);
+      }
+    } catch (e) {
+      console.error('Correction video error:', e);
+      setToast('Network error generating correction video');
+    }
+    setIsCorrectionLoading(false);
+  }, [data, athleteName, sport, videoFile]);
+
+  const handleDownloadCard = useCallback(() => {
+    if (!assetImg) return;
+    const ext = assetImg.includes('svg') ? 'svg' : 'jpg';
+    const a = document.createElement('a');
+    a.href = assetImg;
+    a.download = `laksh_${(athleteName || 'signature').replace(/\s+/g, '_').toLowerCase()}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, [assetImg, athleteName]);
+
+  const handleShareCard = useCallback(async () => {
+    if (!assetImg) return;
+    try {
+      const res  = await fetch(assetImg);
+      const blob = await res.blob();
+      const ext  = blob.type.includes('svg') ? 'svg' : 'jpg';
+      const file = new File([blob], `laksh_${(athleteName || 'signature').replace(/\s+/g, '_').toLowerCase()}.${ext}`, { type: blob.type });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `${athleteName || 'Athlete'} — Laksh.ai Biometric Signature`,
+          text:  `Check out my biomechanics analysis on Laksh.ai`,
+          files: [file],
+        });
+      } else if (navigator.share) {
+        // No file share support — share URL only
+        await navigator.share({
+          title: `${athleteName || 'Athlete'} — Laksh.ai Biometric Signature`,
+          url:   window.location.href,
+        });
+      } else {
+        // Fallback: copy link + toast
+        await navigator.clipboard.writeText(window.location.href);
+        setToast('Link copied to clipboard!');
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        // Share was cancelled or failed — try clipboard fallback
+        try { await navigator.clipboard.writeText(window.location.href); setToast('Link copied to clipboard!'); }
+        catch { setToast('Download the card to share it.'); }
+      }
+    }
+  }, [assetImg, athleteName]);
+
   const handleGenAsset = useCallback(async () => {
     setIsGenAsset(true); setAssetImg(null); setAssetStatus('SYNTHESIZING LAKSH.AI SIGNATURE FOR USER...');
     try {
@@ -1439,7 +1600,10 @@ const App = () => {
                           validationWarnings={data?.validation_warnings}
                           overlayConfig={overlayConfig} setOverlayConfig={setOverlayConfig}
                           onVideoMetadataLoaded={d=>{setVideoDuration(d);setClipRange({start:0,end:d});}}
-                          videoQualityScore={data?.video_quality_score} videoQualityLabel={data?.video_quality_label}/>
+                          videoQualityScore={data?.video_quality_score} videoQualityLabel={data?.video_quality_label}
+                          onGenCorrectionVideo={handleGenCorrectionVideo}
+                          isCorrectionLoading={isCorrectionLoading}
+                          correctionVideoB64={correctionVideoB64}/>
       </div>
 
       {isOracle && <OracleMatchPage stats={s} proMatch={data?.pro_match}
@@ -1447,6 +1611,7 @@ const App = () => {
                      feedback={data?.athlete_feedback} scoutReport={data?.scout_report}
                      assetImg={assetImg} assetStatus={assetStatus}
                      onGenAsset={handleGenAsset} isGenAsset={isGenAsset}
+                     onDownloadCard={handleDownloadCard} onShareCard={handleShareCard}
                      confidence={data?.confidence} athleteName={athleteName}
                      wittyCatchphrase={data?.witty_catchphrase}
                      validationWarnings={data?.validation_warnings}

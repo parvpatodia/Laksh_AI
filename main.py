@@ -23,6 +23,7 @@ import chromadb
 from gtts import gTTS
 
 from physics_engine import KinematicAnalyzer
+from correction_engine import generate_correction_video
 
 # Google Cloud TTS (Studio Voices) — optional; falls back to gTTS if credentials unavailable
 try:
@@ -561,3 +562,77 @@ async def generate_audio_brief(body: dict = None):
         return {"status": "success", "audio_base64": base64.b64encode(audio_bytes).decode("utf-8")}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+@app.post("/generate-correction-video")
+async def generate_correction_video_endpoint(
+    video:            UploadFile = File(None),
+    telemetry_json:   str        = Form(...),
+    stats_json:       str        = Form(...),
+    athlete_name:     str        = Form("Athlete"),
+    kinematic_deltas_json: str   = Form("{}"),
+    sport:            str        = Form("basketball"),
+    pro_match:        str        = Form(""),
+):
+    """
+    Phase 1 correction video endpoint.
+
+    Accepts multipart/form-data:
+      video                 — original uploaded video file (optional but strongly recommended)
+      telemetry_json        — JSON string of telemetry block from /analyze-video
+      stats_json            — JSON string of 8D metrics block
+      athlete_name          — athlete display name
+      kinematic_deltas_json — JSON string of kinematic_deltas (enables pro-matched correction)
+      sport                 — sport ID (basketball / tennis / golf)
+      pro_match             — matched pro name for subtitle
+
+    Returns: { "status": "success", "video_base64": "<base64-mp4>" }
+    """
+    try:
+        telemetry        = json.loads(telemetry_json or "{}")
+        stats            = json.loads(stats_json or "{}")
+        kinematic_deltas = json.loads(kinematic_deltas_json or "{}") or None
+    except json.JSONDecodeError as e:
+        return {"status": "error", "message": f"Invalid JSON in form fields: {e}"}
+
+    if not telemetry:
+        return {"status": "error", "message": "Missing telemetry data."}
+
+    # Save uploaded video to a temp file so OpenCV can read it frame-by-frame
+    video_path = None
+    tmp_video_path = None
+    if video is not None:
+        try:
+            tmp_video_fd, tmp_video_path = tempfile.mkstemp(
+                suffix=os.path.splitext(video.filename or ".mp4")[1] or ".mp4",
+                dir=tempfile.gettempdir(),
+            )
+            with os.fdopen(tmp_video_fd, "wb") as f:
+                content = await video.read()
+                f.write(content)
+            video_path = tmp_video_path
+        except Exception as e:
+            logger.warning("Could not save uploaded video for correction engine: %s", e)
+            video_path = None
+
+    try:
+        video_bytes = generate_correction_video(
+            telemetry, stats,
+            athlete_name     = (athlete_name or "Athlete").strip() or "Athlete",
+            kinematic_deltas = kinematic_deltas,
+            sport            = sport or "basketball",
+            pro_match        = pro_match or None,
+            video_path       = video_path,
+        )
+        if not video_bytes:
+            return {"status": "error", "message": "Correction video could not be rendered (no pose frames available)."}
+        return {
+            "status": "success",
+            "video_base64": base64.b64encode(video_bytes).decode("utf-8"),
+        }
+    except Exception as e:
+        logger.exception("Correction video generation failed")
+        return {"status": "error", "message": str(e)}
+    finally:
+        if tmp_video_path and os.path.exists(tmp_video_path):
+            os.unlink(tmp_video_path)
