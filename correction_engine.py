@@ -182,6 +182,34 @@ def _build_anchor_frames(dip: dict, release: dict,
     return out
 
 
+def _build_projected_frames(anchor: dict, fps: float) -> list[dict]:
+    """
+    Project a plausible motion sequence from a single anchor frame.
+    Used only when real telemetry frames are unavailable.
+    """
+    j = anchor.get("joints") or {}
+    t0 = float(anchor.get("time_sec") or 0.0)
+    if not j or _has_nan(j):
+        return []
+    timeline = [t0 - 0.25, t0 - 0.12, t0, t0 + 0.12, t0 + 0.25, t0 + 0.45, t0 + 0.7]
+    out = []
+    for idx, t in enumerate(timeline):
+        phase = idx / max(1, len(timeline) - 1)
+        joints = {}
+        for name, coords in j.items():
+            try:
+                x = float(coords[0])
+                y = float(coords[1])
+            except (TypeError, ValueError, IndexError):
+                continue
+            # Light projection towards follow-through to keep motion coherent.
+            y_shift = -0.035 * math.sin(math.pi * min(1.0, phase))
+            x_shift = 0.01 * (phase - 0.5)
+            joints[name] = [float(np.clip(x + x_shift, 0.0, 1.0)), float(np.clip(y + y_shift, 0.0, 1.0))]
+        out.append({"time_sec": round(t, 3), "joints": joints, "_synthetic": True, "_projected": True})
+    return out
+
+
 def _nearest_joints(index: list, t: float) -> dict | None:
     """Binary-search the frame index for the closest time to t."""
     if not index:
@@ -426,6 +454,7 @@ def _render_frame_pair(
     knee_angle:  float,
     elbow_angle: float,
     is_synthetic:bool,
+    is_projected:bool,
     letterbox:   tuple,        # (x0, y0, nw, nh)  or None for skeleton-only
 ) -> np.ndarray:
     """
@@ -481,6 +510,8 @@ def _render_frame_pair(
     _draw_correction_arrows(right_bg, joints_px, corr_px)
     _draw_hud_bar(right_bg, "CORRECTED FORM", subtitle_r, CYAN)
     _label(right_bg, phase, (PANEL_W - 160, 30), GREEN, scale=0.50)
+    if is_projected:
+        _draw_metric_badge(right_bg, "PREDICTED MOTION - LOW CONFIDENCE", YELLOW, 110)
 
     if abs(frame_t - dip_t) < 0.22:
         _draw_metric_badge(right_bg,
@@ -506,7 +537,7 @@ def generate_correction_video(
     pro_match:          str | None   = None,
     video_path:         str | None   = None,
     clip_start_sec:     float        = 0.0,
-) -> bytes | None:
+) -> dict | None:
     """
     Build a side-by-side before/after correction MP4.
 
@@ -536,6 +567,7 @@ def generate_correction_video(
 
     # ── 1. Ensure we have at least a minimal frame set ───────────────────────
     is_synthetic = False
+    is_projected = False
     frames = _build_frame_index(frames)       # already filters NaN & sorts
 
     if len(frames) < 4:
@@ -548,18 +580,37 @@ def generate_correction_video(
             frames = _build_frame_index(anchor)
             is_synthetic = True
         else:
-            logger.error("No usable pose data (frames and anchors both empty). "
-                         "Analysis likely hit fallback — video may lack a clear shot.")
-            return None
+            projected = _build_projected_frames(dip or release, fps_tel)
+            if projected:
+                frames = _build_frame_index(projected)
+                is_synthetic = True
+                is_projected = True
+            else:
+                fallback_anchor = release if (release.get("joints") or {}) else dip
+                projected = _build_projected_frames(fallback_anchor or {}, fps_tel)
+                if projected:
+                    frames = _build_frame_index(projected)
+                    is_synthetic = True
+                    is_projected = True
+                else:
+                    logger.error("No usable pose data (frames/anchors/projected all empty).")
+                    return None
 
     if not frames:
         return None
 
     # ── 2. Build correction targets & subtitle ───────────────────────────────
     targets     = _build_targets(stats, kinematic_deltas, sport)
-    knee_angle  = stats.get("knee_angle",  targets["knee_angle"])
-    elbow_angle = stats.get("elbow_angle", targets["elbow_angle"])
-    arc_deg     = stats.get("shot_arc_deg",targets["shot_arc_deg"])
+    def _num(v, d):
+        try:
+            if v is None:
+                return float(d)
+            return float(v)
+        except (TypeError, ValueError):
+            return float(d)
+    knee_angle  = _num(stats.get("knee_angle"), targets["knee_angle"])
+    elbow_angle = _num(stats.get("elbow_angle"), targets["elbow_angle"])
+    arc_deg     = _num(stats.get("shot_arc_deg"), targets["shot_arc_deg"])
 
     if kinematic_deltas and "error" not in (kinematic_deltas or {}):
         source_label = f"Target: {pro_match or 'Matched Pro'} mechanics"
@@ -645,7 +696,7 @@ def generate_correction_video(
                     t_rel, dip_t, release_t,
                     athlete_name, subtitle_r,
                     knee_angle, elbow_angle,
-                    is_synthetic, box,
+                    is_synthetic, is_projected, box,
                 )
                 writer.write(out_frame)
 
@@ -662,7 +713,7 @@ def generate_correction_video(
                     t_val, dip_t, release_t,
                     athlete_name, subtitle_r,
                     knee_angle, elbow_angle,
-                    is_synthetic, None,
+                    is_synthetic, is_projected, None,
                 )
                 writer.write(out_frame)
 
@@ -682,4 +733,8 @@ def generate_correction_video(
         logger.error("Output video too small (%d bytes) — no frames were written", len(video_bytes))
         return None
 
-    return video_bytes
+    return {
+        "video_bytes": video_bytes,
+        "render_mode": "projected" if is_projected else ("synthetic" if is_synthetic else "observed"),
+        "render_confidence": 0.45 if is_projected else (0.65 if is_synthetic else 0.9),
+    }

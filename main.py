@@ -275,8 +275,12 @@ def _normalize_analysis(
         feedback = [{"timestamp": "", "category": "general", "observation": str(feedback)}]
     telemetry = biomech.get("telemetry") or {}
     vq = telemetry.get("video_quality") or {}
+    metric_status = biomech.get("metric_status") or {}
     return {
         **data,
+        "analysis_mode": biomech.get("analysis_mode") or "full",
+        "fallback_reason_codes": biomech.get("fallback_reason_codes") or [],
+        "metric_status": metric_status,
         "athlete_action": data.get("athlete_action") or "—",
         "witty_catchphrase": data.get("witty_catchphrase") or "",
         "stats": {
@@ -334,15 +338,22 @@ async def analyze_video(
         # Weights must mirror db_seeder.FEATURE_WEIGHTS exactly so query and index
         # live in the same normalised L2 space.
         FEATURE_WEIGHTS = [16.6, 3.3, 1.25, 1.66, 0.33, 1.66, 2.22, 2.0]
+        def _num(v, default):
+            try:
+                if v is None:
+                    return float(default)
+                return float(v)
+            except (TypeError, ValueError):
+                return float(default)
         raw_vector = [
-            float(biomech.get("release_velocity_mps", 7.0)),
-            float(biomech.get("shot_arc_deg", 45.0)),
-            float(biomech.get("knee_angle", 145.0)),
-            float(biomech.get("elbow_angle", 165.0)),
-            float(biomech.get("kinetic_sync_ms", 150.0)),
-            float(biomech.get("fluidity_score", 65.0)),
-            float(biomech.get("hip_rotation_deg", 5.0)),
-            float(biomech.get("balance_index", 85.0)),
+            _num(biomech.get("release_velocity_mps"), 7.0),
+            _num(biomech.get("shot_arc_deg"), 45.0),
+            _num(biomech.get("knee_angle"), 145.0),
+            _num(biomech.get("elbow_angle"), 165.0),
+            _num(biomech.get("kinetic_sync_ms"), 150.0),
+            _num(biomech.get("fluidity_score"), 65.0),
+            _num(biomech.get("hip_rotation_deg"), 5.0),
+            _num(biomech.get("balance_index"), 85.0),
         ]
         query_vector = [v * w for v, w in zip(raw_vector, FEATURE_WEIGHTS)]
 
@@ -467,6 +478,7 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         out = _normalize_analysis(data, biomech, market_index, match_name, matched_pro)
         out["athlete_name"] = (athlete_name or "").strip() or "Athlete"
         out["sport"] = sport or "basketball"
+        analysis_mode = biomech.get("analysis_mode") or "full"
         # Reduce confidence when multiple people detected (improves pro-match reliability)
         det = (biomech.get("telemetry") or {}).get("detection_metadata") or {}
         if det.get("people_detected_max", 1) > 1:
@@ -475,7 +487,23 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         vw = (biomech.get("telemetry") or {}).get("validation_warnings") or []
         if vw:
             confidence_score = round(confidence_score * max(0.7, 1.0 - len(vw) * 0.03), 1)
+        # Calibrate with per-metric reliability so confidence reflects data quality.
+        metric_status = biomech.get("metric_status") or {}
+        if metric_status:
+            available = [m for m in metric_status.values() if m.get("source") != "unavailable"]
+            availability_ratio = len(available) / max(1, len(metric_status))
+            mean_metric_conf = (
+                sum(float(m.get("confidence", 0.0)) for m in available) / len(available)
+                if available else 0.0
+            )
+            reliability_factor = 0.55 + (0.45 * ((0.6 * mean_metric_conf) + (0.4 * availability_ratio)))
+            confidence_score = round(confidence_score * reliability_factor, 1)
+        if analysis_mode == "partial":
+            confidence_score = round(confidence_score * 0.9, 1)
+        elif analysis_mode == "fallback":
+            confidence_score = min(confidence_score, 25.0)
         out["confidence"] = confidence_score
+        out["analysis_reliability_score"] = round(float(confidence_score), 1)
         out["detection_metadata"] = det
         out["validation_warnings"] = vw
         # Phase 2: video quality, confidence factors for transparent attribution
@@ -617,7 +645,7 @@ async def generate_correction_video_endpoint(
             video_path = None
 
     try:
-        video_bytes = generate_correction_video(
+        render_result = generate_correction_video(
             telemetry, stats,
             athlete_name     = (athlete_name or "Athlete").strip() or "Athlete",
             kinematic_deltas = kinematic_deltas,
@@ -626,11 +654,16 @@ async def generate_correction_video_endpoint(
             video_path       = video_path,
             clip_start_sec   = float(clip_start_sec or 0.0),
         )
-        if not video_bytes:
+        if not render_result:
             return {"status": "error", "message": "Correction video could not be rendered (no pose frames available)."}
+        video_bytes = render_result.get("video_bytes")
+        if not video_bytes:
+            return {"status": "error", "message": "Correction video could not be rendered (empty output)."}
         return {
             "status": "success",
             "video_base64": base64.b64encode(video_bytes).decode("utf-8"),
+            "render_mode": render_result.get("render_mode", "observed"),
+            "render_confidence": render_result.get("render_confidence", 0.9),
         }
     except Exception as e:
         logger.exception("Correction video generation failed")

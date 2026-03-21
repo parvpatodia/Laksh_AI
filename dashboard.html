@@ -284,11 +284,14 @@ const IcoInfo   = I(<><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="
 // ══════════════════════════════════════════════════════════════
 //  METRIC CARD WITH TOOLTIP — modal overlay (no overlap with bottom cards)
 // ══════════════════════════════════════════════════════════════
-const MetricCardWithTooltip = ({ m, value, uncertainty, tooltip }) => {
+const MetricCardWithTooltip = ({ m, value, uncertainty, tooltip, metricStatus }) => {
   const [show, setShow] = useState(false);
   const tt = tooltip || METRIC_TOOLTIPS[m.key];
   const hasTooltip = !!tt;
   const hasUncertainty = (m.key === 'knee_angle' || m.key === 'elbow_angle') && uncertainty != null && uncertainty > 0;
+  const st = metricStatus || null;
+  const stLabel = st?.source ? st.source.toUpperCase() : null;
+  const stColor = st?.source === 'measured' ? '#39FF14' : (st?.source === 'predicted' ? '#00E5FF' : '#ff9500');
   return (
     <>
       <div className="metric-card glass-panel" style={{position:'relative',borderRadius:'20px',padding:'2rem',
@@ -311,6 +314,12 @@ const MetricCardWithTooltip = ({ m, value, uncertainty, tooltip }) => {
           {' '}
           <span style={{fontSize:'1.1rem',color:'#374151',fontWeight:400,marginLeft:'6px'}}>{m.unit}</span>
         </p>
+        {stLabel && (
+          <p className="mono" style={{margin:0,fontSize:'10px',letterSpacing:'.12em',color:stColor}}>
+            {stLabel}{st?.confidence!=null ? ` • ${(st.confidence*100).toFixed(0)}%` : ''}
+            {st?.reason ? ` • ${st.reason.replaceAll('_',' ')}` : ''}
+          </p>
+        )}
       </div>
       {/* Modal overlay — avoids overlap with cards below */}
       {hasTooltip && show && (
@@ -644,8 +653,9 @@ const IngestionPage = ({ videoFile, onFileSelect, onExecute, isAnalyzing, naviga
 //  NOTE: videoRef/canvasRef live here (in App) and are passed down
 //        so the video element is never unmounted by routing
 // ══════════════════════════════════════════════════════════════
-const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisible, detectionMetadata, validationWarnings, overlayConfig, setOverlayConfig, onVideoMetadataLoaded, videoQualityScore, videoQualityLabel, onGenCorrectionVideo, isCorrectionLoading, correctionVideoB64 }) => {
+const BiomechanicsPage = ({ stats, metricStatus, analysisMode, videoRef, canvasRef, videoObjectUrl, isVisible, detectionMetadata, validationWarnings, overlayConfig, setOverlayConfig, onVideoMetadataLoaded, videoQualityScore, videoQualityLabel, onGenCorrectionVideo, isCorrectionLoading, correctionVideoB64, correctionRenderMode, correctionRenderConfidence }) => {
   const s = stats || {};
+  const ms = metricStatus || {};
   const vw = validationWarnings || [];
   const det = detectionMetadata || {};
   const algorithms = det.algorithms || ['MediaPipe Pose'];
@@ -702,6 +712,16 @@ const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisibl
             </ul>
           </div>
         )}
+        {analysisMode && analysisMode !== 'full' && (
+          <div style={{maxWidth:'900px',margin:'0 auto 1rem',padding:'12px 20px',background:'rgba(255,149,0,.12)',borderLeft:'4px solid #ff9500',borderRadius:'0 10px 10px 0'}}>
+            <p className="mono" style={{fontSize:'11px',color:'#ff9500',letterSpacing:'.12em',marginBottom:'8px'}}>ANALYSIS MODE</p>
+            <p style={{margin:0,color:'#D1D5DB',fontSize:'0.92rem'}}>
+              {analysisMode === 'partial'
+                ? 'Partial mode. Measured metrics are shown as measured. Lower-quality metrics are marked predicted or unavailable.'
+                : 'Fallback mode. This clip did not provide enough reliable motion data for full analysis.'}
+            </p>
+          </div>
+        )}
         {/* Overlay toggles — model-agnostic (works with MediaPipe, RTMPose, ViTPose) */}
         {videoObjectUrl && overlayConfig && setOverlayConfig && (
           <div style={{maxWidth:'900px',margin:'0 auto 1rem',display:'flex',flexWrap:'wrap',gap:'10px',alignItems:'center'}}>
@@ -753,7 +773,8 @@ const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisibl
         <div className="metric-grid" style={{marginBottom:'3rem'}}>
           {METRICS.map(m=>(
             <MetricCardWithTooltip key={m.key} m={m} value={s[m.key]}
-              uncertainty={m.key==='knee_angle'?s.knee_angle_uncertainty:m.key==='elbow_angle'?s.elbow_angle_uncertainty:undefined} />
+              uncertainty={m.key==='knee_angle'?s.knee_angle_uncertainty:m.key==='elbow_angle'?s.elbow_angle_uncertainty:undefined}
+              metricStatus={ms[m.key]} />
           ))}
         </div>
 
@@ -796,6 +817,11 @@ const BiomechanicsPage = ({ stats, videoRef, canvasRef, videoObjectUrl, isVisibl
                   <span className="mono" style={{fontSize:'11px',color:'#39FF14'}}>YOUR FORM</span>
                   <span style={{color:'#374151',fontSize:'11px'}}>◀ ▶</span>
                   <span className="mono" style={{fontSize:'11px',color:'#00E5FF'}}>CORRECTED FORM</span>
+                  {correctionRenderMode && (
+                    <span className="mono" style={{fontSize:'10px',color:correctionRenderMode==='observed'?'#39FF14':'#ff9500'}}>
+                      {correctionRenderMode.toUpperCase()} {(correctionRenderConfidence!=null)?`${Math.round(correctionRenderConfidence*100)}%`:''}
+                    </span>
+                  )}
                   <a href={`data:video/mp4;base64,${correctionVideoB64}`} download="laksh_correction.mp4"
                      style={{marginLeft:'auto',padding:'4px 12px',borderRadius:'6px',border:'1px solid #1F222E',
                              background:'rgba(57,255,20,.08)',color:'#39FF14',fontSize:'11px',fontFamily:'Roboto Mono',
@@ -1241,6 +1267,8 @@ const App = () => {
   const [sport, setSport] = useState('basketball');
   const [correctionVideoB64, setCorrectionVideoB64] = useState(null);
   const [isCorrectionLoading, setIsCorrectionLoading] = useState(false);
+  const [correctionRenderMode, setCorrectionRenderMode] = useState(null);
+  const [correctionRenderConfidence, setCorrectionRenderConfidence] = useState(null);
 
   // Video & canvas refs — live here so they persist across route changes
   const videoRef  = useRef(null);
@@ -1458,6 +1486,8 @@ const App = () => {
     if (!data?.telemetry) return;
     setIsCorrectionLoading(true);
     setCorrectionVideoB64(null);
+    setCorrectionRenderMode(null);
+    setCorrectionRenderConfidence(null);
     try {
       // Send as multipart/form-data so the backend can overlay on the actual
       // user video frame-by-frame. JSON fields are serialized as form strings.
@@ -1479,6 +1509,8 @@ const App = () => {
       const d = await r.json();
       if (d.status === 'success' && d.video_base64) {
         setCorrectionVideoB64(d.video_base64);
+        setCorrectionRenderMode(d.render_mode || null);
+        setCorrectionRenderConfidence(d.render_confidence ?? null);
       } else {
         setToast(`Correction video: ${d.message || 'Unknown error'}`);
       }
@@ -1595,7 +1627,8 @@ const App = () => {
 
       {/* Biomechanics page — always mounted when video loaded, hidden otherwise */}
       <div style={{display: isBio ? 'block' : 'none'}}>
-        <BiomechanicsPage stats={s} videoRef={videoRef} canvasRef={canvasRef}
+        <BiomechanicsPage stats={s} metricStatus={data?.metric_status} analysisMode={data?.analysis_mode}
+                          videoRef={videoRef} canvasRef={canvasRef}
                           videoObjectUrl={videoObjUrl} isVisible={isBio}
                           detectionMetadata={data?.detection_metadata}
                           validationWarnings={data?.validation_warnings}
@@ -1604,7 +1637,9 @@ const App = () => {
                           videoQualityScore={data?.video_quality_score} videoQualityLabel={data?.video_quality_label}
                           onGenCorrectionVideo={handleGenCorrectionVideo}
                           isCorrectionLoading={isCorrectionLoading}
-                          correctionVideoB64={correctionVideoB64}/>
+                          correctionVideoB64={correctionVideoB64}
+                          correctionRenderMode={correctionRenderMode}
+                          correctionRenderConfidence={correctionRenderConfidence}/>
       </div>
 
       {isOracle && <OracleMatchPage stats={s} proMatch={data?.pro_match}
