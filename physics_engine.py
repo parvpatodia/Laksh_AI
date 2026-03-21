@@ -119,7 +119,7 @@ class KinematicAnalyzer:
                 running_mode=vision.RunningMode.VIDEO,
                 num_poses=2,  # Detect up to 2 people; enables multi-person awareness in one pass
                 min_pose_detection_confidence=0.3,
-                min_pose_presence_score=0.3,
+                min_pose_presence_confidence=0.3,
                 min_tracking_confidence=0.3,
             )
             self._landmarker = vision.PoseLandmarker.create_from_options(opts)
