@@ -116,7 +116,7 @@ Each sport config defines:
 
 ### Not Yet Wired
 
-- `main.py` and `physics_engine.py` are basketball-hardcoded (wrist dip/release, 8D vector).
+- `app/main.py` and `app/physics_engine.py` are basketball-hardcoded (wrist dip/release, 8D vector).
 - Event detection, metric formulas, and pro matching assume basketball.
 
 ### Migration Path (Long-Term)

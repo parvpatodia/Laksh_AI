@@ -1,19 +1,19 @@
-# Laksh.ai Documentation
+# Laksh.ai documentation
 
-Central index for technical documentation.
-
-## For Developers
+## Guides (active)
 
 | Document | Purpose |
 |----------|---------|
-| [GOLDEN_VIDEO_GUIDE.md](./GOLDEN_VIDEO_GUIDE.md) | How to create a golden video for regression testing |
-| [PHASED_EXECUTION_PLAN.md](./PHASED_EXECUTION_PLAN.md) | Concrete Phase 1–3 execution plan and procedures |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | End-to-end system boundaries and data flow |
+| [VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md) | Validate metrics for investors / due diligence |
+| [VIDEO_ANALYSIS_LIMITATIONS.md](./VIDEO_ANALYSIS_LIMITATIONS.md) | When analysis fails and why |
+| [evaluation_set_spec.md](./evaluation_set_spec.md) | Evaluation reel taxonomy and benchmark rules |
+| [GOLDEN_VIDEO_GUIDE.md](./GOLDEN_VIDEO_GUIDE.md) | Golden video regression setup |
+| [METRIC_METHODOLOGY.md](./METRIC_METHODOLOGY.md) | Per-metric definitions |
+| [MULTI_SPORT_STRATEGY.md](./MULTI_SPORT_STRATEGY.md) | Future multi-sport direction |
 
-## Planning & Strategy (Root)
+## Planning archive
 
-| Document | Purpose |
-|----------|---------|
-| [RELIABILITY_IMPROVEMENT_PLAN.md](../RELIABILITY_IMPROVEMENT_PLAN.md) | Full reliability roadmap |
-| [TECHNICAL_ROADMAP.md](../TECHNICAL_ROADMAP.md) | 5-year technical vision |
-| [VALIDATION_STRATEGY.md](../VALIDATION_STRATEGY.md) | How to validate metrics for investors |
-| [VIDEO_ANALYSIS_LIMITATIONS.md](../VIDEO_ANALYSIS_LIMITATIONS.md) | When the system fails and why |
+Older roadmaps and audits live in [planning/](planning/) (reference only; may not match current code).
+
+For setup and tests, see the repo root **[CONTRIBUTING.md](../CONTRIBUTING.md)**.

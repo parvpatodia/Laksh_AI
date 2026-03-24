@@ -27,7 +27,7 @@ def test_physics_engine_reproduces_golden_output():
     """
     import json
 
-    from physics_engine import KinematicAnalyzer
+    from app.physics_engine import KinematicAnalyzer
 
     result = KinematicAnalyzer(str(GOLDEN_VIDEO)).analyze()
     if result.get("analysis_mode") == "fallback":

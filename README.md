@@ -8,6 +8,7 @@ Upload a jump-shot video. The system extracts an 8-dimensional kinematic fingerp
 
 ## Table of Contents
 
+- [Project layout](#project-layout)
 - [What It Does](#what-it-does)
 - [Architecture Overview](#architecture-overview)
 - [What's Implemented](#whats-implemented)
@@ -17,7 +18,22 @@ Upload a jump-shot video. The system extracts an 8-dimensional kinematic fingerp
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
 - [Technical Limitations](#technical-limitations)
+- [Evaluation reel](#evaluation-reel)
 - [License](#license)
+
+---
+
+## Project layout
+
+| Path | Purpose |
+|------|---------|
+| `app/` | Application package: `main.py` (FastAPI), `physics_engine.py`, `correction_engine.py`, `db_seeder.py`, `sport_configs.py` |
+| `static/` | `dashboard.html` (SPA UI) |
+| `tests/` | Pytest suite |
+| `scripts/` | Dev/ops helpers (pose download, benchmarks, golden JSON) |
+| `evaluation/` | Benchmark manifests and (local) clip folder |
+| `docs/` | Guides + `docs/planning/` archive |
+| Repo root | `requirements.txt`, `Dockerfile`, `Makefile`, `chroma_db/`, `pose_landmarker_heavy.task` (downloaded) |
 
 ---
 
@@ -59,8 +75,8 @@ Upload a jump-shot video. The system extracts an 8-dimensional kinematic fingerp
 
 | Component | Description | Technology |
 |-----------|-------------|------------|
-| **Physics Engine** | 3D pose extraction, Savitzky–Golay smoothing, dimensionless velocity/arc derivation, kinetic chain event detection | MediaPipe Pose (Heavy), OpenCV, NumPy, SciPy, Pandas |
-| **8D Vector Schema** | release_velocity_mps, shot_arc_deg, knee_angle, elbow_angle, kinetic_sync_ms, fluidity_score, hip_rotation_deg, balance_index | Aligned across `physics_engine`, `db_seeder`, and `main.py` |
+| **Physics Engine** (`app/physics_engine.py`) | 3D pose extraction, Savitzky–Golay smoothing, dimensionless velocity/arc derivation, kinetic chain event detection | MediaPipe Pose (Heavy), OpenCV, NumPy, SciPy, Pandas |
+| **8D Vector Schema** | release_velocity_mps, shot_arc_deg, knee_angle, elbow_angle, kinetic_sync_ms, fluidity_score, hip_rotation_deg, balance_index | Aligned across `app/physics_engine`, `app/db_seeder`, and `app/main` |
 | **NBA Oracle** | Deterministic heuristics map NBA box-score stats → 8D vectors; ChromaDB cosine search returns nearest pro | nba_api, Chromadb |
 | **Market Index** | L2-distance–based valuation tiers (Elite → Amateur) | Calibrated thresholds |
 | **AI Scout Report** | Structured JSON output: scout_report, athlete_feedback (3 items), witty_catchphrase | Gemini 2.5 Flash, response schema |
@@ -95,7 +111,7 @@ Upload a jump-shot video. The system extracts an 8-dimensional kinematic fingerp
 
 ```bash
 # Clone and enter project
-cd Apex.ai
+cd Laksh_AI
 
 # Create virtual environment
 python -m venv .venv
@@ -110,7 +126,7 @@ cp .env.example .env
 
 # Start server (with auto-reload)
 ./run.sh
-# Or: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Or: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000). On first run, the app seeds ChromaDB from the NBA API (~30s cold start); subsequent starts reuse the persisted DB.
@@ -131,6 +147,7 @@ docker run -p 8000:8000 -e GEMINI_API_KEY=your-key laksh-oracle
 | `GEMINI_API_KEY` | Yes | Google AI Studio API key for Gemini and Imagen |
 | `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to service account JSON for Cloud TTS (enables Studio Voices) |
 | `CORS_ORIGINS` | No | Comma-separated origins (default: production + localhost) |
+| `LOG_LEVEL` | No | Python log level: `DEBUG`, `INFO` (default), `WARNING`, … |
 
 ---
 
@@ -141,6 +158,27 @@ pytest tests/ -v
 ```
 
 Regression test requires a golden video. See [docs/GOLDEN_VIDEO_GUIDE.md](docs/GOLDEN_VIDEO_GUIDE.md) for how to create one. Without it, the test is skipped.
+
+```bash
+make test
+# or: pytest tests/ -q
+```
+
+---
+
+## Evaluation reel
+
+Bench the pose pipeline on your own clips (optional): [evaluation/README.md](evaluation/README.md).
+
+```bash
+python scripts/download_pose_model.py   # model at repo root if missing
+make eval-bench                         # needs evaluation/clips/*.mp4
+# or: bash scripts/run_evaluation_local.sh
+```
+
+Spec and pass/fail guidance: [docs/evaluation_set_spec.md](docs/evaluation_set_spec.md). Validation: [docs/VALIDATION_STRATEGY.md](docs/VALIDATION_STRATEGY.md).
+
+**Architecture & contributing:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 

@@ -22,8 +22,9 @@ from google.genai.errors import APIError
 import chromadb
 from gtts import gTTS
 
-from physics_engine import KinematicAnalyzer
-from correction_engine import generate_correction_video
+from app.logging_config import configure_logging
+from app.physics_engine import KinematicAnalyzer
+from app.correction_engine import generate_correction_video
 
 # Google Cloud TTS (Studio Voices) — optional; falls back to gTTS if credentials unavailable
 try:
@@ -37,8 +38,9 @@ except Exception:
 logger = logging.getLogger(__name__)
 
 COLLECTION_NAME = "apex_oracle_v7"
-# Use absolute path: ./chroma_db is ambiguous when cwd differs in deployment (Railway, Docker)
-PERSIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
+# Repo root (parent of app/) — chroma_db lives next to requirements.txt, not inside app/
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+PERSIST_DIR = str(_REPO_ROOT / "chroma_db")
 
 # Module-level client and collection — populated in lifespan startup
 chroma_client = None
@@ -75,7 +77,8 @@ def calculate_market_index(vector: list[float], match_distance: float) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialise ChromaDB on startup; yield for request handling; clean up on shutdown."""
+    """Configure logging, initialise ChromaDB; yield for request handling."""
+    configure_logging()
     _init_chroma()
     yield
 
@@ -105,7 +108,7 @@ app.add_middleware(
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-_DASHBOARD = Path(__file__).resolve().parent / "dashboard.html"
+_DASHBOARD = _REPO_ROOT / "static" / "dashboard.html"
 
 
 def _init_chroma():
@@ -138,7 +141,7 @@ def _init_chroma():
         # Let seed_database own collection creation (it deletes + recreates internally).
         # Fetch the live reference AFTER seeding so _collection points at the final UUID.
         try:
-            from db_seeder import seed_database
+            from app.db_seeder import seed_database
             count = seed_database(chroma_client)
             logger.info("DATABASE SEEDING COMPLETE: %d players indexed.", count)
         except Exception as e:
@@ -276,7 +279,7 @@ def _normalize_analysis(
     telemetry = biomech.get("telemetry") or {}
     vq = telemetry.get("video_quality") or {}
     metric_status = biomech.get("metric_status") or {}
-    return {
+    out = {
         **data,
         "analysis_mode": biomech.get("analysis_mode") or "full",
         "fallback_reason_codes": biomech.get("fallback_reason_codes") or [],
@@ -305,6 +308,10 @@ def _normalize_analysis(
         "video_quality_label": vq.get("video_quality_label"),
         "confidence_factors": telemetry.get("confidence_factors", []),
     }
+    ds = biomech.get("debug_summary")
+    if ds is not None:
+        out["debug_summary"] = ds
+    return out
 
 
 @app.post("/analyze-video")
@@ -502,6 +509,36 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
             confidence_score = round(confidence_score * 0.9, 1)
         elif analysis_mode == "fallback":
             confidence_score = min(confidence_score, 25.0)
+
+        ms_all = biomech.get("metric_status") or {}
+        av_metrics = [m for m in ms_all.values() if isinstance(m, dict) and m.get("source") != "unavailable"]
+        n_predicted = sum(1 for m in ms_all.values() if isinstance(m, dict) and m.get("source") == "predicted")
+        mean_mc = (
+            sum(float(m.get("confidence", 0.0)) for m in av_metrics) / len(av_metrics)
+            if av_metrics
+            else 0.0
+        )
+        oracle_match_degraded = (
+            analysis_mode in ("partial", "fallback")
+            or n_predicted >= 3
+            or (len(av_metrics) >= 1 and mean_mc < 0.52)
+        )
+        out["oracle_match_degraded"] = oracle_match_degraded
+        if oracle_match_degraded:
+            if analysis_mode == "fallback":
+                out["oracle_caveat"] = (
+                    "Pro comparison is not reliable for this clip — fix pose detection or re-record with clearer framing."
+                )
+            else:
+                out["oracle_caveat"] = (
+                    "Pro comparison is approximate: side angles and compressed video often force 2D or partial metrics. "
+                    "Re-record from a 45° front offset for a tighter vector match."
+                )
+            if analysis_mode != "fallback":
+                confidence_score = round(confidence_score * 0.88, 1)
+        else:
+            out["oracle_caveat"] = None
+
         out["confidence"] = confidence_score
         out["analysis_reliability_score"] = round(float(confidence_score), 1)
         out["detection_metadata"] = det
@@ -551,7 +588,7 @@ async def generate_metric_card(req: dict):
         b64 = base64.b64encode(result.generated_images[0].image.image_bytes).decode("utf-8")
         return {"status": "success", "image_base64": b64}
     except Exception as e:
-        print(f"Imagen Generation Error: {e}")
+        logger.warning("Imagen generation failed, using placeholder: %s", e, exc_info=True)
         return {"status": "fallback", "image_base64": _placeholder_card_svg((req or {}).get("match", "Prospect"), 0)}
 
 

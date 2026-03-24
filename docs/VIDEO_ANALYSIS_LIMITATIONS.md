@@ -94,4 +94,4 @@ These appear in the UI to set appropriate expectations.
 
 ---
 
-*For investor validation and methodology, see VALIDATION_STRATEGY.md.*
+*For investor validation and methodology, see [VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md).*

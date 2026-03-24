@@ -1,0 +1,8 @@
+# Ruff (optional): pip install ruff && ruff check app tests scripts
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["app", "tests", "scripts"]
+
+[tool.ruff.lint]
+ignore = ["E501"]

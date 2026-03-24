@@ -34,7 +34,7 @@ def main():
         sys.exit(1)
 
     sys.path.insert(0, str(PROJECT_ROOT))
-    from physics_engine import KinematicAnalyzer
+    from app.physics_engine import KinematicAnalyzer
 
     print("Analyzing golden video...")
     result = KinematicAnalyzer(str(GOLDEN_VIDEO)).analyze()

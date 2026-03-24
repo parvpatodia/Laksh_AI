@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Apply Worktree",
+      "label": "Run API (uvicorn)",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/apply-worktree.sh",
+      "command": "${workspaceFolder}/.venv/bin/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
       "group": "none",
       "presentation": {
         "reveal": "always",

@@ -131,7 +131,7 @@ Once the golden video and expected values are committed:
   run: pytest tests/test_physics_regression.py -v
 ```
 
-This runs on every push, ensuring changes to `physics_engine.py` or `main.py` don't break the pipeline.
+This runs on every push, ensuring changes to `app/physics_engine.py` or `app/main.py` don't break the pipeline.
 
 ---
 

@@ -1,0 +1,4 @@
+clip_id,path,tags,notes,expect_analysis_mode,expect_min_measured
+example_clean,evaluation/clips/PLACEHOLDER_clean_phone.mp4,phone_clean,Minimal sample — use manifest.template.csv for full 24-clip set,full,5
+example_short_side,evaluation/clips/PLACEHOLDER_side_ft.mp4,side_view_ft|yt_short_reencode,Curry-style side FT Short; expect partial or full with predicted angles,partial,
+example_multi,evaluation/clips/PLACEHOLDER_multi_person.mp4,multi_person,Two bodies visible; should not crash,,

@@ -846,7 +846,8 @@ const BiomechanicsPage = ({ stats, metricStatus, analysisMode, videoRef, canvasR
 //  PAGE 3 — ORACLE MATCH  (#/oracle-match)
 // ══════════════════════════════════════════════════════════════
 const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutReport,
-                           assetImg, assetStatus, onGenAsset, isGenAsset, onDownloadCard, onShareCard, confidence, athleteName, wittyCatchphrase, validationWarnings, confidenceFactors }) => {
+                           assetImg, assetStatus, onGenAsset, isGenAsset, onDownloadCard, onShareCard, confidence, athleteName, wittyCatchphrase, validationWarnings, confidenceFactors,
+                           oracleMatchDegraded, oracleCaveat }) => {
   const s  = stats  || {};
   const vs = matchedPro?.vector_stats || {};
   const d  = deltas || {};
@@ -886,6 +887,19 @@ const OracleMatchPage = ({ stats, proMatch, matchedPro, deltas, feedback, scoutR
                 Oracle Match{athleteName ? <span style={{color:'#00E5FF'}}> — {athleteName}</span> : ''}
               </h2>
             </div>
+
+            {oracleCaveat && (
+              <div style={{
+                marginBottom:'1.75rem', padding:'1rem 1.35rem', borderRadius:'16px',
+                border:'1px solid rgba(255, 149, 0, 0.35)', background:'rgba(255, 149, 0, 0.07)',
+                maxWidth:'900px'
+              }}>
+                <p className="mono" style={{fontSize:'10px', color:'#F59E0B', letterSpacing:'.12em', margin:'0 0 8px'}}>
+                  {oracleMatchDegraded ? 'PARTIAL / LOW-CONFIDENCE MATCH' : 'NOTE'}
+                </p>
+                <p style={{margin:0, fontSize:'0.95rem', color:'#FCD34D', lineHeight:1.6}}>{oracleCaveat}</p>
+              </div>
+            )}
 
             {/* Main responsive grid — wraps on narrow screens */}
             <div className="oracle-main" style={{marginBottom:'64px'}}>
@@ -1651,7 +1665,9 @@ const App = () => {
                      confidence={data?.confidence} athleteName={athleteName}
                      wittyCatchphrase={data?.witty_catchphrase}
                      validationWarnings={data?.validation_warnings}
-                     confidenceFactors={data?.confidence_factors}/>}
+                     confidenceFactors={data?.confidence_factors}
+                     oracleMatchDegraded={data?.oracle_match_degraded}
+                     oracleCaveat={data?.oracle_caveat}/>}
 
       <MetaModal open={showMeta} onClose={()=>setShowMeta(false)} payload={metaPayload}/>
       <Toast msg={toast}/>

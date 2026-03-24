@@ -24,7 +24,8 @@ from typing import Any, Optional
 import chromadb
 import pandas as pd
 
-logging.basicConfig(level=logging.INFO)
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 COLLECTION_NAME = "apex_oracle_v7"

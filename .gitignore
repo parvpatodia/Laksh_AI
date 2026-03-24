@@ -22,5 +22,10 @@ env/
 # Temporary media
 temp_*.mp4
 
+# Evaluation bench output and local clip binaries (keep manifest in repo)
+evaluation/results.jsonl
+evaluation/compare.csv
+evaluation/clips/*.mp4
+
 # Cursor worktree apply artifact (prevents "Unable to read file .sh" error)
 .sh

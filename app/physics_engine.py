@@ -1,7 +1,8 @@
 """
-Apex.ai Indestructible 3D Signal Processing Pipeline.
-Uses MediaPipe Tasks API (M1/Python 3.13 Safe), Center of Mass Event Detection, and Dimensionless Physics.
+Laksh.ai biomechanics pipeline: pose extraction, phase detection, and shot metrics.
+Uses MediaPipe Tasks Pose Landmarker (heavy), multi-pass preprocess, and 2D/world fallbacks.
 """
+import logging
 import math
 import cv2
 import numpy as np
@@ -12,6 +13,8 @@ import os
 from pathlib import Path
 from typing import Any
 from scipy.signal import savgol_filter
+
+logger = logging.getLogger(__name__)
 
 LEFT_WRIST, RIGHT_WRIST = 15, 16
 LEFT_ELBOW, RIGHT_ELBOW = 13, 14
@@ -60,6 +63,65 @@ def _is_valid_vec(v: Any) -> bool:
     arr = np.asarray(v, dtype=np.float64)
     return arr.size >= 2 and np.all(np.isfinite(arr[:2]))
 
+
+def _is_valid_xy(v: Any) -> bool:
+    """2D image landmark row [x, y, visibility] — x,y must be finite."""
+    if v is None:
+        return False
+    arr = np.asarray(v, dtype=np.float64)
+    return arr.size >= 2 and np.all(np.isfinite(arr[:2]))
+
+
+def _angle_2d_image(a: np.ndarray, b: np.ndarray, c: np.ndarray, aspect_ratio: float) -> float | None:
+    """Interior angle at b using normalized image coords; stretch x by aspect_ratio."""
+    if not (_is_valid_xy(a) and _is_valid_xy(b) and _is_valid_xy(c)):
+        return None
+    p0 = np.array([float(a[0]) * aspect_ratio, float(a[1])], dtype=np.float64)
+    p1 = np.array([float(b[0]) * aspect_ratio, float(b[1])], dtype=np.float64)
+    p2 = np.array([float(c[0]) * aspect_ratio, float(c[1])], dtype=np.float64)
+    ang = _calculate_3d_angle(p0, p1, p2)
+    return ang if ang >= 1.0 else None
+
+
+def _build_debug_summary(
+    *,
+    analysis_mode: str,
+    reason_codes: list[str],
+    n_frames: int,
+    actual_detections: int,
+    visibility: float,
+    preprocess_pass: str | None,
+    shot_type: str,
+    dip_frame: int,
+    release_frame: int,
+    has_knee_world: bool,
+    has_elbow_world: bool,
+    has_knee_2d: bool,
+    has_elbow_2d: bool,
+    yaw_world: bool,
+    yaw_2d: bool,
+) -> dict:
+    return {
+        "analysis_mode": analysis_mode,
+        "fallback_reason_codes": sorted(set(reason_codes)),
+        "n_frames": n_frames,
+        "wrist_detection_events": actual_detections,
+        "pose_visibility_mean": round(visibility, 3),
+        "selected_preprocess_pass": preprocess_pass,
+        "shot_type": shot_type,
+        "dip_frame": dip_frame,
+        "release_frame": release_frame,
+        "landmarks_ok": {
+            "knee_world": has_knee_world,
+            "elbow_world": has_elbow_world,
+            "knee_2d": has_knee_2d,
+            "elbow_2d": has_elbow_2d,
+            "hip_yaw_world": yaw_world,
+            "hip_yaw_2d": yaw_2d,
+        },
+    }
+
+
 class KinematicAnalyzer:
     def __init__(self, video_path: str):
         self.video_path = video_path
@@ -93,14 +155,21 @@ class KinematicAnalyzer:
         try:
             result = subprocess.run(cmd, capture_output=True, timeout=120)
             if result.returncode != 0 or not os.path.exists(out_path) or os.path.getsize(out_path) < 1024:
-                print(f"FFmpeg normalisation failed (rc={result.returncode}). Using original video.")
-                print(result.stderr.decode(errors="replace")[-800:])
+                logger.warning(
+                    "FFmpeg normalisation failed (rc=%s); using original video. stderr_tail=%s",
+                    result.returncode,
+                    result.stderr.decode(errors="replace")[-800:],
+                )
                 os.unlink(out_path)
                 return self.video_path
-            print(f"FFmpeg normalisation OK → {out_path} ({os.path.getsize(out_path)//1024} KB)")
+            logger.info(
+                "FFmpeg normalisation OK → %s (%s KB)",
+                out_path,
+                os.path.getsize(out_path) // 1024,
+            )
             return out_path
         except Exception as exc:
-            print(f"FFmpeg not available or timed out: {exc}. Using original video.")
+            logger.warning("FFmpeg unavailable or timed out: %s; using original video.", exc)
             try: os.unlink(out_path)
             except OSError: pass
             return self.video_path
@@ -114,10 +183,10 @@ class KinematicAnalyzer:
             from pathlib import Path
 
             # Use the heavy model for maximum lab-grade accuracy
-            model_path = Path(__file__).resolve().parent / "pose_landmarker_heavy.task"
+            model_path = Path(__file__).resolve().parent.parent / "pose_landmarker_heavy.task"
 
             if not model_path.exists():
-                print("Downloading MediaPipe Heavy Model...")
+                logger.info("Downloading MediaPipe pose landmarker (heavy)…")
                 import urllib.request
 
                 url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task"
@@ -130,14 +199,16 @@ class KinematicAnalyzer:
                 except ssl.SSLError:
                     # Fallback for macOS dev environments without updated CA certificates.
                     # Permanent fix: run /Applications/Python*/Install\ Certificates.command
-                    print("WARNING: SSL verification failed. Retrying with unverified context (dev only).")
+                    logger.warning(
+                        "SSL verify failed for model download; retrying without verify (dev only — fix CA bundle in prod)"
+                    )
                     ctx_dev = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
                     ctx_dev.check_hostname = False
                     ctx_dev.verify_mode = ssl.CERT_NONE
                     with urllib.request.urlopen(url, context=ctx_dev) as response, open(model_path, "wb") as out_file:
                         out_file.write(response.read())
 
-                print("Download complete! Booting engine...")
+                logger.info("Pose model download complete.")
 
             # Lower thresholds from 0.5 → 0.3 for fast sports motion (validated by PMC 9397457).
             # At 0.5 many mid-motion frames fail detection; 0.3 recovers ~40% more detections
@@ -153,9 +224,8 @@ class KinematicAnalyzer:
             self._landmarker = vision.PoseLandmarker.create_from_options(opts)
             return True
 
-        except Exception as e:
-            import traceback
-            print(f"FATAL: MediaPipe Tasks API failed to initialize:\n{traceback.format_exc()}")
+        except Exception:
+            logger.exception("MediaPipe PoseLandmarker failed to initialize")
             return False
 
     def _preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
@@ -692,7 +762,12 @@ class KinematicAnalyzer:
             max_people = best["max_people"]
             actual_detections = int(best["detections"])
             visibility = float(best["visibility"])
-            print(f"Selected extraction pass: {best['variant']} | detections={actual_detections} visibility={visibility:.2f}")
+            logger.info(
+                "Selected extraction pass: %s | detections=%s visibility=%.2f",
+                best["variant"],
+                actual_detections,
+                visibility,
+            )
 
             n_frames = len(raw_2d.get("left_wrist", []))
             if n_frames < 3:
@@ -718,22 +793,72 @@ class KinematicAnalyzer:
             w3d, e3d, s3d = f_3d[f"{side}_wrist"], f_3d[f"{side}_elbow"], f_3d[f"{side}_shoulder"]
             h3d, k3d, a3d = f_3d[f"{side}_hip"], f_3d[f"{side}_knee"], f_3d[f"{side}_ankle"]
             
-            # Trajectory Event Anchor (Y-Axis Tracking)
+            # Trajectory phases: jump shot (dip → release window) vs set shot / FT (small excursion)
             wrist_y = w2d[:, 1]
-            dip_frame = max(0, min(int(np.argmax(wrist_y)), len(wrist_y) - 5))
-            search_end = min(len(wrist_y), dip_frame + int(fps * 1.5))
-            
-            if search_end > dip_frame + 2:
-                release_frame = dip_frame + int(np.argmin(wrist_y[dip_frame:search_end]))
+            hip_y = h2d[:, 1]
+            n_w = len(wrist_y)
+            wrist_span = float(np.ptp(wrist_y)) if n_w > 1 else 0.0
+            hip_span = float(np.ptp(hip_y)) if len(hip_y) > 1 else 0.0
+            shot_type = (
+                "set_shot"
+                if (wrist_span < 0.048 and hip_span < 0.042) or (wrist_span < 0.058 and hip_span < 0.028)
+                else "jump_shot"
+            )
+
+            if shot_type == "jump_shot":
+                dip_frame = max(0, min(int(np.argmax(wrist_y)), n_w - 5))
+                search_end = min(n_w, dip_frame + int(fps * 1.5))
+                if search_end > dip_frame + 2:
+                    release_frame = dip_frame + int(np.argmin(wrist_y[dip_frame:search_end]))
+                else:
+                    release_frame = dip_frame + 1
             else:
-                release_frame = dip_frame + 1
-            release_frame = max(0, min(release_frame, len(wrist_y) - 1))
-            
-            # 3D Math
-            k_ang = _calculate_3d_angle(h3d[dip_frame], k3d[dip_frame], a3d[dip_frame])
-            e_ang = _calculate_3d_angle(s3d[release_frame], e3d[release_frame], w3d[release_frame])
-            if k_ang < 10: k_ang = 135.0
-            if e_ang < 10: e_ang = 165.0
+                lo = max(1, int(0.18 * n_w))
+                hi = min(n_w - 1, int(0.92 * n_w))
+                if hi <= lo + 2:
+                    lo, hi = 0, n_w - 1
+                seg = wrist_y[lo : hi + 1]
+                release_frame = lo + int(np.argmin(seg))
+                if release_frame >= 3:
+                    dip_frame = int(np.argmax(wrist_y[: release_frame + 1]))
+                else:
+                    dip_frame = max(0, release_frame - max(3, int(fps * 0.2)))
+                dip_frame = max(0, min(dip_frame, max(0, release_frame - 1)))
+                if release_frame <= dip_frame:
+                    dip_frame = max(0, release_frame - max(2, int(fps * 0.15)))
+
+            release_frame = max(0, min(release_frame, n_w - 1))
+
+            # Joint angles: 3D world first; 2D image fallback when world depth is unusable
+            has_knee_world = _is_valid_vec(h3d[dip_frame]) and _is_valid_vec(k3d[dip_frame]) and _is_valid_vec(a3d[dip_frame])
+            has_elbow_world = (
+                _is_valid_vec(s3d[release_frame])
+                and _is_valid_vec(e3d[release_frame])
+                and _is_valid_vec(w3d[release_frame])
+            )
+            k2d, a2d = f_2d[f"{side}_knee"], f_2d[f"{side}_ankle"]
+            k_2d_raw = _angle_2d_image(h2d[dip_frame], k2d[dip_frame], a2d[dip_frame], aspect_ratio)
+            e_2d_raw = _angle_2d_image(s2d[release_frame], e2d[release_frame], w2d[release_frame], aspect_ratio)
+            has_knee_2d = k_2d_raw is not None
+            has_elbow_2d = e_2d_raw is not None
+
+            if has_knee_world:
+                k_ang = _calculate_3d_angle(h3d[dip_frame], k3d[dip_frame], a3d[dip_frame])
+                if k_ang < 10:
+                    k_ang = 135.0
+            elif has_knee_2d:
+                k_ang = float(np.clip(k_2d_raw, 90, 180))
+            else:
+                k_ang = 135.0
+
+            if has_elbow_world:
+                e_ang = _calculate_3d_angle(s3d[release_frame], e3d[release_frame], w3d[release_frame])
+                if e_ang < 10:
+                    e_ang = 165.0
+            elif has_elbow_2d:
+                e_ang = float(np.clip(e_2d_raw, 100, 180))
+            else:
+                e_ang = 165.0
             
             # Dimensionless Power Scale
             w_travel = np.linalg.norm(w2d[release_frame][:2] - w2d[dip_frame][:2])
@@ -772,22 +897,50 @@ class KinematicAnalyzer:
                         arc_deg = calc_arc
 
             # Unmask the math in the terminal
-            print(f"DEBUG PIPELINE -> Lever Arc: {lever_arc:.1f}°, Polynomial Arc: {calc_arc if calc_arc else 'None'}, Final Output: {arc_deg:.1f}°")
+            logger.debug(
+                "Arc pipeline: lever=%.1f° poly=%s final=%.1f°",
+                lever_arc,
+                calc_arc if calc_arc is not None else None,
+                arc_deg,
+            )
 
-            # True Transverse Torso Twist (Shoulders vs Hips)
+            # Transverse torso twist — world depth when valid; else 2D shoulder vs hip line proxy
             yaw_deg = 0.0
             ls, rs = f_3d["left_shoulder"][dip_frame], f_3d["right_shoulder"][dip_frame]
             lh, rh = f_3d["left_hip"][dip_frame], f_3d["right_hip"][dip_frame]
 
-            yaw_measured = not (np.any(np.isnan(ls)) or np.any(np.isnan(lh)))
+            def _finite_xyz(v):
+                return _is_valid_vec(v) and np.isfinite(float(v[2]))
+
+            yaw_measured = (
+                _finite_xyz(ls) and _finite_xyz(rs) and _finite_xyz(lh) and _finite_xyz(rh)
+            )
             if yaw_measured:
                 s_ang = math.atan2(rs[2] - ls[2], rs[0] - ls[0])
                 h_ang = math.atan2(rh[2] - lh[2], rh[0] - lh[0])
                 twist = math.degrees(s_ang - h_ang)
-
-                # Normalize to shortest path (-180 to 180)
                 twist = (twist + 180) % 360 - 180
-                yaw_deg = np.clip(twist, -45.0, 45.0)
+                yaw_deg = float(np.clip(twist, -45.0, 45.0))
+
+            ls2d = f_2d["left_shoulder"][dip_frame]
+            rs2d = f_2d["right_shoulder"][dip_frame]
+            lh2d = f_2d["left_hip"][dip_frame]
+            rh2d = f_2d["right_hip"][dip_frame]
+            yaw_2d_deg = None
+            if _is_valid_xy(ls2d) and _is_valid_xy(rs2d) and _is_valid_xy(lh2d) and _is_valid_xy(rh2d):
+                sdx = (float(rs2d[0]) - float(ls2d[0])) * aspect_ratio
+                sdy = float(rs2d[1]) - float(ls2d[1])
+                hdx = (float(rh2d[0]) - float(lh2d[0])) * aspect_ratio
+                hdy = float(rh2d[1]) - float(lh2d[1])
+                if (abs(sdx) + abs(sdy) > 1e-6) and (abs(hdx) + abs(hdy) > 1e-6):
+                    s_ang2 = math.atan2(sdy, sdx)
+                    h_ang2 = math.atan2(hdy, hdx)
+                    twist2 = math.degrees(s_ang2 - h_ang2)
+                    twist2 = (twist2 + 180) % 360 - 180
+                    yaw_2d_deg = float(np.clip(twist2, -45.0, 45.0))
+
+            if not yaw_measured and yaw_2d_deg is not None:
+                yaw_deg = yaw_2d_deg
 
             # Dimensionless Time Scaling (Dynamic Frame-Rate Estimator)
             raw_frames = abs(release_frame - dip_frame)
@@ -833,7 +986,6 @@ class KinematicAnalyzer:
                 fluidity_measured = True
 
             # 2D Telemetry Payload for UI Rendering — Research-grade per-frame overlay
-            k2d, a2d = f_2d[f"{side}_knee"], f_2d[f"{side}_ankle"]
             total_frames = len(w2d)
 
             def _joints_at(i):
@@ -859,6 +1011,7 @@ class KinematicAnalyzer:
 
             telemetry = {
                 "fps": round(float(fps), 2),
+                "shot_type": shot_type,
                 "shooting_side": side,  # "left" or "right" — model-agnostic for overlay
                 "dip": {
                     "time_sec": round(float(dip_frame / fps), 3),
@@ -907,6 +1060,10 @@ class KinematicAnalyzer:
             k_unc, e_unc = self._compute_angle_uncertainty(
                 h3d, k3d, a3d, s3d, e3d, w3d, dip_frame, release_frame, visibility
             )
+            if not has_knee_world and has_knee_2d:
+                k_unc = round(float(min(15.0, k_unc * 1.12)), 1)
+            if not has_elbow_world and has_elbow_2d:
+                e_unc = round(float(min(15.0, e_unc * 1.12)), 1)
             metrics_out["knee_angle_uncertainty"] = k_unc
             metrics_out["elbow_angle_uncertainty"] = e_unc
 
@@ -916,14 +1073,12 @@ class KinematicAnalyzer:
                 vq_score, people_count, visibility, all_warnings, used_fallback=(analysis_mode == "fallback")
             )
 
-            has_knee_obs = _is_valid_vec(h3d[dip_frame]) and _is_valid_vec(k3d[dip_frame]) and _is_valid_vec(a3d[dip_frame])
-            has_elbow_obs = _is_valid_vec(s3d[release_frame]) and _is_valid_vec(e3d[release_frame]) and _is_valid_vec(w3d[release_frame])
             vel_src = "measured" if actual_detections >= 8 else "predicted"
             arc_src = "measured" if calc_arc is not None else "predicted"
-            knee_src = "measured" if has_knee_obs else "unavailable"
-            elbow_src = "measured" if has_elbow_obs else "unavailable"
+            knee_src = "measured" if has_knee_world else ("predicted" if has_knee_2d else "unavailable")
+            elbow_src = "measured" if has_elbow_world else ("predicted" if has_elbow_2d else "unavailable")
             sync_src = "measured" if actual_detections >= 8 else "predicted"
-            hip_src = "measured" if yaw_measured else "unavailable"
+            hip_src = "measured" if yaw_measured else ("predicted" if yaw_2d_deg is not None else "unavailable")
             bal_src = "measured" if balance_measured else "predicted"
             fluid_src = "measured" if fluidity_measured else "predicted"
             metric_status = {
@@ -939,13 +1094,31 @@ class KinematicAnalyzer:
                 ),
                 "knee_angle": self._status(
                     knee_src,
-                    self._calibrate_metric_confidence(0.82, visibility, detection_ratio, people_count, analysis_mode, knee_src),
-                    None if knee_src == "measured" else "dip_joint_data_missing",
+                    self._calibrate_metric_confidence(
+                        0.82 if knee_src == "measured" else (0.68 if knee_src == "predicted" else 0.0),
+                        visibility,
+                        detection_ratio,
+                        people_count,
+                        analysis_mode,
+                        knee_src,
+                    ),
+                    None
+                    if knee_src == "measured"
+                    else ("world_depth_unreliable" if knee_src == "predicted" else "dip_joint_data_missing"),
                 ),
                 "elbow_angle": self._status(
                     elbow_src,
-                    self._calibrate_metric_confidence(0.82, visibility, detection_ratio, people_count, analysis_mode, elbow_src),
-                    None if elbow_src == "measured" else "release_joint_data_missing",
+                    self._calibrate_metric_confidence(
+                        0.82 if elbow_src == "measured" else (0.68 if elbow_src == "predicted" else 0.0),
+                        visibility,
+                        detection_ratio,
+                        people_count,
+                        analysis_mode,
+                        elbow_src,
+                    ),
+                    None
+                    if elbow_src == "measured"
+                    else ("world_depth_unreliable" if elbow_src == "predicted" else "release_joint_data_missing"),
                 ),
                 "kinetic_sync_ms": self._status(
                     sync_src,
@@ -954,8 +1127,17 @@ class KinematicAnalyzer:
                 ),
                 "hip_rotation_deg": self._status(
                     hip_src,
-                    self._calibrate_metric_confidence(0.74, visibility, detection_ratio, people_count, analysis_mode, hip_src),
-                    None if hip_src == "measured" else "hip_or_shoulder_depth_missing",
+                    self._calibrate_metric_confidence(
+                        0.74 if hip_src == "measured" else (0.62 if hip_src == "predicted" else 0.0),
+                        visibility,
+                        detection_ratio,
+                        people_count,
+                        analysis_mode,
+                        hip_src,
+                    ),
+                    None
+                    if hip_src == "measured"
+                    else ("world_depth_unreliable" if hip_src == "predicted" else "hip_or_shoulder_depth_missing"),
                 ),
                 "balance_index": self._status(
                     bal_src,
@@ -975,7 +1157,7 @@ class KinematicAnalyzer:
             if metric_status["hip_rotation_deg"]["source"] == "unavailable":
                 metrics_out["hip_rotation_deg"] = None
 
-            return {
+            result = {
                 "analysis_mode": analysis_mode,
                 "fallback_reason_codes": sorted(set(reason_codes)),
                 "metric_status": metric_status,
@@ -993,9 +1175,27 @@ class KinematicAnalyzer:
                 "fluidity_score": fluidity,
                 "telemetry": telemetry,
             }
-        except Exception as e:
-            import traceback
-            print(f"FATAL KINEMATIC CRASH:\n{traceback.format_exc()}")
+            if os.environ.get("LAKSH_INCLUDE_DEBUG_SUMMARY", "").strip().lower() in ("1", "true", "yes"):
+                result["debug_summary"] = _build_debug_summary(
+                    analysis_mode=analysis_mode,
+                    reason_codes=reason_codes,
+                    n_frames=n_frames,
+                    actual_detections=actual_detections,
+                    visibility=visibility,
+                    preprocess_pass=best["variant"],
+                    shot_type=shot_type,
+                    dip_frame=dip_frame,
+                    release_frame=release_frame,
+                    has_knee_world=has_knee_world,
+                    has_elbow_world=has_elbow_world,
+                    has_knee_2d=has_knee_2d,
+                    has_elbow_2d=has_elbow_2d,
+                    yaw_world=yaw_measured,
+                    yaw_2d=yaw_2d_deg is not None,
+                )
+            return result
+        except Exception:
+            logger.exception("KinematicAnalyzer.analyze crashed")
             return self._fallback(["analysis_exception"])
         finally:
             # Clean up the FFmpeg-normalised temp file
@@ -1016,7 +1216,7 @@ class KinematicAnalyzer:
             "confidence_factors": self._compute_confidence_factors(0, 0, 0.0, [warning], used_fallback=True),
         }
         metric_status = self._empty_metric_status(reason_codes)
-        return {
+        fb = {
             "analysis_mode": "fallback",
             "fallback_reason_codes": sorted(set(reason_codes)),
             "metric_status": metric_status,
@@ -1025,3 +1225,22 @@ class KinematicAnalyzer:
             "hip_rotation_deg": None, "balance_index": None, "fluidity_score": None,
             "telemetry": telemetry,
         }
+        if os.environ.get("LAKSH_INCLUDE_DEBUG_SUMMARY", "").strip().lower() in ("1", "true", "yes"):
+            fb["debug_summary"] = _build_debug_summary(
+                analysis_mode="fallback",
+                reason_codes=reason_codes,
+                n_frames=0,
+                actual_detections=0,
+                visibility=0.0,
+                preprocess_pass=None,
+                shot_type="unknown",
+                dip_frame=-1,
+                release_frame=-1,
+                has_knee_world=False,
+                has_elbow_world=False,
+                has_knee_2d=False,
+                has_elbow_2d=False,
+                yaw_world=False,
+                yaw_2d=False,
+            )
+        return fb

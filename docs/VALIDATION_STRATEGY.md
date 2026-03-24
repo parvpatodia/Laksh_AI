@@ -57,6 +57,8 @@
 
 **Action**: Build a small "expert benchmark" set (20–50 videos with expert ratings). Report Pearson correlation between our composite score and expert ratings.
 
+Operational clip taxonomy, pass/fail rules, and `scripts/benchmark_pipeline.py` are in [evaluation_set_spec.md](./evaluation_set_spec.md).
+
 ---
 
 ### E. Transparency & Documentation

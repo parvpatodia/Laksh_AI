@@ -5,5 +5,5 @@
 # the watcher's paths and prevent constant reloads when pip/IDE touches venv files.
 cd "$(dirname "$0")"
 PROJECT_ROOT="$(pwd)"
-.venv/bin/python -m uvicorn main:app --reload \
+.venv/bin/python -m uvicorn app.main:app --reload \
   --reload-exclude "$PROJECT_ROOT/.venv"
