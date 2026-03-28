@@ -27,6 +27,7 @@ from app.logging_config import configure_logging
 from app.physics_engine import KinematicAnalyzer
 from app.correction_engine import generate_correction_video
 from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS, METRIC_DEFAULTS  # single source of truth shared with db_seeder
+from app.config import settings  # centralised env-driven config — replaces scattered os.environ.get() calls
 
 # Google Cloud TTS (Studio Voices) — optional; falls back to gTTS if credentials unavailable
 try:
@@ -78,30 +79,17 @@ def calculate_market_index(match_distance: float) -> str:  # was: (vector, match
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Configure logging, initialise ChromaDB; yield for request handling."""
+    """Configure logging, validate config, initialise ChromaDB at startup."""
     configure_logging()
+    settings.validate()  # fails loudly if GEMINI_API_KEY missing — was: silent failure on first request
     _init_chroma()
     yield
 
 
-# CORS: Production URL + local dev. Set CORS_ORIGINS env to override (comma-separated).
-_DEFAULT_ORIGINS = [
-    "https://lakshai-production.up.railway.app",
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:8000",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:8000",
-]
-_CORS_ORIGINS = [
-    o.strip() for o in os.environ.get("CORS_ORIGINS", ",".join(_DEFAULT_ORIGINS)).split(",") if o.strip()
-]
-
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_CORS_ORIGINS,
+    allow_origins=settings.cors_origins,  # was: inline os.environ.get + split — now from config
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -324,24 +312,33 @@ async def analyze_video(
     sport: Optional[str] = Form(None),
 ):
     """Analyze video. Optional start_sec/end_sec restrict to user-selected clip (single shot)."""
-    _MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB cap — was: no size check, any payload accepted (OWASP API4:2023)
     content = await video.read()
-    if len(content) > _MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="Video file too large. Maximum allowed size is 200 MB.")  # 413 Payload Too Large — standard HTTP status for oversized uploads
+    if len(content) > settings.max_upload_bytes:  # was: hardcoded 200MB literal — now from config
+        raise HTTPException(status_code=413, detail=f"Video file too large. Maximum allowed size is {settings.max_upload_bytes // (1024*1024)} MB.")
     safe_name = os.path.join(tempfile.gettempdir(), f"laksh_{uuid.uuid4()}.mp4")
     with open(safe_name, "wb") as b:
-        b.write(content)  # was: await video.read() called twice — now reuses already-read bytes
+        b.write(content)
     try:
+        # Sanitise athlete_name: truncate and strip control chars to prevent prompt injection
+        # was: unsanitised user string injected directly into Gemini prompt
+        athlete_name = (str(athlete_name or "").strip())[:100] or None
+
         start_val = None
         end_val = None
         if start_sec is not None and str(start_sec).strip():
             try:
-                start_val = float(start_sec)
+                v = float(start_sec)
+                if not (0.0 <= v <= 7200.0):  # guard: reject negative/infinity/absurd values
+                    raise HTTPException(status_code=422, detail="start_sec must be between 0 and 7200.")
+                start_val = v
             except (TypeError, ValueError):
                 pass
         if end_sec is not None and str(end_sec).strip():
             try:
-                end_val = float(end_sec)
+                v = float(end_sec)
+                if not (0.0 <= v <= 7200.0):
+                    raise HTTPException(status_code=422, detail="end_sec must be between 0 and 7200.")
+                end_val = v
             except (TypeError, ValueError):
                 pass
         # Run MediaPipe inference off the event loop — CPU-bound blocking call

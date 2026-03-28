@@ -25,13 +25,15 @@ import chromadb
 import pandas as pd
 
 from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS  # was: both defined inline here — moved to app/constants.py so main.py and db_seeder.py always use the same values
+from app.config import settings  # NBA API timeouts now from centralised config — was: inline os.environ.get()
 
 if not logging.getLogger().handlers:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger(__name__)
-NBA_API_DELAY = 0.6  # seconds between requests (rate-limit safety)
-NBA_API_TIMEOUT = int(os.environ.get("NBA_API_TIMEOUT", "90"))  # cloud→stats.nba.com is slow
-NBA_API_RETRIES = 2  # try twice before fallback
+
+NBA_API_DELAY   = settings.nba_api_delay_sec
+NBA_API_TIMEOUT = settings.nba_api_timeout
+NBA_API_RETRIES = settings.nba_api_retries
 
 # Fallback seed when NBA API fails (timeout, rate-limit, cloud IP block).
 # Synthetic stats run through translate_to_kinematics for consistent 8D vectors.
