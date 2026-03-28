@@ -24,11 +24,11 @@ from typing import Any, Optional
 import chromadb
 import pandas as pd
 
+from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS  # was: both defined inline here — moved to app/constants.py so main.py and db_seeder.py always use the same values
+
 if not logging.getLogger().handlers:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger(__name__)
-
-COLLECTION_NAME = "apex_oracle_v7"
 NBA_API_DELAY = 0.6  # seconds between requests (rate-limit safety)
 NBA_API_TIMEOUT = int(os.environ.get("NBA_API_TIMEOUT", "90"))  # cloud→stats.nba.com is slow
 NBA_API_RETRIES = 2  # try twice before fallback
@@ -54,20 +54,6 @@ FALLBACK_PLAYERS = [
     ("Shai Gilgeous-Alexander", 1628983, {"REB": 5.5, "AST": 6.2, "TOV": 2.5, "FG3_PCT": 0.353, "PTS": 30.1, "GP": 75}),
 ]
 
-# Expert feature weights — equalise L2 distance variance across all 8 dimensions.
-# Each weight scales its dimension so the full biomechanical span maps to ~100 units,
-# preventing high-magnitude dimensions (e.g. kinetic_sync_ms ~300) from dominating search.
-# Applied to embeddings only; raw values are stored unchanged in metadata for the UI.
-FEATURE_WEIGHTS = [
-    16.6,  # v0: velocity_mps    (span ~6 m/s    → ×16.6 → ~100)
-    3.3,   # v1: arc_deg         (span ~30 °      → ×3.3  → ~100)
-    1.25,  # v2: knee_angle      (span ~80 °      → ×1.25 → ~100)
-    1.66,  # v3: elbow_angle     (span ~60 °      → ×1.66 → ~100)
-    0.33,  # v4: kinetic_sync_ms (span ~300 ms    → ×0.33 → ~100)
-    1.66,  # v5: fluidity_score  (span ~60        → ×1.66 → ~100)
-    2.22,  # v6: hip_rotation    (span ~45 °      → ×2.22 → ~100)
-    2.0,   # v7: balance_index   (span ~50        → ×2.0  → ~100)
-]
 
 
 def translate_to_kinematics(row: dict[str, Any]) -> list[float]:

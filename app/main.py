@@ -25,6 +25,7 @@ from gtts import gTTS
 from app.logging_config import configure_logging
 from app.physics_engine import KinematicAnalyzer
 from app.correction_engine import generate_correction_video
+from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS, METRIC_DEFAULTS  # single source of truth shared with db_seeder
 
 # Google Cloud TTS (Studio Voices) — optional; falls back to gTTS if credentials unavailable
 try:
@@ -37,7 +38,6 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
-COLLECTION_NAME = "apex_oracle_v7"
 # Repo root (parent of app/) — chroma_db lives next to requirements.txt, not inside app/
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 PERSIST_DIR = str(_REPO_ROOT / "chroma_db")
@@ -54,7 +54,7 @@ def _get_collection():
     return _collection
 
 
-def calculate_market_index(vector: list[float], match_distance: float) -> str:
+def calculate_market_index(match_distance: float) -> str:  # was: (vector, match_distance) — vector was accepted but never read inside; removed to avoid silent dead param
     """
     Deterministic valuation from cosine distance to nearest NBA pro.
     ChromaDB with hnsw:space='cosine' returns cosine distance in [0, 2]
@@ -323,9 +323,13 @@ async def analyze_video(
     sport: Optional[str] = Form(None),
 ):
     """Analyze video. Optional start_sec/end_sec restrict to user-selected clip (single shot)."""
+    _MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB cap — was: no size check, any payload accepted (OWASP API4:2023)
+    content = await video.read()
+    if len(content) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Video file too large. Maximum allowed size is 200 MB.")  # 413 Payload Too Large — standard HTTP status for oversized uploads
     safe_name = os.path.join(tempfile.gettempdir(), f"laksh_{uuid.uuid4()}.mp4")
     with open(safe_name, "wb") as b:
-        b.write(await video.read())
+        b.write(content)  # was: await video.read() called twice — now reuses already-read bytes
     try:
         start_val = None
         end_val = None
@@ -342,9 +346,9 @@ async def analyze_video(
         biomech = KinematicAnalyzer(safe_name).analyze(start_sec=start_val, end_sec=end_val)
 
         # Query ChromaDB BEFORE Gemini so we can compute deltas for the prompt.
-        # Weights must mirror db_seeder.FEATURE_WEIGHTS exactly so query and index
-        # live in the same normalised L2 space.
-        FEATURE_WEIGHTS = [16.6, 3.3, 1.25, 1.66, 0.33, 1.66, 2.22, 2.0]
+        # FEATURE_WEIGHTS and METRIC_DEFAULTS imported from app.constants — same
+        # values used at index time in db_seeder.py so query and index live in
+        # the same normalised L2 space.
         def _num(v, default):
             try:
                 if v is None:
@@ -353,14 +357,14 @@ async def analyze_video(
             except (TypeError, ValueError):
                 return float(default)
         raw_vector = [
-            _num(biomech.get("release_velocity_mps"), 7.0),
-            _num(biomech.get("shot_arc_deg"), 45.0),
-            _num(biomech.get("knee_angle"), 145.0),
-            _num(biomech.get("elbow_angle"), 165.0),
-            _num(biomech.get("kinetic_sync_ms"), 150.0),
-            _num(biomech.get("fluidity_score"), 65.0),
-            _num(biomech.get("hip_rotation_deg"), 5.0),
-            _num(biomech.get("balance_index"), 85.0),
+            _num(biomech.get("release_velocity_mps"), METRIC_DEFAULTS["release_velocity_mps"]),
+            _num(biomech.get("shot_arc_deg"),          METRIC_DEFAULTS["shot_arc_deg"]),
+            _num(biomech.get("knee_angle"),            METRIC_DEFAULTS["knee_angle"]),
+            _num(biomech.get("elbow_angle"),           METRIC_DEFAULTS["elbow_angle"]),
+            _num(biomech.get("kinetic_sync_ms"),       METRIC_DEFAULTS["kinetic_sync_ms"]),
+            _num(biomech.get("fluidity_score"),        METRIC_DEFAULTS["fluidity_score"]),
+            _num(biomech.get("hip_rotation_deg"),      METRIC_DEFAULTS["hip_rotation_deg"]),
+            _num(biomech.get("balance_index"),         METRIC_DEFAULTS["balance_index"]),
         ]
         query_vector = [v * w for v, w in zip(raw_vector, FEATURE_WEIGHTS)]
 
@@ -396,7 +400,7 @@ async def analyze_video(
 
         player_id = meta.get("id") or meta.get("player_id")
         matched_pro = _build_matched_pro(match_name, player_id, meta) if match_name != "—" else None
-        market_index = calculate_market_index(query_vector, match_distance)
+        market_index = calculate_market_index(match_distance)  # was: passing query_vector as first arg — dropped to match updated signature above
 
         # Build pro_stats from meta (v0-v7) for delta calculation.
         # Schema: v0=vel_mps, v1=arc, v2=knee, v3=elbow, v4=ksync_ms, v5=fluidity, v6=hip, v7=balance
