@@ -2,6 +2,9 @@
 """
 Run KinematicAnalyzer on a manifest or directory of videos; write JSONL for QA / backbone comparison.
 
+For **gym pose-only** metrics (Phase A, no basketball metrics), use:
+  python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.template.csv --out evaluation/pose_baseline.jsonl
+
 Usage:
   python scripts/benchmark_pipeline.py --dir ./evaluation/clips --out ./evaluation/results.jsonl
   python scripts/benchmark_pipeline.py --manifest evaluation/manifest.csv --strict-manifest
@@ -105,10 +108,19 @@ def load_manifest(
 def main() -> int:
     ap = argparse.ArgumentParser(description="Benchmark video analysis pipeline (JSONL out).")
     ap.add_argument("--manifest", type=Path, help="CSV with columns clip_id,path,tags,notes,expect_*")
-    ap.add_argument("--manifest-dir", type=Path, default=None, help="Base dir for relative paths in manifest")
+    ap.add_argument(
+        "--manifest-dir",
+        type=Path,
+        default=None,
+        help="Base dir for relative manifest paths (default: repo root)",
+    )
     ap.add_argument("--dir", type=Path, help="Directory of .mp4 files")
     ap.add_argument("--out", type=Path, required=True, help="Output JSONL path")
-    ap.add_argument("--strict-manifest", action="store_true", help="Exit 1 if any expectation fails")
+    ap.add_argument(
+        "--strict-manifest",
+        action="store_true",
+        help="Exit 1 if any clip path is missing or any expect_* expectation fails",
+    )
     ap.add_argument(
         "--backend",
         choices=("mediapipe",),
@@ -122,14 +134,15 @@ def main() -> int:
 
     jobs: list[tuple[str, Path, str | None, int | None, str | None]] = []
     if args.manifest:
-        base = args.manifest_dir or args.manifest.parent
+        # Paths in CSV are repo-root-relative (see docs/evaluation_set_spec.md).
+        base = args.manifest_dir or REPO_ROOT
         jobs = load_manifest(args.manifest, base)
     else:
         for p in sorted(args.dir.glob("*.mp4")):
             jobs.append((p.stem, p.resolve(), None, None, None))
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    failures = 0
+    strict_violations = 0
     with args.out.open("w", encoding="utf-8") as out_f:
         for clip_id, vp, expect_mode, expect_min_meas, tags in jobs:
             if not vp.is_file():
@@ -143,7 +156,8 @@ def main() -> int:
                     "elapsed_ms": 0.0,
                 }
                 out_f.write(json.dumps(row) + "\n")
-                failures += 1
+                if args.strict_manifest:
+                    strict_violations += 1
                 continue
             row = run_one(vp, clip_id, args.backend)
             if tags:
@@ -153,12 +167,10 @@ def main() -> int:
                 if errs:
                     row["expectation_errors"] = errs
                     if args.strict_manifest:
-                        failures += 1
+                        strict_violations += 1
             out_f.write(json.dumps(row) + "\n")
 
-    if failures and args.strict_manifest:
-        return 1
-    return 0
+    return 1 if args.strict_manifest and strict_violations > 0 else 0
 
 
 if __name__ == "__main__":

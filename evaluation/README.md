@@ -28,3 +28,12 @@
 Details and pass/fail rules: [docs/evaluation_set_spec.md](../docs/evaluation_set_spec.md).
 
 `results.jsonl` and `clips/*.mp4` are gitignored; keep the manifest in version control once curated.
+
+## Gym pose baseline (Phase A)
+
+Gym-specific manifest template: [gym_manifest.template.csv](gym_manifest.template.csv). Place videos under `gym_clips/`. Spec and metrics: [docs/gym_pose_evaluation.md](../docs/gym_pose_evaluation.md).
+
+```bash
+python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.template.csv \
+  --out evaluation/pose_baseline.jsonl
+```

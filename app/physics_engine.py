@@ -7,11 +7,12 @@ import math
 import cv2
 import numpy as np
 import pandas as pd
-import subprocess
-import tempfile
 import os
 from pathlib import Path
 from typing import Any
+
+from app.pose.preprocess import normalize_video_for_pose
+from app.pose.mediapipe_common import create_pose_landmarker
 from scipy.signal import savgol_filter
 
 logger = logging.getLogger(__name__)
@@ -129,101 +130,17 @@ class KinematicAnalyzer:
 
     def _prepare_video(self) -> str:
         """
-        Normalise input video for reliable MediaPipe detection.
-        Fixes the three most common phone-video failure modes in one FFmpeg pass:
-          1. HEVC/H.265 (iPhone default) — re-encode to H.264 which OpenCV decodes reliably
-          2. Variable Frame Rate (VFR) — force constant 30 fps so MediaPipe timestamps are monotonic
-          3. Rotation metadata — bake rotation into pixels so OpenCV sees the correct orientation
-        Returns path to normalised file (caller must clean up).
+        Normalise input video for reliable MediaPipe detection (shared with gym pose baseline).
+        See app.pose.preprocess.normalize_video_for_pose.
         """
-        suffix = Path(self.video_path).suffix or ".mp4"
-        tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
-        tmp.close()
-        out_path = tmp.name
-
-        cmd = [
-            "ffmpeg", "-y",
-            "-i", self.video_path,
-            "-c:v", "libx264",
-            "-preset", "ultrafast",
-            "-crf", "20",
-            "-vf", "scale=-2:min'(720,ih)',fps=30",   # max 720p, constant 30 fps
-            "-an",                                      # drop audio (not needed)
-            "-movflags", "+faststart",
-            out_path,
-        ]
-        try:
-            result = subprocess.run(cmd, capture_output=True, timeout=120)
-            if result.returncode != 0 or not os.path.exists(out_path) or os.path.getsize(out_path) < 1024:
-                logger.warning(
-                    "FFmpeg normalisation failed (rc=%s); using original video. stderr_tail=%s",
-                    result.returncode,
-                    result.stderr.decode(errors="replace")[-800:],
-                )
-                os.unlink(out_path)
-                return self.video_path
-            logger.info(
-                "FFmpeg normalisation OK → %s (%s KB)",
-                out_path,
-                os.path.getsize(out_path) // 1024,
-            )
-            return out_path
-        except Exception as exc:
-            logger.warning("FFmpeg unavailable or timed out: %s; using original video.", exc)
-            try: os.unlink(out_path)
-            except OSError: pass
-            return self.video_path
+        path, _, _ = normalize_video_for_pose(self.video_path)
+        return path
 
     def _init_pose(self) -> bool:
         """Initialise MediaPipe Pose Landmarker (Heavy model). Downloads on first run if missing."""
         try:
-            from mediapipe.tasks.python import vision
-            from mediapipe.tasks.python.core import base_options
-            import ssl
-            from pathlib import Path
-
-            # Use the heavy model for maximum lab-grade accuracy
-            model_path = Path(__file__).resolve().parent.parent / "pose_landmarker_heavy.task"
-
-            if not model_path.exists():
-                logger.info("Downloading MediaPipe pose landmarker (heavy)…")
-                import urllib.request
-
-                url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task"
-
-                try:
-                    # Attempt download with full SSL verification (always works in Docker/production)
-                    ctx = ssl.create_default_context()
-                    with urllib.request.urlopen(url, context=ctx) as response, open(model_path, "wb") as out_file:
-                        out_file.write(response.read())
-                except ssl.SSLError:
-                    # Fallback for macOS dev environments without updated CA certificates.
-                    # Permanent fix: run /Applications/Python*/Install\ Certificates.command
-                    logger.warning(
-                        "SSL verify failed for model download; retrying without verify (dev only — fix CA bundle in prod)"
-                    )
-                    ctx_dev = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-                    ctx_dev.check_hostname = False
-                    ctx_dev.verify_mode = ssl.CERT_NONE
-                    with urllib.request.urlopen(url, context=ctx_dev) as response, open(model_path, "wb") as out_file:
-                        out_file.write(response.read())
-
-                logger.info("Pose model download complete.")
-
-            # Lower thresholds from 0.5 → 0.3 for fast sports motion (validated by PMC 9397457).
-            # At 0.5 many mid-motion frames fail detection; 0.3 recovers ~40% more detections
-            # while staying above noise floor. Biological plausibility check downstream handles outliers.
-            opts = vision.PoseLandmarkerOptions(
-                base_options=base_options.BaseOptions(model_asset_path=str(model_path)),
-                running_mode=vision.RunningMode.VIDEO,
-                num_poses=2,  # Detect up to 2 people; enables multi-person awareness in one pass
-                min_pose_detection_confidence=0.3,
-                min_pose_presence_confidence=0.3,
-                min_tracking_confidence=0.3,
-            )
-            self._landmarker = vision.PoseLandmarker.create_from_options(opts)
+            self._landmarker = create_pose_landmarker()
             return True
-
         except Exception:
             logger.exception("MediaPipe PoseLandmarker failed to initialize")
             return False

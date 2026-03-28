@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "pose_usable_heuristic": {
+    "min_detection_rate": 0.25,
+    "min_visibility_core_when_detected": 0.35,
+    "min_n_frames": 15
+  },
+  "documentation": "Thresholds for pose_usable_heuristic in app/pose/mediapipe_baseline.py. Recalibrate using manifest statistics; see docs/POSE_EVALUATION_PROTOCOL.md."
+}

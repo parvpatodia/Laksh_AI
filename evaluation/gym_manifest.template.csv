@@ -1,0 +1,13 @@
+clip_id,path,tags,notes,exercise_id,expect_pose_usable,expect_min_detection_rate
+g_sq_side_01,evaluation/gym_clips/PLACEHOLDER_squat_side_clean.mp4,squat|side_view|phone_clean,Single lifter side view — good light,squat,,
+g_sq_front_01,evaluation/gym_clips/PLACEHOLDER_squat_front.mp4,squat|front_view|phone_clean,Frontal squat torso visible,squat,,
+g_dl_side_01,evaluation/gym_clips/PLACEHOLDER_deadlift_side.mp4,deadlift|side_view|phone_clean,Conventional DL side,deadlift,,
+g_dl_occl_01,evaluation/gym_clips/PLACEHOLDER_deadlift_bar_occlusion.mp4,deadlift|occlusion|bar_visible,Bar partially hides legs,deadlift,,
+g_bp_phone_01,evaluation/gym_clips/PLACEHOLDER_bench_phone_angle.mp4,bench_press|angled|phone_clean,Bench from diagonal,bench_press,,
+g_row_01,evaluation/gym_clips/PLACEHOLDER_row_low_light.mp4,bent_over_row|phone_low_light,Darker corner of gym,row,,
+g_pullup_01,evaluation/gym_clips/PLACEHOLDER_pullup.mp4,pull_up|far_subject,Small subject in frame,pull_up,,
+g_multi_01,evaluation/gym_clips/PLACEHOLDER_multi_person_gym.mp4,multi_person|gym_floor,Background lifters,mixed,,
+g_portrait_01,evaluation/gym_clips/PLACEHOLDER_squat_portrait.mp4,squat|portrait|phone_clean,Vertical phone capture,squat,,
+g_vfr_01,evaluation/gym_clips/PLACEHOLDER_iphone_hevc.mp4,vfr_hevc|squat,iPhone HEVC/VFR source,squat,,
+g_short_01,evaluation/gym_clips/PLACEHOLDER_short_clip.mp4,short_clip|squat,Very short clip,squat,,
+g_short_02,evaluation/gym_clips/PLACEHOLDER_short_clip_2.mp4,short_clip|deadlift,Very short DL,deadlift,,

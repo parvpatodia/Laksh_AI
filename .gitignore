@@ -25,7 +25,22 @@ temp_*.mp4
 # Evaluation bench output and local clip binaries (keep manifest in repo)
 evaluation/results.jsonl
 evaluation/compare.csv
+evaluation/pose_baseline.jsonl
 evaluation/clips/*.mp4
+evaluation/gym_clips/*.mp4
 
 # Cursor worktree apply artifact (prevents "Unable to read file .sh" error)
 .sh
+
+# Agent output files
+.agent-logs/
+.agent-work/
+.agent-docs/
+HEALTH_LOG.md
+REVIEW_LOG.md
+RESEARCH_LOG.md
+SUGGESTIONS.md
+END_OF_DAY.md
+URGENT.md
+ORCHESTRATOR_REVIEW.md
+SECURITY_AUDIT.md
