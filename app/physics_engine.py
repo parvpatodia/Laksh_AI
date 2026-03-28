@@ -13,16 +13,45 @@ from typing import Any
 
 from app.pose.preprocess import normalize_video_for_pose
 from app.pose.mediapipe_common import create_pose_landmarker
+# Joint indices imported from single source — was duplicated here AND in app/pose/constants.py
+from app.pose.constants import (
+    LEFT_WRIST, RIGHT_WRIST,
+    LEFT_ELBOW, RIGHT_ELBOW,
+    LEFT_SHOULDER, RIGHT_SHOULDER,
+    LEFT_HIP, RIGHT_HIP,
+    LEFT_KNEE, RIGHT_KNEE,
+    LEFT_ANKLE, RIGHT_ANKLE,
+)
+from app.biomechanics_constants import (
+    FRAME_RESIZE_MAX_DIM,
+    GAMMA_POWER, CONTRAST_BOOST,
+    SHARPEN_SIGNAL_WEIGHT, SHARPEN_BLUR_WEIGHT,
+    DENOISE_FILTER_STRENGTH, DENOISE_TEMPLATE_WINDOW, DENOISE_SEARCH_WINDOW,
+    JUMP_SHOT_WRIST_SPAN, JUMP_SHOT_HIP_SPAN, SET_SHOT_WRIST_SPAN, SET_SHOT_HIP_SPAN,
+    JUMP_SHOT_SEARCH_DURATION_SEC, POST_RELEASE_DURATION_SEC,
+    SET_SHOT_DIP_WINDOW_LO, SET_SHOT_DIP_WINDOW_HI,
+    SET_SHOT_FPS_DIP_FALLBACK_SEC, SET_SHOT_MIN_DIP_OFFSET_SEC,
+    KNEE_ANGLE_FALLBACK_DEG, ELBOW_ANGLE_FALLBACK_DEG,
+    KNEE_ANGLE_VALIDITY_MIN, ELBOW_ANGLE_VALIDITY_MIN,
+    WRIST_FLICK_OFFSET_DEG, ARC_BIOLOGICAL_MIN_DEG, ARC_BIOLOGICAL_MAX_DEG,
+    ARC_DEFAULT_DEG, ARC_POST_RELEASE_FRAMES,
+    KINETIC_SYNC_BASELINE_FRAMES, KINETIC_SYNC_MIN_MS, KINETIC_SYNC_MAX_MS,
+    KINETIC_SYNC_FPS_DILATION_THRESHOLD,
+    VELOCITY_SCALE_FACTOR, VELOCITY_MIN_MPS, VELOCITY_MAX_MPS, VELOCITY_DEFAULT_MPS,
+    YAW_CLAMP_DEG,
+    BALANCE_DEFAULT, BALANCE_DEVIATION_SCALE, BALANCE_SCORE_MIN, BALANCE_SCORE_MAX, BALANCE_TORSO_EPSILON,
+    FLUIDITY_DEFAULT, FLUIDITY_JERK_SCALE, FLUIDITY_SCORE_MIN, FLUIDITY_SCORE_MAX, FLUIDITY_MIN_FRAMES,
+    UNCERTAINTY_WINDOW_HALF, UNCERTAINTY_CLAMP_MIN_DEG, UNCERTAINTY_CLAMP_MAX_DEG,
+    UNCERTAINTY_VARIANCE_MULTIPLIER, UNCERTAINTY_LOW_VISIBILITY_INFLATE,
+    UNCERTAINTY_VISIBILITY_THRESHOLD, UNCERTAINTY_MIN_SAMPLES, UNCERTAINTY_FALLBACK_DEG,
+    UNCERTAINTY_2D_FALLBACK_INFLATE, UNCERTAINTY_2D_FALLBACK_CAP_DEG,
+    METRIC_CONFIDENCE_MAP,
+    VQ_MIN_WIDTH, VQ_MIN_HEIGHT, VQ_MIN_FPS, VQ_SLOWMO_FPS,
+    VQ_MIN_ASPECT, VQ_MAX_ASPECT, VQ_MIN_FRAMES, VQ_FPS_REFERENCE, VQ_RES_BASELINE,
+)
 from scipy.signal import savgol_filter
 
 logger = logging.getLogger(__name__)
-
-LEFT_WRIST, RIGHT_WRIST = 15, 16
-LEFT_ELBOW, RIGHT_ELBOW = 13, 14
-LEFT_SHOULDER, RIGHT_SHOULDER = 11, 12
-LEFT_HIP, RIGHT_HIP = 23, 24
-LEFT_KNEE, RIGHT_KNEE = 25, 26
-LEFT_ANKLE, RIGHT_ANKLE = 27, 28
 
 METRIC_KEYS = [
     "release_velocity_mps",
@@ -149,10 +178,9 @@ class KinematicAnalyzer:
         """Resize frame for consistent pose extraction (Option 3: video preprocessing).
         Max 720p on longer side; preserves aspect. Coords stay normalized [0,1]."""
         h, w = frame.shape[:2]
-        max_dim = 720
-        if max(h, w) <= max_dim:
+        if max(h, w) <= FRAME_RESIZE_MAX_DIM:
             return frame
-        scale = max_dim / max(h, w)
+        scale = FRAME_RESIZE_MAX_DIM / max(h, w)
         new_w, new_h = int(w * scale), int(h * scale)
         return cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
@@ -161,13 +189,17 @@ class KinematicAnalyzer:
         if variant == "gamma_contrast":
             # Lift shadows and boost local contrast for dim videos.
             f = frame.astype(np.float32) / 255.0
-            f = np.power(np.clip(f, 0.0, 1.0), 0.85)
-            f = np.clip((f - 0.5) * 1.18 + 0.5, 0.0, 1.0)
+            f = np.power(np.clip(f, 0.0, 1.0), GAMMA_POWER)
+            f = np.clip((f - 0.5) * CONTRAST_BOOST + 0.5, 0.0, 1.0)
             return (f * 255.0).astype(np.uint8)
         if variant == "denoise_sharpen":
-            den = cv2.fastNlMeansDenoisingColored(frame, None, 3, 3, 7, 21)
+            den = cv2.fastNlMeansDenoisingColored(
+                frame, None,
+                DENOISE_FILTER_STRENGTH, DENOISE_FILTER_STRENGTH,
+                DENOISE_TEMPLATE_WINDOW, DENOISE_SEARCH_WINDOW,
+            )
             gauss = cv2.GaussianBlur(den, (0, 0), 1.0)
-            return cv2.addWeighted(den, 1.35, gauss, -0.35, 0)
+            return cv2.addWeighted(den, SHARPEN_SIGNAL_WEIGHT, gauss, SHARPEN_BLUR_WEIGHT, 0)
         return frame
 
     def _extract_frames_with_variant(
@@ -182,6 +214,7 @@ class KinematicAnalyzer:
         path = video_path_override or self.video_path
         cap = cv2.VideoCapture(path)
         if not cap.isOpened():
+            cap.release()  # was: raised without releasing — file descriptor leak
             raise ValueError(f"Could not open video: {path}")
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
@@ -396,27 +429,26 @@ class KinematicAnalyzer:
         visibility-weighted. Ref: PMC 11695451 (OpenPose accuracy vs movement).
         """
         notes = []
-        if w < 320 or h < 240:
+        if w < VQ_MIN_WIDTH or h < VQ_MIN_HEIGHT:
             notes.append("Low resolution may reduce pose accuracy. Use 720p or higher for best results.")
-        if fps < 20:
-            notes.append("Low framerate (<20 fps) can blur fast motions. 30 fps or higher recommended.")
-        elif fps > 90:
+        if fps < VQ_MIN_FPS:
+            notes.append(f"Low framerate (<{VQ_MIN_FPS:.0f} fps) can blur fast motions. 30 fps or higher recommended.")
+        elif fps > VQ_SLOWMO_FPS:
             notes.append("Slow-motion detected. Kinetic sync timing adjusted for high-speed capture.")
         ar = w / h if h > 0 else 1.0
-        if ar < 0.6:
+        if ar < VQ_MIN_ASPECT:
             notes.append("Vertical/portrait video can compress shot arc. For best accuracy, use landscape with a 45° angle.")
-        elif ar > 2.2:
+        elif ar > VQ_MAX_ASPECT:
             notes.append("Ultra-wide format may distort joint positions at frame edges.")
-        if total_frames < 30:
+        if total_frames < VQ_MIN_FRAMES:
             notes.append("Short clip: ensure it contains a single, complete jump shot for reliable analysis.")
 
-        # Log-based quality formula (PHASE2_RESEARCH_GROUNDED)
-        max_dim = max(w, h, 320)
-        q_res = min(100, 20 * math.log10(max_dim / 320 + 1e-6) + 40)  # 320p baseline
+        max_dim = max(w, h, VQ_RES_BASELINE)
+        q_res = min(100, 20 * math.log10(max_dim / VQ_RES_BASELINE + 1e-6) + 40)
         q_res = max(0, q_res)
-        q_fps = min(15, 15 * min(fps / 30.0, 1.5))  # 30 fps reference
-        q_aspect = 10 if 0.6 <= ar <= 2.2 else 5
-        q_visibility = 30 * visibility  # 0–1 → 0–30 pts
+        q_fps = min(15, 15 * min(fps / VQ_FPS_REFERENCE, 1.5))
+        q_aspect = 10 if VQ_MIN_ASPECT <= ar <= VQ_MAX_ASPECT else 5
+        q_visibility = 30 * visibility
         q_people = 10 if people_count <= 1 else max(0, 10 - 5 * (people_count - 1))
         score = int(np.clip(q_res + q_fps + q_aspect + q_visibility + q_people, 0, 100))
 
@@ -438,56 +470,6 @@ class KinematicAnalyzer:
             if arr is not None and len(arr) > 0 and arr.shape[1] >= 3:
                 vals.append(np.nanmean(arr[:, 2]))
         return float(np.mean(vals)) if vals else 0.0
-
-    def _compute_angle_uncertainty(
-        self,
-        h3d: np.ndarray,
-        k3d: np.ndarray,
-        a3d: np.ndarray,
-        s3d: np.ndarray,
-        e3d: np.ndarray,
-        w3d: np.ndarray,
-        dip_frame: int,
-        release_frame: int,
-        visibility: float,
-    ) -> dict:
-        """
-        Empirical uncertainty from frame-window variance. Ref: PMC 9397457.
-        Returns knee_angle_uncertainty and elbow_angle_uncertainty in degrees (±).
-        """
-        out = {}
-        half = 3
-        # Knee: window around dip
-        lo = max(0, dip_frame - half)
-        hi = min(len(k3d), dip_frame + half + 1)
-        k_angles = []
-        for i in range(lo, hi):
-            ang = _calculate_3d_angle(h3d[i], k3d[i], a3d[i])
-            if ang >= 10:
-                k_angles.append(ang)
-        if len(k_angles) >= 2:
-            std_k = float(np.nanstd(k_angles))
-            unc = max(3, min(12, std_k * 1.2))
-            if visibility < 0.6:
-                unc = min(12, unc * 1.5)
-            out["knee_angle_uncertainty"] = round(unc, 1)
-
-        # Elbow: window around release
-        lo = max(0, release_frame - half)
-        hi = min(len(e3d), release_frame + half + 1)
-        e_angles = []
-        for i in range(lo, hi):
-            ang = _calculate_3d_angle(s3d[i], e3d[i], w3d[i])
-            if ang >= 10:
-                e_angles.append(ang)
-        if len(e_angles) >= 2:
-            std_e = float(np.nanstd(e_angles))
-            unc = max(3, min(12, std_e * 1.2))
-            if visibility < 0.6:
-                unc = min(12, unc * 1.5)
-            out["elbow_angle_uncertainty"] = round(unc, 1)
-
-        return out
 
     def _compute_validation_flags(self, metrics: dict, visibility: float, used_fallback: bool) -> list:
         """Biological plausibility and data-quality checks. Returns human-readable warnings."""
@@ -522,21 +504,20 @@ class KinematicAnalyzer:
         Returns (knee_uncertainty_deg, elbow_uncertainty_deg). Clamped 3–12°; inflated if visibility low.
         """
         n = len(h3d)
-        win = 3
         k_angles, e_angles = [], []
-        for i in range(max(0, dip_frame - win), min(n, dip_frame + win + 1)):
+        for i in range(max(0, dip_frame - UNCERTAINTY_WINDOW_HALF), min(n, dip_frame + UNCERTAINTY_WINDOW_HALF + 1)):
             ang = _calculate_3d_angle(h3d[i], k3d[i], a3d[i])
-            if ang > 10:
+            if ang > KNEE_ANGLE_VALIDITY_MIN:
                 k_angles.append(ang)
-        for i in range(max(0, release_frame - win), min(n, release_frame + win + 1)):
+        for i in range(max(0, release_frame - UNCERTAINTY_WINDOW_HALF), min(n, release_frame + UNCERTAINTY_WINDOW_HALF + 1)):
             ang = _calculate_3d_angle(s3d[i], e3d[i], w3d[i])
-            if ang > 10:
+            if ang > ELBOW_ANGLE_VALIDITY_MIN:
                 e_angles.append(ang)
-        k_std = float(np.nanstd(k_angles)) if len(k_angles) >= 3 else 5.0
-        e_std = float(np.nanstd(e_angles)) if len(e_angles) >= 3 else 5.0
-        mult = 1.5 if visibility < 0.6 else 1.0
-        k_unc = max(3.0, min(12.0, k_std * 1.2 * mult))
-        e_unc = max(3.0, min(12.0, e_std * 1.2 * mult))
+        k_std = float(np.nanstd(k_angles)) if len(k_angles) >= UNCERTAINTY_MIN_SAMPLES else UNCERTAINTY_FALLBACK_DEG
+        e_std = float(np.nanstd(e_angles)) if len(e_angles) >= UNCERTAINTY_MIN_SAMPLES else UNCERTAINTY_FALLBACK_DEG
+        mult = UNCERTAINTY_LOW_VISIBILITY_INFLATE if visibility < UNCERTAINTY_VISIBILITY_THRESHOLD else 1.0
+        k_unc = max(UNCERTAINTY_CLAMP_MIN_DEG, min(UNCERTAINTY_CLAMP_MAX_DEG, k_std * UNCERTAINTY_VARIANCE_MULTIPLIER * mult))
+        e_unc = max(UNCERTAINTY_CLAMP_MIN_DEG, min(UNCERTAINTY_CLAMP_MAX_DEG, e_std * UNCERTAINTY_VARIANCE_MULTIPLIER * mult))
         return (round(k_unc, 1), round(e_unc, 1))
 
     def _compute_confidence_factors(
@@ -718,20 +699,21 @@ class KinematicAnalyzer:
             hip_span = float(np.ptp(hip_y)) if len(hip_y) > 1 else 0.0
             shot_type = (
                 "set_shot"
-                if (wrist_span < 0.048 and hip_span < 0.042) or (wrist_span < 0.058 and hip_span < 0.028)
+                if (wrist_span < JUMP_SHOT_WRIST_SPAN and hip_span < JUMP_SHOT_HIP_SPAN)
+                or (wrist_span < SET_SHOT_WRIST_SPAN and hip_span < SET_SHOT_HIP_SPAN)
                 else "jump_shot"
             )
 
             if shot_type == "jump_shot":
                 dip_frame = max(0, min(int(np.argmax(wrist_y)), n_w - 5))
-                search_end = min(n_w, dip_frame + int(fps * 1.5))
+                search_end = min(n_w, dip_frame + int(fps * JUMP_SHOT_SEARCH_DURATION_SEC))
                 if search_end > dip_frame + 2:
                     release_frame = dip_frame + int(np.argmin(wrist_y[dip_frame:search_end]))
                 else:
                     release_frame = dip_frame + 1
             else:
-                lo = max(1, int(0.18 * n_w))
-                hi = min(n_w - 1, int(0.92 * n_w))
+                lo = max(1, int(SET_SHOT_DIP_WINDOW_LO * n_w))
+                hi = min(n_w - 1, int(SET_SHOT_DIP_WINDOW_HI * n_w))
                 if hi <= lo + 2:
                     lo, hi = 0, n_w - 1
                 seg = wrist_y[lo : hi + 1]
@@ -739,10 +721,10 @@ class KinematicAnalyzer:
                 if release_frame >= 3:
                     dip_frame = int(np.argmax(wrist_y[: release_frame + 1]))
                 else:
-                    dip_frame = max(0, release_frame - max(3, int(fps * 0.2)))
+                    dip_frame = max(0, release_frame - max(3, int(fps * SET_SHOT_FPS_DIP_FALLBACK_SEC)))
                 dip_frame = max(0, min(dip_frame, max(0, release_frame - 1)))
                 if release_frame <= dip_frame:
-                    dip_frame = max(0, release_frame - max(2, int(fps * 0.15)))
+                    dip_frame = max(0, release_frame - max(2, int(fps * SET_SHOT_MIN_DIP_OFFSET_SEC)))
 
             release_frame = max(0, min(release_frame, n_w - 1))
 
@@ -761,46 +743,49 @@ class KinematicAnalyzer:
 
             if has_knee_world:
                 k_ang = _calculate_3d_angle(h3d[dip_frame], k3d[dip_frame], a3d[dip_frame])
-                if k_ang < 10:
-                    k_ang = 135.0
+                if k_ang < KNEE_ANGLE_VALIDITY_MIN:
+                    k_ang = KNEE_ANGLE_FALLBACK_DEG  # degenerate frame — use league-average default
             elif has_knee_2d:
                 k_ang = float(np.clip(k_2d_raw, 90, 180))
             else:
-                k_ang = 135.0
+                k_ang = KNEE_ANGLE_FALLBACK_DEG
 
             if has_elbow_world:
                 e_ang = _calculate_3d_angle(s3d[release_frame], e3d[release_frame], w3d[release_frame])
-                if e_ang < 10:
-                    e_ang = 165.0
+                if e_ang < ELBOW_ANGLE_VALIDITY_MIN:
+                    e_ang = ELBOW_ANGLE_FALLBACK_DEG
             elif has_elbow_2d:
                 e_ang = float(np.clip(e_2d_raw, 100, 180))
             else:
-                e_ang = 165.0
+                e_ang = ELBOW_ANGLE_FALLBACK_DEG
             
             # Dimensionless Power Scale
             w_travel = np.linalg.norm(w2d[release_frame][:2] - w2d[dip_frame][:2])
             t_len = np.linalg.norm(s2d[dip_frame][:2] - h2d[dip_frame][:2])
             power_ratio = (w_travel / t_len) if t_len > 1e-5 and release_frame > dip_frame else 0.0
-            vel_mps = np.clip(power_ratio * 3.5, 4.0, 10.0) if power_ratio > 0 else 6.5
+            vel_mps = (
+                np.clip(power_ratio * VELOCITY_SCALE_FACTOR, VELOCITY_MIN_MPS, VELOCITY_MAX_MPS)
+                if power_ratio > 0
+                else VELOCITY_DEFAULT_MPS
+            )
 
             # True Parabolic Shot Arc (Bulletproof Geometric Anchor)
 
             # 1. ALWAYS calculate the Lever Arc first (Shoulder to Wrist at release)
-            lever_arc = 48.5
+            lever_arc = ARC_DEFAULT_DEG
             dx_lever = (w2d[release_frame, 0] - s2d[release_frame, 0]) * aspect_ratio
-            dy_lever = -(w2d[release_frame, 1] - s2d[release_frame, 1]) # Invert Y
+            dy_lever = -(w2d[release_frame, 1] - s2d[release_frame, 1])  # Invert Y (image → screen coords)
             if abs(dx_lever) > 1e-5:
                 lever_angle = math.degrees(math.atan2(dy_lever, abs(dx_lever)))
-                # Subtract wrist flick, clamp to human reality
-                lever_arc = np.clip(lever_angle - 15.0, 30.0, 75.0)
+                lever_arc = np.clip(lever_angle - WRIST_FLICK_OFFSET_DEG, ARC_BIOLOGICAL_MIN_DEG, ARC_BIOLOGICAL_MAX_DEG)
 
-            arc_deg = lever_arc # Lock in geometric truth as our baseline
+            arc_deg = lever_arc  # Geometric anchor — overridden below if trajectory data is available
 
             # 2. Try to calculate true post-release flight path IF we have enough frames
             calc_arc = None
             available_frames = len(w2d) - release_frame - 1
-            if available_frames >= 3: # Require at least 3 frames for a true curve
-                arc_window = min(7, available_frames)
+            if available_frames >= 3:
+                arc_window = min(ARC_POST_RELEASE_FRAMES, available_frames)
                 x_vals = w2d[release_frame : release_frame + arc_window, 0] * aspect_ratio
                 y_vals = -w2d[release_frame : release_frame + arc_window, 1]
 
@@ -810,7 +795,7 @@ class KinematicAnalyzer:
                     calc_arc = math.degrees(math.atan(abs(slope)))
 
                     # Only override lever if the flight path makes biological sense
-                    if 30.0 <= calc_arc <= 75.0:
+                    if ARC_BIOLOGICAL_MIN_DEG <= calc_arc <= ARC_BIOLOGICAL_MAX_DEG:
                         arc_deg = calc_arc
 
             # Unmask the math in the terminal
@@ -837,7 +822,7 @@ class KinematicAnalyzer:
                 h_ang = math.atan2(rh[2] - lh[2], rh[0] - lh[0])
                 twist = math.degrees(s_ang - h_ang)
                 twist = (twist + 180) % 360 - 180
-                yaw_deg = float(np.clip(twist, -45.0, 45.0))
+                yaw_deg = float(np.clip(twist, -YAW_CLAMP_DEG, YAW_CLAMP_DEG))
 
             ls2d = f_2d["left_shoulder"][dip_frame]
             rs2d = f_2d["right_shoulder"][dip_frame]
@@ -854,7 +839,7 @@ class KinematicAnalyzer:
                     h_ang2 = math.atan2(hdy, hdx)
                     twist2 = math.degrees(s_ang2 - h_ang2)
                     twist2 = (twist2 + 180) % 360 - 180
-                    yaw_2d_deg = float(np.clip(twist2, -45.0, 45.0))
+                    yaw_2d_deg = float(np.clip(twist2, -YAW_CLAMP_DEG, YAW_CLAMP_DEG))
 
             if not yaw_measured and yaw_2d_deg is not None:
                 yaw_deg = yaw_2d_deg
@@ -863,21 +848,20 @@ class KinematicAnalyzer:
             raw_frames = abs(release_frame - dip_frame)
             estimated_fps = fps
 
-            # Human biomechanics limit: Nobody takes 15+ frames to shoot at true 30fps
-            if raw_frames > 15:
-                # Dynamically scale the FPS based on the degree of slow-motion dilation
-                estimated_fps = fps * (raw_frames / 8.0)
+            # Human biomechanics limit: nobody takes 15+ frames at true 30 fps
+            if raw_frames > KINETIC_SYNC_FPS_DILATION_THRESHOLD:
+                # Dynamically scale FPS to correct for slow-motion dilation
+                estimated_fps = fps * (raw_frames / KINETIC_SYNC_BASELINE_FRAMES)
 
             if estimated_fps > 0:
                 sync_ms = (raw_frames / estimated_fps) * 1000.0
             else:
-                sync_ms = raw_frames * 33.3
+                sync_ms = raw_frames * (1000.0 / VQ_FPS_REFERENCE)
 
-            sync_ms = np.clip(sync_ms, 120.0, 395.0)
+            sync_ms = np.clip(sync_ms, KINETIC_SYNC_MIN_MS, KINETIC_SYNC_MAX_MS)
 
             # Dimensionless Base of Support (Balance Index)
-            # Measures horizontal displacement of Center of Mass (Hips) over Base (Ankles)
-            balance_index = 85
+            balance_index = BALANCE_DEFAULT
             lh2d, rh2d = f_2d["left_hip"][dip_frame], f_2d["right_hip"][dip_frame]
             la2d, ra2d = f_2d["left_ankle"][dip_frame], f_2d["right_ankle"][dip_frame]
             balance_measured = False
@@ -887,19 +871,16 @@ class KinematicAnalyzer:
                 ankle_mid_x = (la2d[0] + ra2d[0]) / 2.0
 
                 # Normalize deviation by torso length to remain immune to camera zoom
-                if t_len > 1e-4:
+                if t_len > BALANCE_TORSO_EPSILON:
                     deviation = abs(hip_mid_x - ankle_mid_x) / t_len
-                    # A perfect vertical stack (deviation 0) = 99 score.
-                    # Leaning heavily (deviation > 0.5) drops score rapidly.
-                    balance_index = int(np.clip(100 - (deviation * 120), 40, 99))
+                    balance_index = int(np.clip(100 - (deviation * BALANCE_DEVIATION_SCALE), BALANCE_SCORE_MIN, BALANCE_SCORE_MAX))
                     balance_measured = True
 
-            # Fluidity Derivation
-            fluidity = 65
+            fluidity = FLUIDITY_DEFAULT
             fluidity_measured = False
             if release_frame > dip_frame + 2:
-                jerk = np.std(np.diff(np.diff(wrist_y[dip_frame:release_frame]))) if release_frame - dip_frame > 3 else 0
-                fluidity = int(np.clip(100 - (jerk * 2000), 40, 99))
+                jerk = np.std(np.diff(np.diff(wrist_y[dip_frame:release_frame]))) if release_frame - dip_frame > FLUIDITY_MIN_FRAMES else 0
+                fluidity = int(np.clip(100 - (jerk * FLUIDITY_JERK_SCALE), FLUIDITY_SCORE_MIN, FLUIDITY_SCORE_MAX))
                 fluidity_measured = True
 
             # 2D Telemetry Payload for UI Rendering — Research-grade per-frame overlay
@@ -918,8 +899,7 @@ class KinematicAnalyzer:
                     "ankle":    [round(float(a2d[i, 0]), 4), round(float(a2d[i, 1]), 4)],
                 }
 
-            # Per-frame skeleton overlay: dip to release + 1.5s post-release (smooth continuous visualization)
-            end_frame = min(total_frames - 1, release_frame + int(fps * 1.5))
+            end_frame = min(total_frames - 1, release_frame + int(fps * POST_RELEASE_DURATION_SEC))
             frames = []
             for fi in range(dip_frame, end_frame + 1):
                 j = _joints_at(fi)
@@ -957,15 +937,21 @@ class KinematicAnalyzer:
             # Video quality and validation (expert-grade robustness)
             vq = self._assess_video_quality(w, h, fps, total_frames, visibility, people_count)
             telemetry["video_quality"] = vq
+            def _safe(val: float, fallback: float, ndigits: int = 1) -> float:
+                """Guard NaN/Inf from propagating into JSON — was: round(float(NaN)) → invalid JSON."""
+                v = float(val)
+                return round(v if math.isfinite(v) else fallback, ndigits)
+
+            from app.constants import METRIC_DEFAULTS
             metrics_out = {
-                "release_velocity_mps": round(float(vel_mps), 2),
-                "shot_arc_deg": round(float(arc_deg), 1),
-                "knee_angle": round(float(np.clip(k_ang, 90, 180)), 1),
-                "elbow_angle": round(float(np.clip(e_ang, 100, 180)), 1),
-                "kinetic_sync_ms": round(float(sync_ms), 1),
-                "hip_rotation_deg": round(float(yaw_deg), 1),
-                "balance_index": balance_index,
-                "fluidity_score": fluidity,
+                "release_velocity_mps": _safe(vel_mps,  METRIC_DEFAULTS["release_velocity_mps"], 2),
+                "shot_arc_deg":         _safe(arc_deg,  METRIC_DEFAULTS["shot_arc_deg"], 1),
+                "knee_angle":           _safe(np.clip(k_ang, 90, 180),   METRIC_DEFAULTS["knee_angle"], 1),
+                "elbow_angle":          _safe(np.clip(e_ang, 100, 180),  METRIC_DEFAULTS["elbow_angle"], 1),
+                "kinetic_sync_ms":      _safe(sync_ms,  METRIC_DEFAULTS["kinetic_sync_ms"], 1),
+                "hip_rotation_deg":     _safe(yaw_deg,  METRIC_DEFAULTS["hip_rotation_deg"], 1),
+                "balance_index":        balance_index,
+                "fluidity_score":       fluidity,
             }
             validation_flags = self._compute_validation_flags(metrics_out, visibility, used_fallback=False)
             if analysis_mode == "partial":
@@ -978,9 +964,9 @@ class KinematicAnalyzer:
                 h3d, k3d, a3d, s3d, e3d, w3d, dip_frame, release_frame, visibility
             )
             if not has_knee_world and has_knee_2d:
-                k_unc = round(float(min(15.0, k_unc * 1.12)), 1)
+                k_unc = round(float(min(UNCERTAINTY_2D_FALLBACK_CAP_DEG, k_unc * UNCERTAINTY_2D_FALLBACK_INFLATE)), 1)
             if not has_elbow_world and has_elbow_2d:
-                e_unc = round(float(min(15.0, e_unc * 1.12)), 1)
+                e_unc = round(float(min(UNCERTAINTY_2D_FALLBACK_CAP_DEG, e_unc * UNCERTAINTY_2D_FALLBACK_INFLATE)), 1)
             metrics_out["knee_angle_uncertainty"] = k_unc
             metrics_out["elbow_angle_uncertainty"] = e_unc
 
@@ -990,83 +976,48 @@ class KinematicAnalyzer:
                 vq_score, people_count, visibility, all_warnings, used_fallback=(analysis_mode == "fallback")
             )
 
-            vel_src = "measured" if actual_detections >= 8 else "predicted"
-            arc_src = "measured" if calc_arc is not None else "predicted"
-            knee_src = "measured" if has_knee_world else ("predicted" if has_knee_2d else "unavailable")
+            # Per-metric source classification
+            vel_src   = "measured" if actual_detections >= 8 else "predicted"
+            arc_src   = "measured" if calc_arc is not None else "predicted"
+            knee_src  = "measured" if has_knee_world else ("predicted" if has_knee_2d else "unavailable")
             elbow_src = "measured" if has_elbow_world else ("predicted" if has_elbow_2d else "unavailable")
-            sync_src = "measured" if actual_detections >= 8 else "predicted"
-            hip_src = "measured" if yaw_measured else ("predicted" if yaw_2d_deg is not None else "unavailable")
-            bal_src = "measured" if balance_measured else "predicted"
+            sync_src  = "measured" if actual_detections >= 8 else "predicted"
+            hip_src   = "measured" if yaw_measured else ("predicted" if yaw_2d_deg is not None else "unavailable")
+            bal_src   = "measured" if balance_measured else "predicted"
             fluid_src = "measured" if fluidity_measured else "predicted"
-            metric_status = {
-                "release_velocity_mps": self._status(
-                    vel_src,
-                    self._calibrate_metric_confidence(0.86 if vel_src == "measured" else 0.55, visibility, detection_ratio, people_count, analysis_mode, vel_src),
-                    None if vel_src == "measured" else "low_detections",
-                ),
-                "shot_arc_deg": self._status(
-                    arc_src,
-                    self._calibrate_metric_confidence(0.84 if arc_src == "measured" else 0.58, visibility, detection_ratio, people_count, analysis_mode, arc_src),
-                    None if arc_src == "measured" else "insufficient_post_release_frames",
-                ),
-                "knee_angle": self._status(
-                    knee_src,
-                    self._calibrate_metric_confidence(
-                        0.82 if knee_src == "measured" else (0.68 if knee_src == "predicted" else 0.0),
-                        visibility,
-                        detection_ratio,
-                        people_count,
-                        analysis_mode,
-                        knee_src,
-                    ),
-                    None
-                    if knee_src == "measured"
-                    else ("world_depth_unreliable" if knee_src == "predicted" else "dip_joint_data_missing"),
-                ),
-                "elbow_angle": self._status(
-                    elbow_src,
-                    self._calibrate_metric_confidence(
-                        0.82 if elbow_src == "measured" else (0.68 if elbow_src == "predicted" else 0.0),
-                        visibility,
-                        detection_ratio,
-                        people_count,
-                        analysis_mode,
-                        elbow_src,
-                    ),
-                    None
-                    if elbow_src == "measured"
-                    else ("world_depth_unreliable" if elbow_src == "predicted" else "release_joint_data_missing"),
-                ),
-                "kinetic_sync_ms": self._status(
-                    sync_src,
-                    self._calibrate_metric_confidence(0.78 if sync_src == "measured" else 0.52, visibility, detection_ratio, people_count, analysis_mode, sync_src),
-                    None if sync_src == "measured" else "low_detections",
-                ),
-                "hip_rotation_deg": self._status(
-                    hip_src,
-                    self._calibrate_metric_confidence(
-                        0.74 if hip_src == "measured" else (0.62 if hip_src == "predicted" else 0.0),
-                        visibility,
-                        detection_ratio,
-                        people_count,
-                        analysis_mode,
-                        hip_src,
-                    ),
-                    None
-                    if hip_src == "measured"
-                    else ("world_depth_unreliable" if hip_src == "predicted" else "hip_or_shoulder_depth_missing"),
-                ),
-                "balance_index": self._status(
-                    bal_src,
-                    self._calibrate_metric_confidence(0.74 if bal_src == "measured" else 0.50, visibility, detection_ratio, people_count, analysis_mode, bal_src),
-                    None if bal_src == "measured" else "ankle_or_hip_visibility_low",
-                ),
-                "fluidity_score": self._status(
-                    fluid_src,
-                    self._calibrate_metric_confidence(0.72 if fluid_src == "measured" else 0.50, visibility, detection_ratio, people_count, analysis_mode, fluid_src),
-                    None if fluid_src == "measured" else "insufficient_motion_window",
-                ),
+
+            # (source, reason_if_predicted, reason_if_unavailable)
+            # was: 68 lines of copy-paste, one block per metric with hardcoded confidence values
+            _METRIC_SOURCES: dict[str, str] = {
+                "release_velocity_mps": vel_src,
+                "shot_arc_deg":         arc_src,
+                "knee_angle":           knee_src,
+                "elbow_angle":          elbow_src,
+                "kinetic_sync_ms":      sync_src,
+                "hip_rotation_deg":     hip_src,
+                "balance_index":        bal_src,
+                "fluidity_score":       fluid_src,
             }
+            _METRIC_REASONS: dict[str, tuple[str | None, str | None]] = {
+                "release_velocity_mps": ("low_detections",                   "low_detections"),
+                "shot_arc_deg":         ("insufficient_post_release_frames",  None),
+                "knee_angle":           ("world_depth_unreliable",            "dip_joint_data_missing"),
+                "elbow_angle":          ("world_depth_unreliable",            "release_joint_data_missing"),
+                "kinetic_sync_ms":      ("low_detections",                   "low_detections"),
+                "hip_rotation_deg":     ("world_depth_unreliable",            "hip_or_shoulder_depth_missing"),
+                "balance_index":        ("ankle_or_hip_visibility_low",      "ankle_or_hip_visibility_low"),
+                "fluidity_score":       ("insufficient_motion_window",       "insufficient_motion_window"),
+            }
+            metric_status: dict[str, dict] = {}
+            for _name, _src in _METRIC_SOURCES.items():
+                _measured_conf, _predicted_conf = METRIC_CONFIDENCE_MAP[_name]
+                _base = _measured_conf if _src == "measured" else (_predicted_conf if _src == "predicted" else 0.0)
+                _calibrated = self._calibrate_metric_confidence(
+                    _base, visibility, detection_ratio, people_count, analysis_mode, _src
+                )
+                _pred_reason, _unavail_reason = _METRIC_REASONS[_name]
+                _reason = None if _src == "measured" else (_pred_reason if _src == "predicted" else _unavail_reason)
+                metric_status[_name] = self._status(_src, _calibrated, _reason)
             if metric_status["knee_angle"]["source"] == "unavailable":
                 metrics_out["knee_angle"] = None
             if metric_status["elbow_angle"]["source"] == "unavailable":
@@ -1115,6 +1066,13 @@ class KinematicAnalyzer:
             logger.exception("KinematicAnalyzer.analyze crashed")
             return self._fallback(["analysis_exception"])
         finally:
+            # Release MediaPipe landmarker — was only closed on exception paths before
+            if self._landmarker is not None:
+                try:
+                    self._landmarker.close()
+                except Exception:
+                    pass
+                self._landmarker = None
             # Clean up the FFmpeg-normalised temp file
             if norm_path and norm_path != self.video_path:
                 try:

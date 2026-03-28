@@ -1,3 +1,4 @@
+import asyncio  # needed for to_thread — MediaPipe inference is CPU-bound and must not block the event loop
 import os
 import json
 import time
@@ -25,6 +26,8 @@ from gtts import gTTS
 from app.logging_config import configure_logging
 from app.physics_engine import KinematicAnalyzer
 from app.correction_engine import generate_correction_video
+from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS, METRIC_DEFAULTS  # single source of truth shared with db_seeder
+from app.config import settings  # centralised env-driven config — replaces scattered os.environ.get() calls
 
 # Google Cloud TTS (Studio Voices) — optional; falls back to gTTS if credentials unavailable
 try:
@@ -37,7 +40,6 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
-COLLECTION_NAME = "apex_oracle_v7"
 # Repo root (parent of app/) — chroma_db lives next to requirements.txt, not inside app/
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 PERSIST_DIR = str(_REPO_ROOT / "chroma_db")
@@ -54,7 +56,7 @@ def _get_collection():
     return _collection
 
 
-def calculate_market_index(vector: list[float], match_distance: float) -> str:
+def calculate_market_index(match_distance: float) -> str:  # was: (vector, match_distance) — vector was accepted but never read inside; removed to avoid silent dead param
     """
     Deterministic valuation from cosine distance to nearest NBA pro.
     ChromaDB with hnsw:space='cosine' returns cosine distance in [0, 2]
@@ -77,30 +79,17 @@ def calculate_market_index(vector: list[float], match_distance: float) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Configure logging, initialise ChromaDB; yield for request handling."""
+    """Configure logging, validate config, initialise ChromaDB at startup."""
     configure_logging()
+    settings.validate()  # fails loudly if GEMINI_API_KEY missing — was: silent failure on first request
     _init_chroma()
     yield
 
 
-# CORS: Production URL + local dev. Set CORS_ORIGINS env to override (comma-separated).
-_DEFAULT_ORIGINS = [
-    "https://lakshai-production.up.railway.app",
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:8000",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:8000",
-]
-_CORS_ORIGINS = [
-    o.strip() for o in os.environ.get("CORS_ORIGINS", ",".join(_DEFAULT_ORIGINS)).split(",") if o.strip()
-]
-
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_CORS_ORIGINS,
+    allow_origins=settings.cors_origins,  # was: inline os.environ.get + split — now from config
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -323,28 +312,47 @@ async def analyze_video(
     sport: Optional[str] = Form(None),
 ):
     """Analyze video. Optional start_sec/end_sec restrict to user-selected clip (single shot)."""
+    content = await video.read()
+    if len(content) > settings.max_upload_bytes:  # was: hardcoded 200MB literal — now from config
+        raise HTTPException(status_code=413, detail=f"Video file too large. Maximum allowed size is {settings.max_upload_bytes // (1024*1024)} MB.")
     safe_name = os.path.join(tempfile.gettempdir(), f"laksh_{uuid.uuid4()}.mp4")
     with open(safe_name, "wb") as b:
-        b.write(await video.read())
+        b.write(content)
     try:
+        # Sanitise athlete_name: truncate and strip control chars to prevent prompt injection
+        # was: unsanitised user string injected directly into Gemini prompt
+        athlete_name = (str(athlete_name or "").strip())[:100] or None
+
         start_val = None
         end_val = None
         if start_sec is not None and str(start_sec).strip():
             try:
-                start_val = float(start_sec)
+                v = float(start_sec)
+                if not (0.0 <= v <= 7200.0):  # guard: reject negative/infinity/absurd values
+                    raise HTTPException(status_code=422, detail="start_sec must be between 0 and 7200.")
+                start_val = v
             except (TypeError, ValueError):
                 pass
         if end_sec is not None and str(end_sec).strip():
             try:
-                end_val = float(end_sec)
+                v = float(end_sec)
+                if not (0.0 <= v <= 7200.0):
+                    raise HTTPException(status_code=422, detail="end_sec must be between 0 and 7200.")
+                end_val = v
             except (TypeError, ValueError):
                 pass
-        biomech = KinematicAnalyzer(safe_name).analyze(start_sec=start_val, end_sec=end_val)
+        # Run MediaPipe inference off the event loop — CPU-bound blocking call
+        # was previously running on the async thread, starving other requests
+        biomech = await asyncio.to_thread(
+            KinematicAnalyzer(safe_name).analyze,
+            start_sec=start_val,
+            end_sec=end_val,
+        )
 
         # Query ChromaDB BEFORE Gemini so we can compute deltas for the prompt.
-        # Weights must mirror db_seeder.FEATURE_WEIGHTS exactly so query and index
-        # live in the same normalised L2 space.
-        FEATURE_WEIGHTS = [16.6, 3.3, 1.25, 1.66, 0.33, 1.66, 2.22, 2.0]
+        # FEATURE_WEIGHTS and METRIC_DEFAULTS imported from app.constants — same
+        # values used at index time in db_seeder.py so query and index live in
+        # the same normalised L2 space.
         def _num(v, default):
             try:
                 if v is None:
@@ -353,14 +361,14 @@ async def analyze_video(
             except (TypeError, ValueError):
                 return float(default)
         raw_vector = [
-            _num(biomech.get("release_velocity_mps"), 7.0),
-            _num(biomech.get("shot_arc_deg"), 45.0),
-            _num(biomech.get("knee_angle"), 145.0),
-            _num(biomech.get("elbow_angle"), 165.0),
-            _num(biomech.get("kinetic_sync_ms"), 150.0),
-            _num(biomech.get("fluidity_score"), 65.0),
-            _num(biomech.get("hip_rotation_deg"), 5.0),
-            _num(biomech.get("balance_index"), 85.0),
+            _num(biomech.get("release_velocity_mps"), METRIC_DEFAULTS["release_velocity_mps"]),
+            _num(biomech.get("shot_arc_deg"),          METRIC_DEFAULTS["shot_arc_deg"]),
+            _num(biomech.get("knee_angle"),            METRIC_DEFAULTS["knee_angle"]),
+            _num(biomech.get("elbow_angle"),           METRIC_DEFAULTS["elbow_angle"]),
+            _num(biomech.get("kinetic_sync_ms"),       METRIC_DEFAULTS["kinetic_sync_ms"]),
+            _num(biomech.get("fluidity_score"),        METRIC_DEFAULTS["fluidity_score"]),
+            _num(biomech.get("hip_rotation_deg"),      METRIC_DEFAULTS["hip_rotation_deg"]),
+            _num(biomech.get("balance_index"),         METRIC_DEFAULTS["balance_index"]),
         ]
         query_vector = [v * w for v, w in zip(raw_vector, FEATURE_WEIGHTS)]
 
@@ -396,7 +404,7 @@ async def analyze_video(
 
         player_id = meta.get("id") or meta.get("player_id")
         matched_pro = _build_matched_pro(match_name, player_id, meta) if match_name != "—" else None
-        market_index = calculate_market_index(query_vector, match_distance)
+        market_index = calculate_market_index(match_distance)  # was: passing query_vector as first arg — dropped to match updated signature above
 
         # Build pro_stats from meta (v0-v7) for delta calculation.
         # Schema: v0=vel_mps, v1=arc, v2=knee, v3=elbow, v4=ksync_ms, v5=fluidity, v6=hip, v7=balance
@@ -682,7 +690,9 @@ async def generate_correction_video_endpoint(
             video_path = None
 
     try:
-        render_result = generate_correction_video(
+        # Run OpenCV video rendering off the event loop — CPU-bound, same reason as analyze-video
+        render_result = await asyncio.to_thread(
+            generate_correction_video,
             telemetry, stats,
             athlete_name     = (athlete_name or "Athlete").strip() or "Athlete",
             kinematic_deltas = kinematic_deltas,

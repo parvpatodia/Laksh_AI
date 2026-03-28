@@ -24,14 +24,16 @@ from typing import Any, Optional
 import chromadb
 import pandas as pd
 
+from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS  # was: both defined inline here — moved to app/constants.py so main.py and db_seeder.py always use the same values
+from app.config import settings  # NBA API timeouts now from centralised config — was: inline os.environ.get()
+
 if not logging.getLogger().handlers:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-COLLECTION_NAME = "apex_oracle_v7"
-NBA_API_DELAY = 0.6  # seconds between requests (rate-limit safety)
-NBA_API_TIMEOUT = int(os.environ.get("NBA_API_TIMEOUT", "90"))  # cloud→stats.nba.com is slow
-NBA_API_RETRIES = 2  # try twice before fallback
+NBA_API_DELAY   = settings.nba_api_delay_sec
+NBA_API_TIMEOUT = settings.nba_api_timeout
+NBA_API_RETRIES = settings.nba_api_retries
 
 # Fallback seed when NBA API fails (timeout, rate-limit, cloud IP block).
 # Synthetic stats run through translate_to_kinematics for consistent 8D vectors.
@@ -54,20 +56,6 @@ FALLBACK_PLAYERS = [
     ("Shai Gilgeous-Alexander", 1628983, {"REB": 5.5, "AST": 6.2, "TOV": 2.5, "FG3_PCT": 0.353, "PTS": 30.1, "GP": 75}),
 ]
 
-# Expert feature weights — equalise L2 distance variance across all 8 dimensions.
-# Each weight scales its dimension so the full biomechanical span maps to ~100 units,
-# preventing high-magnitude dimensions (e.g. kinetic_sync_ms ~300) from dominating search.
-# Applied to embeddings only; raw values are stored unchanged in metadata for the UI.
-FEATURE_WEIGHTS = [
-    16.6,  # v0: velocity_mps    (span ~6 m/s    → ×16.6 → ~100)
-    3.3,   # v1: arc_deg         (span ~30 °      → ×3.3  → ~100)
-    1.25,  # v2: knee_angle      (span ~80 °      → ×1.25 → ~100)
-    1.66,  # v3: elbow_angle     (span ~60 °      → ×1.66 → ~100)
-    0.33,  # v4: kinetic_sync_ms (span ~300 ms    → ×0.33 → ~100)
-    1.66,  # v5: fluidity_score  (span ~60        → ×1.66 → ~100)
-    2.22,  # v6: hip_rotation    (span ~45 °      → ×2.22 → ~100)
-    2.0,   # v7: balance_index   (span ~50        → ×2.0  → ~100)
-]
 
 
 def translate_to_kinematics(row: dict[str, Any]) -> list[float]:
@@ -138,7 +126,7 @@ def translate_to_kinematics(row: dict[str, Any]) -> list[float]:
     balance_index = 50.0 + ast_tov * 10.0
     balance_index = max(50.0, min(98.0, balance_index))
 
-    return [
+    vec = [
         round(release_velocity_mps, 2),
         round(shot_arc_deg, 1),
         round(knee_angle, 1),
@@ -148,6 +136,9 @@ def translate_to_kinematics(row: dict[str, Any]) -> list[float]:
         round(hip_rotation_deg, 2),
         round(balance_index, 1),
     ]
+    # Guard: ChromaDB silently accepts wrong-dimension vectors; catch schema drift here
+    assert len(vec) == 8, f"translate_to_kinematics must return 8D vector, got {len(vec)}D"
+    return vec
 
 
 def _seed_fallback(chroma_client: chromadb.Client) -> int:
