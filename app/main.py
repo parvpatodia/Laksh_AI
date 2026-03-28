@@ -1,3 +1,4 @@
+import asyncio  # needed for to_thread — MediaPipe inference is CPU-bound and must not block the event loop
 import os
 import json
 import time
@@ -343,7 +344,13 @@ async def analyze_video(
                 end_val = float(end_sec)
             except (TypeError, ValueError):
                 pass
-        biomech = KinematicAnalyzer(safe_name).analyze(start_sec=start_val, end_sec=end_val)
+        # Run MediaPipe inference off the event loop — CPU-bound blocking call
+        # was previously running on the async thread, starving other requests
+        biomech = await asyncio.to_thread(
+            KinematicAnalyzer(safe_name).analyze,
+            start_sec=start_val,
+            end_sec=end_val,
+        )
 
         # Query ChromaDB BEFORE Gemini so we can compute deltas for the prompt.
         # FEATURE_WEIGHTS and METRIC_DEFAULTS imported from app.constants — same
@@ -686,7 +693,9 @@ async def generate_correction_video_endpoint(
             video_path = None
 
     try:
-        render_result = generate_correction_video(
+        # Run OpenCV video rendering off the event loop — CPU-bound, same reason as analyze-video
+        render_result = await asyncio.to_thread(
+            generate_correction_video,
             telemetry, stats,
             athlete_name     = (athlete_name or "Athlete").strip() or "Athlete",
             kinematic_deltas = kinematic_deltas,

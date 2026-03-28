@@ -124,7 +124,7 @@ def translate_to_kinematics(row: dict[str, Any]) -> list[float]:
     balance_index = 50.0 + ast_tov * 10.0
     balance_index = max(50.0, min(98.0, balance_index))
 
-    return [
+    vec = [
         round(release_velocity_mps, 2),
         round(shot_arc_deg, 1),
         round(knee_angle, 1),
@@ -134,6 +134,9 @@ def translate_to_kinematics(row: dict[str, Any]) -> list[float]:
         round(hip_rotation_deg, 2),
         round(balance_index, 1),
     ]
+    # Guard: ChromaDB silently accepts wrong-dimension vectors; catch schema drift here
+    assert len(vec) == 8, f"translate_to_kinematics must return 8D vector, got {len(vec)}D"
+    return vec
 
 
 def _seed_fallback(chroma_client: chromadb.Client) -> int:

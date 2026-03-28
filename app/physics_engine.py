@@ -439,56 +439,6 @@ class KinematicAnalyzer:
                 vals.append(np.nanmean(arr[:, 2]))
         return float(np.mean(vals)) if vals else 0.0
 
-    def _compute_angle_uncertainty(
-        self,
-        h3d: np.ndarray,
-        k3d: np.ndarray,
-        a3d: np.ndarray,
-        s3d: np.ndarray,
-        e3d: np.ndarray,
-        w3d: np.ndarray,
-        dip_frame: int,
-        release_frame: int,
-        visibility: float,
-    ) -> dict:
-        """
-        Empirical uncertainty from frame-window variance. Ref: PMC 9397457.
-        Returns knee_angle_uncertainty and elbow_angle_uncertainty in degrees (±).
-        """
-        out = {}
-        half = 3
-        # Knee: window around dip
-        lo = max(0, dip_frame - half)
-        hi = min(len(k3d), dip_frame + half + 1)
-        k_angles = []
-        for i in range(lo, hi):
-            ang = _calculate_3d_angle(h3d[i], k3d[i], a3d[i])
-            if ang >= 10:
-                k_angles.append(ang)
-        if len(k_angles) >= 2:
-            std_k = float(np.nanstd(k_angles))
-            unc = max(3, min(12, std_k * 1.2))
-            if visibility < 0.6:
-                unc = min(12, unc * 1.5)
-            out["knee_angle_uncertainty"] = round(unc, 1)
-
-        # Elbow: window around release
-        lo = max(0, release_frame - half)
-        hi = min(len(e3d), release_frame + half + 1)
-        e_angles = []
-        for i in range(lo, hi):
-            ang = _calculate_3d_angle(s3d[i], e3d[i], w3d[i])
-            if ang >= 10:
-                e_angles.append(ang)
-        if len(e_angles) >= 2:
-            std_e = float(np.nanstd(e_angles))
-            unc = max(3, min(12, std_e * 1.2))
-            if visibility < 0.6:
-                unc = min(12, unc * 1.5)
-            out["elbow_angle_uncertainty"] = round(unc, 1)
-
-        return out
-
     def _compute_validation_flags(self, metrics: dict, visibility: float, used_fallback: bool) -> list:
         """Biological plausibility and data-quality checks. Returns human-readable warnings."""
         flags = []
@@ -1115,6 +1065,13 @@ class KinematicAnalyzer:
             logger.exception("KinematicAnalyzer.analyze crashed")
             return self._fallback(["analysis_exception"])
         finally:
+            # Release MediaPipe landmarker — was only closed on exception paths before
+            if self._landmarker is not None:
+                try:
+                    self._landmarker.close()
+                except Exception:
+                    pass
+                self._landmarker = None
             # Clean up the FFmpeg-normalised temp file
             if norm_path and norm_path != self.video_path:
                 try:
