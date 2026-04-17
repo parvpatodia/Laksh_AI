@@ -2,7 +2,7 @@
 # Use the same interpreter you install requirements into (override: make PYTHON=python3.12 …).
 PYTHON ?= python3
 
-.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header
+.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard
 
 test:
 	pytest tests/ -q
@@ -20,6 +20,15 @@ mypy-pose:
 scorecard-header:
 	$(PYTHON) scripts/eval_scorecard_header.py --manifest evaluation/gym_manifest.csv
 
+# Full release scorecard (markdown): header hashes + per-backend aggregates + per-clip drill-down.
+# Examples:
+#   make scorecard                       # header-only (no JSONL)
+#   make scorecard JSONL=evaluation/pose_baseline.jsonl
+#   make scorecard JSONL="evaluation/pose_baseline.jsonl evaluation/pose_baseline_roi.jsonl"
+scorecard:
+	$(PYTHON) scripts/build_scorecard.py --manifest evaluation/gym_manifest.csv \
+		$(foreach j,$(JSONL),--jsonl $(j))
+
 # Pose contract + gym manifest/calibration (no full test suite / no cv2-heavy physics tests)
 test-pose-core:
 	pytest tests/test_canonical_mapping.py tests/test_mapping_rtmpose_coco17.py \
@@ -30,7 +39,7 @@ test-pose-core:
 		tests/test_calibration_load.py tests/test_pose_types.py tests/test_reason_codes_registry.py \
 		tests/test_person_isolation.py tests/test_kinematic_canonical_probe.py \
 		tests/test_eval_scorecard_header.py tests/test_gym_manifest_hard_template.py \
-		tests/test_scorecard_command.py -q
+		tests/test_scorecard_command.py tests/test_build_scorecard.py -q
 
 eval-model:
 	$(PYTHON) scripts/download_pose_model.py
