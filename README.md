@@ -13,6 +13,7 @@ Upload a jump-shot video. The system extracts an 8-dimensional kinematic fingerp
 - [Architecture Overview](#architecture-overview)
 - [What's Implemented](#whats-implemented)
 - [What's Coming](#whats-coming)
+- [Roadmap](#roadmap)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -94,6 +95,23 @@ Upload a jump-shot video. The system extracts an 8-dimensional kinematic fingerp
 - **Production hardening** — CORS origins restriction, rate limiting, optional authentication.
 - **Mobile-native capture** — On-device recording flow and UX optimizations.
 - **Historical trends** — Session storage and longitudinal comparison.
+
+---
+
+## Roadmap
+
+Full plan: [docs/product-grade_laksh_roadmap_05e7df02.plan.md](docs/product-grade_laksh_roadmap_05e7df02.plan.md) — phased path from basketball demo to defensible CV product with a measurement contract, tiered data, and operational honesty. Milestones tracked in [GOALS.md](GOALS.md).
+
+| Phase | Focus | Status |
+|---|---|---|
+| **A** — Repository excellence | Locked deps, two-speed CI (`pr.yml` + `nightly.yml`), regression scorecard bundle (`make scorecard`), ruff + mypy in CI, pose model SHA-256 pin | **Largely landed** (see `scripts/build_scorecard.py`, `.github/workflows/`, [CONTRIBUTING.md](CONTRIBUTING.md)) |
+| **B** — Data moat | Tiered L0 / L1 / L2 datasets; subject-level splits; jitter + calibration reports; human coaching rubric | **Scaffolded** — tooling in `scripts/pose_jitter.py`, `scripts/pose_calibration.py`, `scripts/subject_split_check.py`, rubric in [docs/HUMAN_RUBRIC.md](docs/HUMAN_RUBRIC.md); L1 capture + L2 labels in progress |
+| **C** — Pose stack completion | P2 person isolation + P3 canonical joints default in `KinematicAnalyzer` | **Parity telemetry shipping** behind `LAKSH_USE_CANONICAL_JOINTS` — see [docs/adr/0002-p3-canonical-in-kinematic-analyzer.md](docs/adr/0002-p3-canonical-in-kinematic-analyzer.md) |
+| **D** — Gym MVP | Exercise v0 freeze, rep segmentation, per-rep feature vector with valid/degraded/unknown semantics | **In flight** — see [GOALS.md](GOALS.md) Milestone 1 |
+| **E** — Product operations | Async job queue, structured logs, p50/p95 SLO, shadow / canary | **Decision doc landed** ([docs/adr/0003-observability-and-async-jobs.md](docs/adr/0003-observability-and-async-jobs.md)); implementation follows Phase A + partial B |
+| **F** — Generative media | LTX / before-after video conditioned on pose | **Deferred** — ships only after pose tracks are stable and legal review closes |
+
+Grading rubric, honest gap analysis, and dependencies between phases are in the roadmap doc.
 
 ---
 

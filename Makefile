@@ -39,7 +39,9 @@ test-pose-core:
 		tests/test_calibration_load.py tests/test_pose_types.py tests/test_reason_codes_registry.py \
 		tests/test_person_isolation.py tests/test_kinematic_canonical_probe.py \
 		tests/test_eval_scorecard_header.py tests/test_gym_manifest_hard_template.py \
-		tests/test_scorecard_command.py tests/test_build_scorecard.py -q
+		tests/test_scorecard_command.py tests/test_build_scorecard.py \
+		tests/test_pose_jitter.py tests/test_subject_split_check.py \
+		tests/test_pose_calibration.py -q
 
 eval-model:
 	$(PYTHON) scripts/download_pose_model.py
