@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Phase A: run pose-only baseline on the gym evaluation manifest (MediaPipe).
+Phase A: run pose-only baseline on the gym evaluation manifest (pluggable backend).
 
-Produces JSONL rows compatible with backbone A/B once RTMPose (or other) implements
-the same PoseBaselineResult fields via app.pose.backends.get_pose_backend.
+Backends: ``mediapipe`` (default), ``rtmpose`` (optional: ``requirements-pose-optional.txt``).
 
 Usage:
-  python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.template.csv \\
-      --out evaluation/pose_baseline.jsonl
+  python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.csv --out evaluation/pose_baseline.jsonl
+  python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.csv --backend rtmpose --out evaluation/pose_rtm.jsonl
   python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.csv --strict-manifest --multipass
   python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.csv --validate-only
+  python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.csv --person-isolation haar_mil_v1 --out evaluation/pose_roi.jsonl
 """
 from __future__ import annotations
 
@@ -45,8 +45,19 @@ def main() -> int:
         action="store_true",
         help="Check manifest paths exist; print JSON summary; exit 1 if any missing. No MediaPipe.",
     )
-    ap.add_argument("--backend", type=str, default="mediapipe")
+    ap.add_argument(
+        "--backend",
+        type=str,
+        default="mediapipe",
+        help="Pose backend: mediapipe | rtmpose (rtmpose needs pip install -r requirements-pose-optional.txt)",
+    )
     ap.add_argument("--multipass", action="store_true", help="Match KinematicAnalyzer preprocess sweep")
+    ap.add_argument(
+        "--person-isolation",
+        default=None,
+        metavar="MODE",
+        help="P2 optional person ROI before pose (e.g. haar_mil_v1). Omit to disable.",
+    )
     ap.add_argument(
         "--strict-manifest",
         action="store_true",
@@ -120,7 +131,11 @@ def main() -> int:
                     strict_violations += 1
                 continue
 
-            res = backend.run(str(vp), multipass=args.multipass)
+            res = backend.run(
+                str(vp),
+                multipass=args.multipass,
+                person_isolation=args.person_isolation,
+            )
             elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 1)
             d = res.to_dict()
             d["clip_id"] = clip_id

@@ -1,4 +1,4 @@
-# Ruff (optional): pip install ruff && ruff check app tests scripts
+# Ruff: pip install ruff && ruff check app tests scripts
 [tool.ruff]
 line-length = 100
 target-version = "py311"
@@ -6,3 +6,23 @@ src = ["app", "tests", "scripts"]
 
 [tool.ruff.lint]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# load_dotenv() before third-party imports so env is available for config
+"app/main.py" = ["E402"]
+# sys.path bootstrap before importing app.* (script entrypoint)
+"scripts/download_pose_model.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+ignore_missing_imports = true
+check_untyped_defs = true
+explicit_package_bases = true
+namespace_packages = true
+mypy_path = "."
+files = ["app/pose"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+ignore_errors = true

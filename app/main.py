@@ -22,6 +22,7 @@ from google.genai.errors import APIError
 import chromadb
 from gtts import gTTS
 
+from app.api_contract import API_SCHEMA_VERSION
 from app.logging_config import configure_logging
 from app.physics_engine import KinematicAnalyzer
 from app.correction_engine import generate_correction_video
@@ -194,6 +195,7 @@ def health():
             "status": "ok",
             "chroma_ready": True,
             "collection_count": cnt,
+            "api_schema_version": API_SCHEMA_VERSION,
         }
     except Exception as e:
         logger.warning("Health check failed: %s", e)
@@ -272,7 +274,6 @@ def _normalize_analysis(
     pro_match: str,
     matched_pro: Optional[dict] = None,
 ) -> dict:
-    stats = data.get("stats") or {}
     feedback = data.get("athlete_feedback") or []
     if not isinstance(feedback, list):
         feedback = [{"timestamp": "", "category": "general", "observation": str(feedback)}]
@@ -476,7 +477,7 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
             if status == 429:
                 msg = "Rate limit exceeded. Please try again later."
             raise HTTPException(status_code=min(status, 503), detail=msg)
-        except Exception as e:
+        except Exception:
             raise HTTPException(status_code=503, detail="Analysis service error. Please try again.")
 
         data = json.loads(response.text)
@@ -549,6 +550,7 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         out["video_quality_score"] = vq.get("video_quality_score")
         out["video_quality_label"] = vq.get("video_quality_label")
         out["confidence_factors"] = tel.get("confidence_factors") or []
+        out["api_schema_version"] = API_SCHEMA_VERSION
         return out
     finally:
         if os.path.exists(safe_name):

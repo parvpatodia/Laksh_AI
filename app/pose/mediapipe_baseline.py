@@ -14,35 +14,24 @@ import cv2
 import numpy as np
 
 from app.pose.calibration import load_gym_pose_usable_gate
+from app.pose.gym_baseline_metrics import (
+    aggregate_metrics,
+    enhance_frame_variant,
+    preprocess_frame_max720,
+    utility_score,
+)
 from app.pose.mediapipe_common import create_pose_landmarker
+from app.pose.person_isolation import (
+    create_person_isolation,
+    normalize_person_isolation_mode,
+    unmap_normalized_xy_from_crop,
+)
 from app.pose.preprocess import normalize_video_for_pose
-from app.pose.provenance import build_mediapipe_pose_provenance
-from app.pose.types import PoseBaselineResult, merge_reason_codes
+from app.pose.provenance import POSE_BASELINE_SCHEMA_VERSION, build_mediapipe_pose_provenance
+from app.pose.reason_codes import merge_reason_codes
+from app.pose.types import PoseBaselineResult
 
 logger = logging.getLogger(__name__)
-
-
-def _preprocess_frame(frame: np.ndarray) -> np.ndarray:
-    h, w = frame.shape[:2]
-    max_dim = 720
-    if max(h, w) <= max_dim:
-        return frame
-    scale = max_dim / max(h, w)
-    new_w, new_h = int(w * scale), int(h * scale)
-    return cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-
-
-def _enhance_frame_variant(frame: np.ndarray, variant: str) -> np.ndarray:
-    if variant == "gamma_contrast":
-        f = frame.astype(np.float32) / 255.0
-        f = np.power(np.clip(f, 0.0, 1.0), 0.85)
-        f = np.clip((f - 0.5) * 1.18 + 0.5, 0.0, 1.0)
-        return (f * 255.0).astype(np.uint8)
-    if variant == "denoise_sharpen":
-        den = cv2.fastNlMeansDenoisingColored(frame, None, 3, 3, 7, 21)
-        gauss = cv2.GaussianBlur(den, (0, 0), 1.0)
-        return cv2.addWeighted(den, 1.35, gauss, -0.35, 0)
-    return frame
 
 
 def _extract_2d_one_pass(
@@ -51,7 +40,9 @@ def _extract_2d_one_pass(
     variant: str,
     start_sec: float | None,
     end_sec: float | None,
-) -> tuple[float, dict[str, np.ndarray], int, int]:
+    *,
+    person_isolation_mode: str | None = None,
+) -> tuple[float, dict[str, np.ndarray], int, int, dict[str, Any] | None]:
     import mediapipe as mp
 
     cap = cv2.VideoCapture(video_path)
@@ -81,6 +72,10 @@ def _extract_2d_one_pass(
         (C.LEFT_ANKLE, C.RIGHT_ANKLE, "ankle"),
     ]
 
+    isolation = create_person_isolation(person_isolation_mode)
+    if isolation is not None:
+        isolation.start_clip()
+
     data_2d: dict[str, list] = {f"{s}_{j}": [] for s in sides for j in joints}
     frame_idx = 0
     last_t_ms = -1
@@ -98,13 +93,25 @@ def _extract_2d_one_pass(
                 break
 
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            rgb = _preprocess_frame(rgb)
-            rgb = _enhance_frame_variant(rgb, variant)
+            rgb = preprocess_frame_max720(rgb)
+            full_h, full_w = rgb.shape[0], rgb.shape[1]
+            if isolation is not None:
+                bgr_work = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+                x0, y0, x1, y1 = isolation.step(bgr_work)
+                wc, hc = x1 - x0, y1 - y0
+                crop_rgb = rgb[y0:y1, x0:x1] if wc > 0 and hc > 0 else rgb
+                if wc <= 0 or hc <= 0:
+                    x0, y0, wc, hc = 0, 0, full_w, full_h
+            else:
+                x0, y0, wc, hc = 0, 0, full_w, full_h
+                crop_rgb = rgb
+
+            crop_rgb = enhance_frame_variant(crop_rgb, variant)
 
             t_ms = max(t_ms_raw, last_t_ms + 1)
             last_t_ms = t_ms
 
-            mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+            mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=crop_rgb)
             result = landmarker.detect_for_video(mp_img, t_ms)
 
             plm = None
@@ -117,16 +124,42 @@ def _extract_2d_one_pass(
                     plm = plms[0]
 
             for li, ri, name in idx_map:
-                data_2d[f"left_{name}"].append(
-                    np.array([plm[li].x, plm[li].y, plm[li].visibility], dtype=np.float64)
-                    if plm is not None and li < len(plm)
-                    else np.array([np.nan, np.nan, np.nan], dtype=np.float64)
-                )
-                data_2d[f"right_{name}"].append(
-                    np.array([plm[ri].x, plm[ri].y, plm[ri].visibility], dtype=np.float64)
-                    if plm is not None and ri < len(plm)
-                    else np.array([np.nan, np.nan, np.nan], dtype=np.float64)
-                )
+                if plm is not None and li < len(plm) and ri < len(plm):
+                    if isolation is not None:
+                        lx, ly = unmap_normalized_xy_from_crop(
+                            plm[li].x,
+                            plm[li].y,
+                            x0,
+                            y0,
+                            wc,
+                            hc,
+                            full_w,
+                            full_h,
+                        )
+                        rx, ry = unmap_normalized_xy_from_crop(
+                            plm[ri].x,
+                            plm[ri].y,
+                            x0,
+                            y0,
+                            wc,
+                            hc,
+                            full_w,
+                            full_h,
+                        )
+                        lv, rv = plm[li].visibility, plm[ri].visibility
+                    else:
+                        lx, ly, lv = plm[li].x, plm[li].y, plm[li].visibility
+                        rx, ry, rv = plm[ri].x, plm[ri].y, plm[ri].visibility
+                    data_2d[f"left_{name}"].append(
+                        np.array([lx, ly, lv], dtype=np.float64)
+                    )
+                    data_2d[f"right_{name}"].append(
+                        np.array([rx, ry, rv], dtype=np.float64)
+                    )
+                else:
+                    nan = np.array([np.nan, np.nan, np.nan], dtype=np.float64)
+                    data_2d[f"left_{name}"].append(nan)
+                    data_2d[f"right_{name}"].append(nan)
 
             frame_idx += 1
     finally:
@@ -134,82 +167,14 @@ def _extract_2d_one_pass(
 
     raw_2d = {k: np.array(v, dtype=np.float64) for k, v in data_2d.items()}
     n_frames = len(next(iter(raw_2d.values()))) if raw_2d else 0
-    return fps, raw_2d, max_people, n_frames
-
-
-def _frame_has_pose(plm_slice: dict[str, np.ndarray], frame_i: int) -> bool:
-    lh = plm_slice["left_hip"][frame_i]
-    rh = plm_slice["right_hip"][frame_i]
-    return np.isfinite(lh[0]) and np.isfinite(rh[0])
-
-
-def _core_visibility_for_frame(plm_slice: dict[str, np.ndarray], frame_i: int) -> float | None:
-    keys = [
-        "left_shoulder",
-        "right_shoulder",
-        "left_hip",
-        "right_hip",
-        "left_knee",
-        "right_knee",
-        "left_ankle",
-        "right_ankle",
-    ]
-    row = []
-    for k in keys:
-        arr = plm_slice[k][frame_i]
-        if np.isfinite(arr[0]) and np.isfinite(arr[2]):
-            row.append(float(arr[2]))
-    return float(np.mean(row)) if row else None
-
-
-def _aggregate_metrics(raw_2d: dict[str, np.ndarray], n_frames: int) -> tuple[int, float, float, float, float | None]:
-    if n_frames == 0:
-        return 0, 0.0, 0.0, 0.0, None
-
-    n_with = 0
-    vis_when = []
-    vis_all_num = []
-    hip_mid_pts = []
-
-    for i in range(n_frames):
-        if _frame_has_pose(raw_2d, i):
-            n_with += 1
-            v = _core_visibility_for_frame(raw_2d, i)
-            if v is not None:
-                vis_when.append(v)
-        for k in (
-            "left_shoulder",
-            "right_shoulder",
-            "left_hip",
-            "right_hip",
-            "left_knee",
-            "right_knee",
-            "left_ankle",
-            "right_ankle",
-        ):
-            arr = raw_2d[k][i]
-            vis_all_num.append(float(arr[2]) if np.isfinite(arr[2]) else 0.0)
-
-        lh, rh = raw_2d["left_hip"][i], raw_2d["right_hip"][i]
-        if np.isfinite(lh[0]) and np.isfinite(rh[0]):
-            hip_mid_pts.append(((lh[0] + rh[0]) * 0.5, (lh[1] + rh[1]) * 0.5))
-
-    det_rate = n_with / max(1, n_frames)
-    vis_det = float(np.mean(vis_when)) if vis_when else 0.0
-    vis_all = float(np.mean(vis_all_num)) if vis_all_num else 0.0
-
-    disp = None
-    if len(hip_mid_pts) >= 3:
-        pts = np.array(hip_mid_pts, dtype=np.float64)
-        d = np.linalg.norm(np.diff(pts, axis=0), axis=1)
-        disp = float(np.median(d))
-
-    return n_with, det_rate, vis_det, vis_all, disp
-
-
-def _utility(raw_2d: dict[str, np.ndarray], n_frames: int) -> float:
-    n_with, det_rate, vis_det, _, _ = _aggregate_metrics(raw_2d, n_frames)
-    return n_with + vis_det * 20.0
+    iso_stats = (
+        isolation.stats_dict(mode=person_isolation_mode)
+        if isolation is not None and person_isolation_mode
+        else None
+    )
+    if iso_stats is not None:
+        iso_stats["frames_processed_pose"] = n_frames
+    return fps, raw_2d, max_people, n_frames, iso_stats
 
 
 def run_mediapipe_pose_baseline(
@@ -218,13 +183,32 @@ def run_mediapipe_pose_baseline(
     start_sec: float | None = None,
     end_sec: float | None = None,
     multipass: bool = False,
+    person_isolation: str | None = None,
 ) -> PoseBaselineResult:
     """
     Run MediaPipe pose landmarker on a clip; return detection / visibility / stability metrics.
 
     multipass=False: single ``baseline`` frame variant (fastest, strictest raw benchmark).
     multipass=True: same variant sweep as KinematicAnalyzer (baseline, gamma, denoise) picking best utility.
+
+    person_isolation: optional P2 ROI mode (e.g. ``haar_mil_v1``) — see ``app.pose.person_isolation``.
     """
+    try:
+        iso_mode_norm = normalize_person_isolation_mode(person_isolation)
+    except ValueError as e:
+        return PoseBaselineResult(
+            backend="mediapipe",
+            video_path=video_path,
+            ok=False,
+            error=str(e),
+            reason_codes=["pose_init_failed"],
+            ffmpeg_preprocess_applied=False,
+            provenance={
+                "pose_baseline_schema_version": POSE_BASELINE_SCHEMA_VERSION,
+                "person_isolation_config_error": str(e),
+            },
+        )
+
     norm_path, is_temp, ffmpeg_applied = normalize_video_for_pose(video_path)
     gate, cal_record = load_gym_pose_usable_gate()
     prov = build_mediapipe_pose_provenance(
@@ -258,12 +242,18 @@ def run_mediapipe_pose_baseline(
     best_people = 0
     best_name = "baseline"
     best_u = -1.0
+    best_iso_stats: dict[str, Any] | None = None
 
     try:
         for variant in variants:
             try:
-                fps, raw_2d, max_p, n_fr = _extract_2d_one_pass(
-                    landmarker, norm_path, variant, start_sec, end_sec
+                fps, raw_2d, max_p, n_fr, iso_stats = _extract_2d_one_pass(
+                    landmarker,
+                    norm_path,
+                    variant,
+                    start_sec,
+                    end_sec,
+                    person_isolation_mode=iso_mode_norm,
                 )
             except ValueError as e:
                 return PoseBaselineResult(
@@ -275,7 +265,7 @@ def run_mediapipe_pose_baseline(
                     ffmpeg_preprocess_applied=ffmpeg_applied,
                     provenance=prov,
                 )
-            u = _utility(raw_2d, n_fr)
+            u = utility_score(raw_2d, n_fr)
             if u > best_u:
                 best_u = u
                 best_fps = fps
@@ -283,8 +273,16 @@ def run_mediapipe_pose_baseline(
                 best_n = n_fr
                 best_people = max_p
                 best_name = variant if multipass else "baseline"
+                best_iso_stats = iso_stats
 
-        n_with, det_rate, vis_det, vis_all, disp = _aggregate_metrics(best_raw, best_n)
+        if best_iso_stats is not None:
+            prov["person_isolation"] = best_iso_stats
+            prov["person_isolation_note"] = (
+                "max_people_seen counts poses on the (possibly cropped) tensor passed to the landmarker; "
+                "with ROI enabled it often drops vs full-frame runs — compare JSONL provenance."
+            )
+
+        n_with, det_rate, vis_det, vis_all, disp = aggregate_metrics(best_raw, best_n)
         selected = "multipass_best" if multipass else "baseline_only"
         if multipass:
             selected = f"multipass_best:{best_name}"
@@ -295,7 +293,7 @@ def run_mediapipe_pose_baseline(
             and best_n >= gate.min_n_frames
         )
 
-        reasons = merge_reason_codes(det_rate, best_n, vis_det)
+        reasons = merge_reason_codes(det_rate, best_n, vis_det, max_people_seen=best_people)
         if not usable:
             reasons.append("pose_not_usable_heuristic")
 

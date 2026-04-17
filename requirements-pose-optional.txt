@@ -1,0 +1,9 @@
+# Optional: RTMPose gym baseline via rtmlib (YOLOX + RTMPose ONNX).
+# May pull opencv-contrib-python alongside opencv-python-headless; verify in your env.
+# First run can download OpenMMLab model zips (network).
+#
+# Pin rationale: rtmlib>=0.0.15 — first releases with stable Body() API used by
+# app/pose/rtmpose_baseline.py; bump only after A/B on evaluation/gym_manifest.csv.
+rtmlib>=0.0.15
+# onnxruntime: CPU inference for ONNX heads; align with rtmlib wheel expectations.
+onnxruntime>=1.16.0

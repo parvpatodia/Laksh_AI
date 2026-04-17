@@ -16,10 +16,12 @@ class MediaPipePoseBackend:
         start_sec: float | None = None,
         end_sec: float | None = None,
         multipass: bool = False,
+        person_isolation: str | None = None,
     ) -> PoseBaselineResult:
         return run_mediapipe_pose_baseline(
             video_path,
             start_sec=start_sec,
             end_sec=end_sec,
             multipass=multipass,
+            person_isolation=person_isolation,
         )

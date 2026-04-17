@@ -1,0 +1,34 @@
+# Optional slow path: pose contract tests only (no full physics suite).
+# PR CI stays fast. Ubuntu-only by default (MediaPipe wheels + minute costs);
+# add macos-latest to the matrix only if you need platform-specific signal.
+name: Nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  pose-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Pose landmarker model
+        run: python scripts/download_pose_model.py
+
+      - name: Pose eval readiness (strict)
+        run: python scripts/check_pose_eval_readiness.py --manifest evaluation/gym_manifest.csv --strict
+
+      - name: Pose contract tests
+        run: make test-pose-core

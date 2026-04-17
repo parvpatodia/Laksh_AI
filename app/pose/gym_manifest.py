@@ -47,11 +47,13 @@ def load_gym_manifest(path: Path, base_dir: Path) -> list[dict[str, Any]]:
     expect_min_detection_rate (extras ignored).
 
     Raises:
-        ValueError: if a data row has an empty ``path`` (invalid manifest).
+        ValueError: if a data row has an empty ``path``, or if ``clip_id`` duplicates
+        another row (after defaulting empty clip_id to the video filename stem).
     """
     rows: list[dict[str, Any]] = []
     with path.open(newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
+        clip_id_first_row: dict[str, int] = {}
         for row_num, r in enumerate(reader, start=2):
             rel = (r.get("path") or "").strip()
             if not rel:
@@ -59,6 +61,12 @@ def load_gym_manifest(path: Path, base_dir: Path) -> list[dict[str, Any]]:
                     f"{path}: row {row_num}: empty 'path' (clip_id={r.get('clip_id')!r})"
                 )
             cid = (r.get("clip_id") or "").strip() or Path(rel).stem
+            if cid in clip_id_first_row:
+                raise ValueError(
+                    f"{path}: duplicate clip_id {cid!r} (rows {clip_id_first_row[cid]} and {row_num}); "
+                    "clip_id must be stable and unique for eval regression tracking"
+                )
+            clip_id_first_row[cid] = row_num
             vp = (base_dir / rel).resolve() if not Path(rel).is_absolute() else Path(rel)
             min_dr = parse_expect_min_detection_rate(r.get("expect_min_detection_rate"))
             rows.append(

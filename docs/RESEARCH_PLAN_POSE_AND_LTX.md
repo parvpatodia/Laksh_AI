@@ -1,6 +1,6 @@
 # Research-grade plan: pose estimation + LTX-2.3 media stack
 
-This document records **primary-source research** (as of March 2025), a **staged technical plan**, and a **plan review checklist** before any major implementation. It aligns with [files/PROJECT_CONTEXT.md](../files/PROJECT_CONTEXT.md) and [files/GOALS.md](../files/GOALS.md).
+This document records **primary-source research** (as of March 2026), a **staged technical plan**, and a **plan review checklist** before any major implementation. It aligns with [PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md) and [GOALS.md](../GOALS.md).
 
 ---
 
@@ -11,7 +11,7 @@ Every significant change to CV, generative media, or evaluation should follow:
 1. **Research** — papers, model cards, official docs, license terms, compute needs, failure modes.
 2. **Plan** — written phases, success metrics, dependencies, risks (this doc is the living artifact).
 3. **Plan review** — Section 6 checklist; revise plan if any item fails.
-4. **Execute** — smallest vertical slice that tests the hypothesis; benchmark; then integrate.
+4. **Execute** — smallest vertical slice that tests the hypothesis; benchmark; then integrate. **Live checklist:** [POSE_UPGRADE_EXECUTION_PLAN.md §0](./POSE_UPGRADE_EXECUTION_PLAN.md#0-plan-status--how-to-execute) (P0–P4 status + commands).
 
 Skipping steps creates “phase loops” without cumulative advantage.
 
@@ -107,7 +107,25 @@ Then **swap backbones** (MediaPipe → RTMPose → SMPLer-X-class) without rewri
 
 **Goal:** Reliable pose **or** explicit “cannot analyze” for gym v0 exercises.
 
-**Implemented in repo (baseline slice):** [evaluation/gym_manifest.template.csv](../evaluation/gym_manifest.template.csv), [evaluation/gym_pose_calibration.json](../evaluation/gym_pose_calibration.json), [app/pose/mediapipe_baseline.py](../app/pose/mediapipe_baseline.py), [app/pose/calibration.py](../app/pose/calibration.py), [app/pose/gym_manifest.py](../app/pose/gym_manifest.py), [app/pose/provenance.py](../app/pose/provenance.py), [scripts/eval_pose_baseline.py](../scripts/eval_pose_baseline.py) (including `--validate-only`), specs [docs/gym_pose_evaluation.md](./gym_pose_evaluation.md) and [docs/POSE_EVALUATION_PROTOCOL.md](./POSE_EVALUATION_PROTOCOL.md). FFmpeg normalization is shared via [app/pose/preprocess.py](../app/pose/preprocess.py) with `KinematicAnalyzer`. RTMPose (or other) should plug in via `app.pose.backends` and the same JSONL shape plus backend-specific `provenance`.
+**Implemented in repo (baseline slice):** [evaluation/gym_manifest.template.csv](../evaluation/gym_manifest.template.csv), [evaluation/gym_pose_calibration.json](../evaluation/gym_pose_calibration.json), [app/pose/mediapipe_baseline.py](../app/pose/mediapipe_baseline.py), [app/pose/calibration.py](../app/pose/calibration.py), [app/pose/gym_manifest.py](../app/pose/gym_manifest.py), [app/pose/reason_codes.py](../app/pose/reason_codes.py), [app/pose/provenance.py](../app/pose/provenance.py), [scripts/eval_pose_baseline.py](../scripts/eval_pose_baseline.py) (including `--validate-only`), specs [docs/gym_pose_evaluation.md](./gym_pose_evaluation.md) and [docs/POSE_EVALUATION_PROTOCOL.md](./POSE_EVALUATION_PROTOCOL.md). FFmpeg normalization is shared via [app/pose/preprocess.py](../app/pose/preprocess.py) with `KinematicAnalyzer`. RTMPose (or other) should plug in via `app.pose.backends` and the same JSONL shape plus backend-specific `provenance`.
+
+**Rough compute / cost (MediaPipe Phase A):** CPU-only friendly for short clips; primary costs are engineer time and **disk + consent** for an internal clip bank. FFmpeg is optional but strongly recommended for iPhone HEVC/VFR parity with CI/Docker. No GPU requirement for the current heavy landmarker at prototype batch sizes; revisit when manifest exceeds ~hundreds of long clips or when adding RTMPose/GPU backends.
+
+**Phase A engineering exit criteria (before declaring “measurement done” for Milestone 1):**
+
+| Criterion | Target |
+|-----------|--------|
+| Curated internal manifest | ≥30 clips, [documented capture protocol](./GYM_EVAL_CAPTURE_AND_DATA.md), diversity notes (angle, clutter, lighting). |
+| JSONL + provenance | Every run records `pose_baseline_schema_version`, canonical joint schema / mapping id, model hash, calibration source, `ffmpeg_preprocess_applied`. |
+| Failure taxonomy | Stable `reason_codes` (see protocol doc); no silent “unknown bad.” |
+| Usable-pose rate | Report **%** `pose_usable_heuristic` on the manifest **and** distribution of `detection_rate` — numbers feed product copy, not the reverse. |
+| Backbone swap | Second backend behind `app.pose.backends` **or** written ADR “defer until N clips labeled” with date. |
+
+Rep-boundary **precision/recall** remains a **Milestone 1** metric but is **downstream** of this spine; do not block shipping the baseline runner on perfect rep segmentation.
+
+### 4.1 Execution contract (backbone upgrade, preprocessing, claims)
+
+**Authoritative detail:** [POSE_UPGRADE_EXECUTION_PLAN.md](./POSE_UPGRADE_EXECUTION_PLAN.md) — canonical keypoint mapping rules, offline vs online inference, **denoise A/B gate**, multipass vs deploy honesty, **labeling tiers (L0–L2)** and allowed claims, basketball eval parity with gym JSONL, phased implementation (P0–P4), and risk register. **Self-assessed grade: A** (P0 + P1a RTMPose); **P1b** = manifest A/B — see [execution plan §0](./POSE_UPGRADE_EXECUTION_PLAN.md#0-plan-status--how-to-execute).
 
 1. **Build / curate** an internal **benchmark manifest** (30–200 clips): lighting, occlusion, phone angles; **sparse** 2D/3D pseudo-gold (even expert keyframe labels on a subset).
 2. **Baseline**: current MediaPipe pipeline → metrics: detection rate, joint stability, failure taxonomy.
@@ -127,7 +145,7 @@ Then **swap backbones** (MediaPipe → RTMPose → SMPLer-X-class) without rewri
 
 ### Phase D — Scale to additional sports
 
-Only after **Phase A–C gates** pass for gym (per [files/GOALS.md](../files/GOALS.md)).
+Only after **Phase A–C gates** pass for gym (per [GOALS.md](../GOALS.md)).
 
 ---
 
@@ -135,15 +153,15 @@ Only after **Phase A–C gates** pass for gym (per [files/GOALS.md](../files/GOA
 
 Use this after writing or updating the plan:
 
-- [ ] **Problem statement** is one paragraph, falsifiable.
-- [ ] **Success metrics** are numeric or categorical (not “better UX”).
-- [ ] **Primary sources** cited (paper arXiv, official README, license).
-- [ ] **Compute + $** rough budget for each phase.
-- [ ] **Privacy / consent** path for body and generative likeness.
-- [ ] **Rollback**: baseline (MediaPipe or overlay-only) still works if new model fails.
-- [ ] **Scope**: no parallel “rewrite everything” without Phase A results.
+- [x] **Problem statement** is one paragraph, falsifiable. *(§2 frames casual uploads + single-view limits.)*
+- [x] **Success metrics** are numeric or categorical (not “better UX”). *(Phase A table + Milestone 1 in GOALS.)*
+- [x] **Primary sources** cited (paper arXiv, official README, license). *(§1, §6; pose refs §2.)*
+- [x] **Compute + $** rough budget for each phase. *(§4 Phase A note; Phases B–C still order-of-magnitude TBD when spikes start.)*
+- [ ] **Privacy / consent** path for body and generative likeness. *(Phase A internal eval: see [GYM_EVAL_CAPTURE_AND_DATA.md §3](./GYM_EVAL_CAPTURE_AND_DATA.md#3-internal-data-handling-rd); enforce org policy. Phase C likeness — still open.)*
+- [x] **Rollback**: baseline (MediaPipe or overlay-only) still works if new model fails.
+- [x] **Scope**: no parallel “rewrite everything” without Phase A results.
 
-If any box is unchecked, **revise the plan** before large code or spend.
+If any **unchecked** box applies to the **specific change you are about to ship**, **revise the plan or design** before large code or spend. Checklist items are living, not a one-time sign-off.
 
 ---
 

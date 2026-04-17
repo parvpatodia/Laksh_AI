@@ -8,11 +8,13 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
-from pathlib import Path
 from typing import Any
 
-from app.pose.preprocess import normalize_video_for_pose
+from app.pose.canonical import CANONICAL_JOINT_SCHEMA_VERSION, CanonicalJointName
+from app.pose.kinematic_flags import use_canonical_joint_trace
+from app.pose.mapping_mediapipe import map_mediapipe_blazepose33_to_canonical
 from app.pose.mediapipe_common import create_pose_landmarker
+from app.pose.preprocess import normalize_video_for_pose
 from scipy.signal import savgol_filter
 
 logger = logging.getLogger(__name__)
@@ -45,16 +47,21 @@ FALLBACK_MESSAGES = {
 }
 
 def _to_vec3(lm) -> np.ndarray:
-    if lm is None: return np.array([np.nan, np.nan, np.nan], dtype=np.float64)
+    if lm is None:
+        return np.array([np.nan, np.nan, np.nan], dtype=np.float64)
     return np.array([getattr(lm, "x", np.nan), getattr(lm, "y", np.nan), getattr(lm, "z", np.nan)], dtype=np.float64)
 
+
 def _calculate_3d_angle(a, b, c) -> float:
-    if np.any(np.isnan(a)) or np.any(np.isnan(b)) or np.any(np.isnan(c)): return 0.0
+    if np.any(np.isnan(a)) or np.any(np.isnan(b)) or np.any(np.isnan(c)):
+        return 0.0
     u, v = a - b, c - b
     nu, nv = np.linalg.norm(u), np.linalg.norm(v)
-    if nu < 1e-9 or nv < 1e-9: return 0.0
+    if nu < 1e-9 or nv < 1e-9:
+        return 0.0
     val = np.dot(u, v) / (nu * nv)
-    if np.isnan(val): return 0.0
+    if np.isnan(val):
+        return 0.0
     return math.degrees(math.acos(np.clip(val, -1.0, 1.0)))
 
 
@@ -71,6 +78,113 @@ def _is_valid_xy(v: Any) -> bool:
         return False
     arr = np.asarray(v, dtype=np.float64)
     return arr.size >= 2 and np.all(np.isfinite(arr[:2]))
+
+
+def _angle_2d_from_joint_observations(
+    ja: Any, jb: Any, jc: Any, aspect_ratio: float
+) -> float | None:
+    """Interior angle at jb from three JointObservation-like objects (x, y, visibility)."""
+    if ja is None or jb is None or jc is None:
+        return None
+    a = np.array([float(ja.x), float(ja.y), float(ja.visibility)], dtype=np.float64)
+    b = np.array([float(jb.x), float(jb.y), float(jb.visibility)], dtype=np.float64)
+    c = np.array([float(jc.x), float(jc.y), float(jc.visibility)], dtype=np.float64)
+    return _angle_2d_image(a, b, c, aspect_ratio)
+
+
+def _canonical_joint_path_telemetry(
+    cpf: list[Any] | None,
+    side: str,
+    dip_frame: int,
+    release_frame: int,
+    aspect_ratio: float,
+    e_legacy_2d_raw: float | None,
+    k_legacy_2d_raw: float | None,
+) -> dict[str, Any] | None:
+    """
+    Parity probe: same 2D angle math on canonical-mapped joints vs legacy index path.
+    Does not replace shipped metrics (ADR 0002 P3).
+    """
+    if not cpf or dip_frame < 0 or release_frame < 0:
+        return None
+    if dip_frame >= len(cpf) or release_frame >= len(cpf):
+        return {
+            "enabled": True,
+            "canonical_joint_schema_version": CANONICAL_JOINT_SCHEMA_VERSION,
+            "mapping_id": "mediapipe_blazepose33_to_canonical",
+            "error": "key_frame_out_of_range",
+        }
+    fd = cpf[dip_frame]
+    fr = cpf[release_frame]
+    if fd is None or fr is None:
+        return {
+            "enabled": True,
+            "canonical_joint_schema_version": CANONICAL_JOINT_SCHEMA_VERSION,
+            "mapping_id": "mediapipe_blazepose33_to_canonical",
+            "error": "missing_canonical_pose_at_key_frame",
+        }
+    if side == "right":
+        hip_k, knee_k, ankle_k = (
+            CanonicalJointName.RIGHT_HIP,
+            CanonicalJointName.RIGHT_KNEE,
+            CanonicalJointName.RIGHT_ANKLE,
+        )
+        sh_e, el_e, wr_e = (
+            CanonicalJointName.RIGHT_SHOULDER,
+            CanonicalJointName.RIGHT_ELBOW,
+            CanonicalJointName.RIGHT_WRIST,
+        )
+    else:
+        hip_k = CanonicalJointName.LEFT_HIP
+        knee_k = CanonicalJointName.LEFT_KNEE
+        ankle_k = CanonicalJointName.LEFT_ANKLE
+        sh_e = CanonicalJointName.LEFT_SHOULDER
+        el_e = CanonicalJointName.LEFT_ELBOW
+        wr_e = CanonicalJointName.LEFT_WRIST
+
+    hj = fd.get(hip_k)
+    kk = fd.get(knee_k)
+    ak = fd.get(ankle_k)
+    sh = fr.get(sh_e)
+    el = fr.get(el_e)
+    wr = fr.get(wr_e)
+    if hj is None or kk is None or ak is None or sh is None or el is None or wr is None:
+        return {
+            "enabled": True,
+            "canonical_joint_schema_version": CANONICAL_JOINT_SCHEMA_VERSION,
+            "mapping_id": "mediapipe_blazepose33_to_canonical",
+            "error": "missing_joint_in_canonical_frame",
+        }
+
+    k_ang_c = _angle_2d_from_joint_observations(hj, kk, ak, aspect_ratio)
+    e_ang_c = _angle_2d_from_joint_observations(sh, el, wr, aspect_ratio)
+
+    out: dict[str, Any] = {
+        "enabled": True,
+        "canonical_joint_schema_version": CANONICAL_JOINT_SCHEMA_VERSION,
+        "mapping_id": "mediapipe_blazepose33_to_canonical",
+        "knee_angle_2d_image_deg_canonical_at_dip": round(float(k_ang_c), 3)
+        if k_ang_c is not None
+        else None,
+        "elbow_angle_2d_image_deg_canonical_at_release": round(float(e_ang_c), 3)
+        if e_ang_c is not None
+        else None,
+        "legacy_knee_2d_image_deg_at_dip": round(float(k_legacy_2d_raw), 3)
+        if k_legacy_2d_raw is not None
+        else None,
+        "legacy_elbow_2d_image_deg_at_release": round(float(e_legacy_2d_raw), 3)
+        if e_legacy_2d_raw is not None
+        else None,
+    }
+    if k_ang_c is not None and k_legacy_2d_raw is not None:
+        out["delta_knee_vs_legacy_2d_deg"] = round(
+            float(k_ang_c) - float(k_legacy_2d_raw), 3
+        )
+    if e_ang_c is not None and e_legacy_2d_raw is not None:
+        out["delta_elbow_vs_legacy_2d_deg"] = round(
+            float(e_ang_c) - float(e_legacy_2d_raw), 3
+        )
+    return out
 
 
 def _angle_2d_image(a: np.ndarray, b: np.ndarray, c: np.ndarray, aspect_ratio: float) -> float | None:
@@ -196,6 +310,8 @@ class KinematicAnalyzer:
         joints, sides = ["wrist", "elbow", "shoulder", "hip", "knee", "ankle"], ["left", "right"]
         data_3d = {f"{s}_{j}": [] for s in sides for j in joints}
         data_2d = {f"{s}_{j}": [] for s in sides for j in joints}
+        collect_canon = use_canonical_joint_trace()
+        canonical_per_frame: list[Any] | None = [] if collect_canon else None
 
         frame_idx = 0
         last_t_ms = -1
@@ -233,6 +349,14 @@ class KinematicAnalyzer:
                     if plms and len(plms) > 0:
                         plm = plms[0]
 
+                if canonical_per_frame is not None:
+                    if plm is not None and len(plm) == 33:
+                        canonical_per_frame.append(
+                            map_mediapipe_blazepose33_to_canonical(plm)
+                        )
+                    else:
+                        canonical_per_frame.append(None)
+
                 indices = [
                     (LEFT_WRIST, RIGHT_WRIST, "wrist"),
                     (LEFT_ELBOW, RIGHT_ELBOW, "elbow"),
@@ -250,7 +374,13 @@ class KinematicAnalyzer:
         finally:
             cap.release()
 
-        return fps, {k: np.array(v) for k, v in data_3d.items()}, {k: np.array(v) for k, v in data_2d.items()}, max_people
+        return (
+            fps,
+            {k: np.array(v) for k, v in data_3d.items()},
+            {k: np.array(v) for k, v in data_2d.items()},
+            max_people,
+            canonical_per_frame,
+        )
 
     def _detection_utility(self, raw_2d: dict) -> tuple[int, float]:
         """Return (usable wrist detections, average visibility)."""
@@ -284,7 +414,8 @@ class KinematicAnalyzer:
         import mediapipe as mp
         path = video_path_override or self.video_path
         cap = cv2.VideoCapture(path)
-        if not cap.isOpened(): raise ValueError(f"Could not open video: {path}")
+        if not cap.isOpened():
+            raise ValueError(f"Could not open video: {path}")
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
 
@@ -299,6 +430,8 @@ class KinematicAnalyzer:
         joints, sides = ["wrist", "elbow", "shoulder", "hip", "knee", "ankle"], ["left", "right"]
         data_3d = {f"{s}_{j}": [] for s in sides for j in joints}
         data_2d = {f"{s}_{j}": [] for s in sides for j in joints}
+        collect_canon = use_canonical_joint_trace()
+        canonical_per_frame: list[Any] | None = [] if collect_canon else None
 
         frame_idx = 0
         last_t_ms = -1          # monotonicity guard for MediaPipe VIDEO mode
@@ -340,6 +473,14 @@ class KinematicAnalyzer:
                     if plms and len(plms) > 0:
                         plm = plms[0]
 
+                if canonical_per_frame is not None:
+                    if plm is not None and len(plm) == 33:
+                        canonical_per_frame.append(
+                            map_mediapipe_blazepose33_to_canonical(plm)
+                        )
+                    else:
+                        canonical_per_frame.append(None)
+
                 indices = [
                     (LEFT_WRIST, RIGHT_WRIST, "wrist"),
                     (LEFT_ELBOW, RIGHT_ELBOW, "elbow"),
@@ -361,7 +502,13 @@ class KinematicAnalyzer:
             if self._landmarker:
                 self._landmarker.close()
 
-        return fps, {k: np.array(v) for k, v in data_3d.items()}, {k: np.array(v) for k, v in data_2d.items()}, max_people
+        return (
+            fps,
+            {k: np.array(v) for k, v in data_3d.items()},
+            {k: np.array(v) for k, v in data_2d.items()},
+            max_people,
+            canonical_per_frame,
+        )
 
     def apply_filters(self, data):
         out = {}
@@ -373,8 +520,10 @@ class KinematicAnalyzer:
             clean = df.values
             smoothed = np.zeros_like(clean)
             for d in range(clean.shape[1]):
-                try: smoothed[:, d] = savgol_filter(clean[:, d], 11, 3)
-                except Exception: smoothed[:, d] = clean[:, d]
+                try:
+                    smoothed[:, d] = savgol_filter(clean[:, d], 11, 3)
+                except Exception:
+                    smoothed[:, d] = clean[:, d]
             out[k] = smoothed
         return out
 
@@ -650,11 +799,13 @@ class KinematicAnalyzer:
             pass_variants = ["baseline", "gamma_contrast", "denoise_sharpen"]
             best = None
             for variant in pass_variants:
-                fps_i, raw_3d_i, raw_2d_i, max_people_i = self._extract_frames_with_variant(
-                    variant=variant,
-                    start_sec=start_sec,
-                    end_sec=end_sec,
-                    video_path_override=norm_path,
+                fps_i, raw_3d_i, raw_2d_i, max_people_i, canonical_i = (
+                    self._extract_frames_with_variant(
+                        variant=variant,
+                        start_sec=start_sec,
+                        end_sec=end_sec,
+                        video_path_override=norm_path,
+                    )
                 )
                 det_i, vis_i = self._detection_utility(raw_2d_i)
                 utility = det_i + int(round(vis_i * 20))
@@ -668,6 +819,7 @@ class KinematicAnalyzer:
                         "detections": det_i,
                         "visibility": vis_i,
                         "utility": utility,
+                        "canonical_per_frame": canonical_i,
                     }
 
             if best is None:
@@ -953,6 +1105,18 @@ class KinematicAnalyzer:
                 ) if people_count > 1 else None,
             }
             telemetry["detection_metadata"] = detection_metadata
+
+            cprobe = _canonical_joint_path_telemetry(
+                best.get("canonical_per_frame"),
+                side,
+                dip_frame,
+                release_frame,
+                aspect_ratio,
+                e_2d_raw,
+                k_2d_raw,
+            )
+            if cprobe is not None:
+                telemetry["canonical_joint_path"] = cprobe
 
             # Video quality and validation (expert-grade robustness)
             vq = self._assess_video_quality(w, h, fps, total_frames, visibility, people_count)

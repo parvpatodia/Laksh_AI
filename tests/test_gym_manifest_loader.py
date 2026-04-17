@@ -56,6 +56,55 @@ def test_load_and_validate_paths(tmp_path: Path, monkeypatch):
     assert stat["files_missing"] == 0
 
 
+def test_duplicate_clip_id_raises(tmp_path: Path):
+    repo = tmp_path / "repo"
+    clips = repo / "evaluation" / "clips"
+    clips.mkdir(parents=True)
+    (clips / "a.mp4").write_bytes(b"x")
+    (clips / "b.mp4").write_bytes(b"y")
+
+    manifest = repo / "m.csv"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    with manifest.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(
+            f,
+            fieldnames=[
+                "clip_id",
+                "path",
+                "tags",
+                "notes",
+                "exercise_id",
+                "expect_pose_usable",
+                "expect_min_detection_rate",
+            ],
+        )
+        w.writeheader()
+        w.writerow(
+            {
+                "clip_id": "same",
+                "path": "evaluation/clips/a.mp4",
+                "tags": "",
+                "notes": "",
+                "exercise_id": "",
+                "expect_pose_usable": "",
+                "expect_min_detection_rate": "",
+            }
+        )
+        w.writerow(
+            {
+                "clip_id": "same",
+                "path": "evaluation/clips/b.mp4",
+                "tags": "",
+                "notes": "",
+                "exercise_id": "",
+                "expect_pose_usable": "",
+                "expect_min_detection_rate": "",
+            }
+        )
+    with pytest.raises(ValueError, match="duplicate clip_id"):
+        load_gym_manifest(manifest, repo)
+
+
 def test_empty_path_raises(tmp_path: Path):
     repo = tmp_path / "repo"
     manifest = repo / "m.csv"

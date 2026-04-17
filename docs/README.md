@@ -4,6 +4,10 @@
 
 | Document | Purpose |
 |----------|---------|
+| [RESEARCH_PLAN_POSE_AND_LTX.md](./RESEARCH_PLAN_POSE_AND_LTX.md) | Staged plan: pose → LTX-2.3; literature and gates |
+| [POSE_UPGRADE_EXECUTION_PLAN.md](./POSE_UPGRADE_EXECUTION_PLAN.md) | **Execution contract:** canonical joints, P0–P4, denoise/claim gates |
+| [POSE_EVALUATION_PROTOCOL.md](./POSE_EVALUATION_PROTOCOL.md) | Gym Phase A metric definitions + reason codes |
+| [GYM_EVAL_CAPTURE_AND_DATA.md](./GYM_EVAL_CAPTURE_AND_DATA.md) | Internal clip capture + data hygiene |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | End-to-end system boundaries and data flow |
 | [VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md) | Validate metrics for investors / due diligence |
 | [VIDEO_ANALYSIS_LIMITATIONS.md](./VIDEO_ANALYSIS_LIMITATIONS.md) | When analysis fails and why |
