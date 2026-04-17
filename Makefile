@@ -2,7 +2,7 @@
 # Use the same interpreter you install requirements into (override: make PYTHON=python3.12 …).
 PYTHON ?= python3
 
-.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report
+.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report freeze-exercise-v0 verify-exercise-v0
 
 test:
 	pytest tests/ -q
@@ -41,7 +41,8 @@ test-pose-core:
 		tests/test_eval_scorecard_header.py tests/test_gym_manifest_hard_template.py \
 		tests/test_scorecard_command.py tests/test_build_scorecard.py \
 		tests/test_pose_jitter.py tests/test_subject_split_check.py \
-		tests/test_pose_calibration.py tests/test_pose_parity_report.py -q
+		tests/test_pose_calibration.py tests/test_pose_parity_report.py \
+		tests/test_exercises_v0.py -q
 
 eval-model:
 	$(PYTHON) scripts/download_pose_model.py
@@ -90,3 +91,12 @@ eval-bench-strict:
 # Then: make pose-parity-report JSONL=evaluation/results.jsonl
 pose-parity-report:
 	$(PYTHON) scripts/pose_parity_report.py --jsonl $(JSONL)
+
+# Milestone 1 (GOALS.md): freeze / verify exercise v0 taxonomy.
+# Run freeze-exercise-v0 after editing app/gym/exercises_v0.py; commit the
+# regenerated evaluation/exercise_v0_manifest.json alongside the code change.
+freeze-exercise-v0:
+	$(PYTHON) scripts/freeze_exercise_v0.py
+
+verify-exercise-v0:
+	$(PYTHON) scripts/freeze_exercise_v0.py --verify

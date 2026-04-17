@@ -1,0 +1,265 @@
+{
+  "allowed_camera_views": [
+    "45_front_offset",
+    "dtl",
+    "front",
+    "side"
+  ],
+  "allowed_categories": [
+    "carry",
+    "hinge",
+    "horizontal_pull",
+    "horizontal_push",
+    "isometric_core",
+    "lunge",
+    "squat",
+    "vertical_pull",
+    "vertical_push"
+  ],
+  "allowed_framings": [
+    "full_body",
+    "lower_body",
+    "upper_body"
+  ],
+  "allowed_rep_signal_types": [
+    "cyclic_angle",
+    "cyclic_vertical",
+    "duration",
+    "gait_cadence"
+  ],
+  "exercises": [
+    {
+      "camera_instruction": "Place phone ~2m to your side, hip-height, lens level. Whole body in frame.",
+      "camera_view_hint": "side",
+      "category": "squat",
+      "display_name": "Back Squat",
+      "exercise_id": "back_squat",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle"
+      ],
+      "rep_signal_joint": "right_hip",
+      "rep_signal_type": "cyclic_vertical"
+    },
+    {
+      "camera_instruction": "Side view, hip-height, whole body visible; keep bar path in-frame.",
+      "camera_view_hint": "side",
+      "category": "squat",
+      "display_name": "Front Squat",
+      "exercise_id": "front_squat",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle",
+        "left_shoulder",
+        "right_shoulder"
+      ],
+      "rep_signal_joint": "right_hip",
+      "rep_signal_type": "cyclic_vertical"
+    },
+    {
+      "camera_instruction": "Side view, knee-to-hip height, bar and feet both visible at lockout.",
+      "camera_view_hint": "side",
+      "category": "hinge",
+      "display_name": "Conventional Deadlift",
+      "exercise_id": "conventional_deadlift",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle",
+        "left_shoulder",
+        "right_shoulder"
+      ],
+      "rep_signal_joint": "right_hip",
+      "rep_signal_type": "cyclic_vertical"
+    },
+    {
+      "camera_instruction": "Side view, hip-height; capture torso angle change through the hinge.",
+      "camera_view_hint": "side",
+      "category": "hinge",
+      "display_name": "Romanian Deadlift",
+      "exercise_id": "romanian_deadlift",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle",
+        "left_shoulder",
+        "right_shoulder"
+      ],
+      "rep_signal_joint": "right_hip",
+      "rep_signal_type": "cyclic_angle"
+    },
+    {
+      "camera_instruction": "Side view, bar-height, bench and bar visible end-to-end through the rep.",
+      "camera_view_hint": "side",
+      "category": "horizontal_push",
+      "display_name": "Barbell Bench Press",
+      "exercise_id": "bench_press",
+      "framing": "upper_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist"
+      ],
+      "rep_signal_joint": "right_elbow",
+      "rep_signal_type": "cyclic_angle"
+    },
+    {
+      "camera_instruction": "Side view, chest-height, head to hips in frame; show full lockout above head.",
+      "camera_view_hint": "side",
+      "category": "vertical_push",
+      "display_name": "Standing Overhead Press",
+      "exercise_id": "overhead_press",
+      "framing": "upper_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist"
+      ],
+      "rep_signal_joint": "right_elbow",
+      "rep_signal_type": "cyclic_angle"
+    },
+    {
+      "camera_instruction": "Side view, hip-height; torso hinge and bar path both in frame.",
+      "camera_view_hint": "side",
+      "category": "horizontal_pull",
+      "display_name": "Bent-Over Barbell Row",
+      "exercise_id": "barbell_row",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist",
+        "left_hip",
+        "right_hip"
+      ],
+      "rep_signal_joint": "right_elbow",
+      "rep_signal_type": "cyclic_angle"
+    },
+    {
+      "camera_instruction": "Front view, bar slightly above head height; whole torso + bar visible.",
+      "camera_view_hint": "front",
+      "category": "vertical_pull",
+      "display_name": "Pull-Up",
+      "exercise_id": "pull_up",
+      "framing": "upper_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist"
+      ],
+      "rep_signal_joint": "right_elbow",
+      "rep_signal_type": "cyclic_angle"
+    },
+    {
+      "camera_instruction": "Side view, ground-level, shoulder-to-ankle in frame for a straight body check.",
+      "camera_view_hint": "side",
+      "category": "horizontal_push",
+      "display_name": "Push-Up",
+      "exercise_id": "push_up",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist",
+        "left_hip",
+        "right_hip"
+      ],
+      "rep_signal_joint": "right_elbow",
+      "rep_signal_type": "cyclic_angle"
+    },
+    {
+      "camera_instruction": "Side view, hip-height, pan if needed so full body stays in frame across steps.",
+      "camera_view_hint": "side",
+      "category": "lunge",
+      "display_name": "Walking Lunge",
+      "exercise_id": "walking_lunge",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle"
+      ],
+      "rep_signal_joint": "right_knee",
+      "rep_signal_type": "cyclic_vertical"
+    },
+    {
+      "camera_instruction": "Side view, ground-level; shoulder-to-ankle in frame for line-of-body check.",
+      "camera_view_hint": "side",
+      "category": "isometric_core",
+      "display_name": "Plank (hold)",
+      "exercise_id": "plank",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_hip",
+        "right_hip",
+        "left_ankle",
+        "right_ankle"
+      ],
+      "rep_signal_joint": null,
+      "rep_signal_type": "duration"
+    },
+    {
+      "camera_instruction": "Side view, hip-height, pan to follow; capture at least 6 steady strides.",
+      "camera_view_hint": "side",
+      "category": "carry",
+      "display_name": "Farmer Carry",
+      "exercise_id": "farmer_carry",
+      "framing": "full_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_hip",
+        "right_hip",
+        "left_ankle",
+        "right_ankle"
+      ],
+      "rep_signal_joint": null,
+      "rep_signal_type": "gait_cadence"
+    }
+  ],
+  "manifest_version": "v0.1.0",
+  "reserved_exercise_tokens": [
+    "mixed",
+    "unknown"
+  ],
+  "schema_version": "1.0.0",
+  "sha256": "548d15db4c91a8d0de4422233c03382292d5db5083fc9c0179f141b47c4a642b"
+}
