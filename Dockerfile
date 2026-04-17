@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y \
     ffmpeg libavcodec-extra \
     && rm -rf /var/lib/apt/lists/*
 
-# Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Python dependencies (locked for reproducibility; matches CI)
+COPY requirements.txt requirements.lock ./
+RUN pip install --no-cache-dir -r requirements.lock
 
 # Application code
 COPY . .

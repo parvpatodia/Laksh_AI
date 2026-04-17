@@ -3,7 +3,11 @@
 ## First PR checklist
 
 1. **Python 3.11** — same as CI (see `.github/workflows/ci.yml`).
-2. **Install:** `pip install -r requirements.txt` and optionally `pip install -r requirements-dev.txt` before `make lint` / `make mypy-pose`.
+2. **Install (reproducible):** `pip install -r requirements-dev.lock` (superset of `requirements.lock` — runtime + dev). For runtime-only deploys: `pip install -r requirements.lock`. Loose pins (`requirements.txt` / `requirements-dev.txt`) are the **inputs**; the `.lock` files are what CI and Docker install. Regenerate locks when you edit `requirements*.txt`:
+   ```bash
+   uv pip compile requirements.txt --python-version 3.11 --output-file requirements.lock
+   uv pip compile requirements.txt requirements-dev.txt --python-version 3.11 --output-file requirements-dev.lock
+   ```
 3. **Pose model:** `python scripts/download_pose_model.py` (verifies SHA-256 of `pose_landmarker_heavy.task`).
 4. **Tests:** `pytest tests/ -q` or at least `make test-pose-core` for pose-only changes.
 5. **Eval claims:** If you change preprocess, pose, or metrics, read [docs/POSE_UPGRADE_EXECUTION_PLAN.md](docs/POSE_UPGRADE_EXECUTION_PLAN.md) and attach a scorecard per [evaluation/SCORECARD_TEMPLATE.md](evaluation/SCORECARD_TEMPLATE.md) when reporting numbers.

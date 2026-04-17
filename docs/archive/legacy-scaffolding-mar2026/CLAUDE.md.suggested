@@ -1,0 +1,45 @@
+# CLAUDE.md -- Laksh_AI
+
+## Overview
+See `context.md` for project vision and rationale.
+Stack: Python 3.11, pip, fastapi, huggingface, jax, matplotlib, numpy, opencv, pandas, pillow, pytorch, scipy, sklearn, tensorflow.
+
+## Critical rules
+1. Never commit secrets. Use `.env.local` (gitignored).
+2. This project uses pip. Do not switch package managers.
+3. Test before commit: `pytest -x`.
+4. Never force-push to main.
+5. Read file before editing. Never modify blind.
+6. Verify every import exists before adding it.
+7. This output will be cross-checked by another AI -- be precise.
+
+## Commands
+- **Run:** `python main.py`
+- **Test:** `pytest -x`
+- **Lint:** `ruff check . --fix`
+
+## Compact instructions
+When compacting, preserve: current task, failing tests, error tracebacks,
+architectural decisions made this session, file paths discussed.
+
+## Project map
+Apex.ai              -- (describe)
+app                  -- (describe)
+docs                 -- (describe)
+evaluation           -- (describe)
+files                -- (describe)
+files (1)            -- (describe)
+files 2              -- (describe)
+scripts              -- (describe)
+
+## Deeper context (read on demand, not at startup)
+- Code style rules:  `.claude/rules/style.md`
+- Testing rules:     `.claude/rules/testing.md`
+
+
+## Periodic diagnostics
+Before starting any new task, verify:
+1. Environment activated (check: `which python`)
+2. `git status` is clean or changes are staged
+3. No broken imports: `ruff check . --fix`
+

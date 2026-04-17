@@ -36,6 +36,10 @@ evaluation/gym_clips/*.mp4
 .agent-logs/
 .agent-work/
 .agent-docs/
+
+# Claude Code / Cursor session-local worktrees (each session gets its own isolated checkout)
+.claude/worktrees/
+.cursor/worktrees/
 HEALTH_LOG.md
 REVIEW_LOG.md
 RESEARCH_LOG.md
