@@ -2,7 +2,7 @@
 # Use the same interpreter you install requirements into (override: make PYTHON=python3.12 …).
 PYTHON ?= python3
 
-.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard
+.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report
 
 test:
 	pytest tests/ -q
@@ -41,7 +41,7 @@ test-pose-core:
 		tests/test_eval_scorecard_header.py tests/test_gym_manifest_hard_template.py \
 		tests/test_scorecard_command.py tests/test_build_scorecard.py \
 		tests/test_pose_jitter.py tests/test_subject_split_check.py \
-		tests/test_pose_calibration.py -q
+		tests/test_pose_calibration.py tests/test_pose_parity_report.py -q
 
 eval-model:
 	$(PYTHON) scripts/download_pose_model.py
@@ -83,3 +83,10 @@ eval-pose-isolation-ab:
 # After setting expect_* columns in manifest.csv
 eval-bench-strict:
 	$(PYTHON) scripts/benchmark_pipeline.py --manifest evaluation/manifest.csv --out evaluation/results.jsonl --backend mediapipe --strict-manifest
+
+# ADR 0002 Phase C: canonical-vs-legacy parity gate.
+# Generate input JSONL with LAKSH_USE_CANONICAL_JOINTS=1 first, e.g.:
+#   LAKSH_USE_CANONICAL_JOINTS=1 make eval-bench-strict
+# Then: make pose-parity-report JSONL=evaluation/results.jsonl
+pose-parity-report:
+	$(PYTHON) scripts/pose_parity_report.py --jsonl $(JSONL)
