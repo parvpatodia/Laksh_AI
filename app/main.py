@@ -130,7 +130,14 @@ def _init_chroma():
     if not db_healthy:
         logger.info("DATABASE NOT FOUND OR CORRUPT — wiping and rebuilding…")
         if os.path.exists(PERSIST_DIR):
-            shutil.rmtree(PERSIST_DIR)
+            # Delete *contents* only -- the directory itself may be a mounted
+            # volume (Fly.io block device) and rmtree on the mountpoint raises
+            # OSError EBUSY. Keep the root directory, clear everything inside it.
+            for _child in Path(PERSIST_DIR).iterdir():
+                if _child.is_dir():
+                    shutil.rmtree(_child)
+                else:
+                    _child.unlink()
         os.makedirs(PERSIST_DIR, exist_ok=True)
 
     for path in [PERSIST_DIR, os.path.join(os.environ.get("TMPDIR", "/tmp"), "apex_chroma")]:
