@@ -24,5 +24,11 @@ scipy
 # NBA data (db_seeder)
 nba_api
 
+# Production server (single worker on 1 GB Fly machine)
+gunicorn
+
+# Cloudflare R2 / S3-compatible object storage
+boto3
+
 # Testing (regression, CI)
 pytest>=7.0

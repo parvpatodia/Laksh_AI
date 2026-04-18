@@ -20,6 +20,12 @@ attrs==26.1.0
     #   referencing
 bcrypt==5.0.0
     # via chromadb
+boto3==1.42.91
+    # via -r requirements.txt
+botocore==1.42.91
+    # via
+    #   boto3
+    #   s3transfer
 build==1.4.3
     # via chromadb
 certifi==2026.2.25
@@ -90,6 +96,8 @@ grpcio-status==1.80.0
     # via google-api-core
 gtts==2.5.4
     # via -r requirements.txt
+gunicorn==25.3.0
+    # via -r requirements.txt
 h11==0.16.0
     # via
     #   httpcore
@@ -118,6 +126,10 @@ importlib-resources==7.1.0
     # via chromadb
 iniconfig==2.3.0
     # via pytest
+jmespath==1.1.0
+    # via
+    #   boto3
+    #   botocore
 jsonschema==4.26.0
     # via chromadb
 jsonschema-specifications==2025.9.1
@@ -188,6 +200,7 @@ overrides==7.7.0
 packaging==26.1
     # via
     #   build
+    #   gunicorn
     #   huggingface-hub
     #   matplotlib
     #   onnxruntime
@@ -245,6 +258,7 @@ pytest==9.0.3
     # via -r requirements.txt
 python-dateutil==2.9.0.post0
     # via
+    #   botocore
     #   kubernetes
     #   matplotlib
     #   pandas
@@ -284,6 +298,8 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
+s3transfer==0.16.0
+    # via boto3
 scipy==1.17.1
     # via -r requirements.txt
 shellingham==1.5.4
@@ -338,6 +354,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 urllib3==2.6.3
     # via
+    #   botocore
     #   kubernetes
     #   requests
 uvicorn==0.44.0
