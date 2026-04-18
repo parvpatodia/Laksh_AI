@@ -2,7 +2,7 @@
 # Use the same interpreter you install requirements into (override: make PYTHON=python3.12 …).
 PYTHON ?= python3
 
-.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report freeze-exercise-v0 verify-exercise-v0
+.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report freeze-exercise-v0 verify-exercise-v0 verify-calibration-v0 print-calibration-v0
 
 test:
 	pytest tests/ -q
@@ -43,7 +43,7 @@ test-pose-core:
 		tests/test_pose_jitter.py tests/test_subject_split_check.py \
 		tests/test_pose_calibration.py tests/test_pose_parity_report.py \
 		tests/test_exercises_v0.py tests/test_rep_segmenter.py \
-		tests/test_rep_features.py -q
+		tests/test_rep_features.py tests/test_calibration_v0.py -q
 
 eval-model:
 	$(PYTHON) scripts/download_pose_model.py
@@ -101,3 +101,13 @@ freeze-exercise-v0:
 
 verify-exercise-v0:
 	$(PYTHON) scripts/freeze_exercise_v0.py --verify
+
+# Milestone 1 bullet 4 (GOALS.md): gym calibration v0 config.
+# Source of truth is evaluation/gym_calibration_v0.json (edited at labeled eval
+# time). verify-calibration-v0 enforces schema + policy guards on that file.
+# Pass SHA=... to pin the expected sha256 (CI guard).
+verify-calibration-v0:
+	$(PYTHON) scripts/freeze_calibration_v0.py $(if $(SHA),--expected-sha $(SHA),)
+
+print-calibration-v0:
+	$(PYTHON) scripts/freeze_calibration_v0.py --print

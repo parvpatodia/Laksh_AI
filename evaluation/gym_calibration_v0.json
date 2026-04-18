@@ -1,0 +1,192 @@
+{
+  "schema_version": "1.0.0",
+  "manifest_version": "v0.1.0",
+  "evidence_source": null,
+  "exercises": [
+    {
+      "exercise_id": "back_squat",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "barbell_row",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "bench_press",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "comparable_fields": [
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "gait_cadence exercise; rep-based duration fields omitted until stride segmentation is labeled (Milestone 2)."
+    },
+    {
+      "exercise_id": "front_squat",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "overhead_press",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "plank",
+      "comparable_fields": [
+        "rep_duration_s",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "duration (isometric) exercise; eccentric/concentric/tempo do not apply. signal_amplitude is a body-line stability proxy."
+    },
+    {
+      "exercise_id": "pull_up",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "push_up",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    },
+    {
+      "exercise_id": "walking_lunge",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {},
+      "evidence_status": "uncalibrated_v0",
+      "evidence_source": null,
+      "notes": "Structural v0; reference bands require labeled subset (Milestone 2)."
+    }
+  ]
+}
