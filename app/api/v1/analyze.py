@@ -2,6 +2,7 @@
 
 Day-1: gym frames_json path.
 Day-7: gym video path (multipart WebM -> MediaPipe heavy -> pipeline).
+Day-8: realtime parity probe wired into the video endpoint.
 
 Basketball analysis still flows through the legacy ``/analyze-video``
 endpoint until the KinematicAnalyzer result-builder is adapted to the
@@ -9,6 +10,8 @@ unified feature_vectors schema (planned post-showcase).
 """
 from __future__ import annotations
 
+import json
+import logging
 import os
 import tempfile
 import uuid
@@ -20,9 +23,13 @@ from app.api.v1.provenance import build_provenance
 from app.api.v1.schema import (
     AnalyzeGymRequest,
     AnalyzeResponseModel,
+    ParityProbeModel,
 )
 from app.gym.pipeline import UnknownExerciseError, analyze_gym_clip
 from app.gym.pose_adapter import frames_json_to_canonical_frames
+from app.parity.realtime import probe_reps
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["analyze"])
 
@@ -33,8 +40,23 @@ router = APIRouter(tags=["analyze"])
 _MAX_CLIP_BYTES = 50 * 1024 * 1024  # 50 MB
 
 
-def _build_envelope(result: dict, model: str) -> AnalyzeResponseModel:
-    """Wrap a pipeline result dict into the v1 response envelope."""
+def _build_envelope(
+    result: dict,
+    model: str,
+    parity_probe: ParityProbeModel | None = None,
+) -> AnalyzeResponseModel:
+    """Wrap a pipeline result dict into the v1 response envelope.
+
+    Parameters
+    ----------
+    result:
+        Raw dict returned by :func:`app.gym.pipeline.analyze_gym_clip`.
+    model:
+        Pose model identifier string for the provenance block.
+    parity_probe:
+        Optional validated parity probe block. ``None`` when realtime
+        vectors were not submitted or could not be compared.
+    """
     envelope = {
         "sport_id": "gym",
         "exercise_id": result["exercise_id"],
@@ -56,7 +78,7 @@ def _build_envelope(result: dict, model: str) -> AnalyzeResponseModel:
             for fv in result["feature_vectors"]
         ],
         "calibration": result["calibration"],
-        "parity_probe": None,
+        "parity_probe": parity_probe.model_dump() if parity_probe is not None else None,
     }
     try:
         return AnalyzeResponseModel.model_validate(envelope)
@@ -122,13 +144,23 @@ def analyze_gym(req: AnalyzeGymRequest) -> AnalyzeResponseModel:
 async def analyze_gym_video(
     exercise_id: str = Form(..., description="Exercise identifier, e.g. 'back_squat'"),
     video: UploadFile = File(..., description="Raw WebM/MP4 clip from MediaRecorder"),
+    realtime_vectors_json: str | None = Form(
+        None,
+        description=(
+            "Optional JSON-encoded list of ghost rep vectors from the browser "
+            "repCounter, used to compute the parity_probe block."
+        ),
+    ),
 ) -> AnalyzeResponseModel:
     """Run the full canonical pipeline on an uploaded video file.
 
     1. Write the upload to a secure temp file.
     2. Call ``extract_canonical_frames`` (MediaPipe heavy, VIDEO mode).
     3. Run the gym measurement spine via ``analyze_gym_clip``.
-    4. Return the v1 response envelope with ``source='video'`` and
+    4. If ``realtime_vectors_json`` is provided, run :func:`probe_reps`
+       against the canonical feature vectors and embed the result in the
+       ``parity_probe`` block of the response envelope.
+    5. Return the v1 response envelope with ``source='video'`` and
        ``model='mediapipe_pose_landmarker_heavy'``.
 
     The endpoint is synchronous from the client's perspective (it blocks
@@ -189,4 +221,19 @@ async def analyze_gym_video(
         except OSError:
             pass
 
-    return _build_envelope(result, model="mediapipe_pose_landmarker_heavy")
+    # Parity probe: compare realtime ghost vectors against canonical output.
+    parity_probe: ParityProbeModel | None = None
+    if realtime_vectors_json:
+        try:
+            realtime_vecs: list[dict] = json.loads(realtime_vectors_json)
+            if realtime_vecs:
+                canonical_vecs = result["feature_vectors"]
+                probe_raw = probe_reps(realtime_vecs, canonical_vecs)
+                parity_probe = ParityProbeModel.model_validate(probe_raw)
+        except Exception:
+            log.warning(
+                "parity probe failed -- skipping (realtime_vectors_json may be malformed)",
+                exc_info=True,
+            )
+
+    return _build_envelope(result, model="mediapipe_pose_landmarker_heavy", parity_probe=parity_probe)

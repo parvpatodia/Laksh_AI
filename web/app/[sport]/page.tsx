@@ -11,7 +11,7 @@
  */
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
@@ -22,7 +22,7 @@ import {
   type Phase,
   type RepCounterState,
 } from "@/lib/realtime/repCounter";
-import { analyzeGymVideo, type AnalyzeResponse } from "@/lib/api";
+import { analyzeGymVideo, type AnalyzeResponse, type GhostRepVector } from "@/lib/api";
 import GhostMetricsPanel from "@/components/GhostMetricsPanel";
 import CanonicalReport from "@/components/CanonicalReport";
 
@@ -73,6 +73,18 @@ function SportPageInner() {
   const [uploadError, setUploadError] = useState<string | undefined>();
   const [canonicalResult, setCanonicalResult] = useState<AnalyzeResponse | null>(null);
 
+  // Eagerly start loading the pose model as soon as the page mounts.
+  // loadPoseLandmarker() is a cached promise -- calling it here races the
+  // model download against the judge reading the page, so by the time they
+  // click Start Camera the model is usually ready.
+  useEffect(() => {
+    import("@/lib/pose/landmarkerLoader").then(({ loadPoseLandmarker }) => {
+      loadPoseLandmarker().catch(() => {
+        // Silently ignore -- PoseCamera will surface the error when it tries.
+      });
+    });
+  }, []);
+
   // Rep counter (ref so RAF mutations don't trigger re-renders)
   const repStateRef = useRef<RepCounterState>(makeRepCounterState());
   const [repCount, setRepCount] = useState(0);
@@ -104,7 +116,18 @@ function SportPageInner() {
     setUploadStatus("uploading");
     setUploadError(undefined);
     try {
-      const result = await analyzeGymVideo(capturedBlob, exerciseId, capturedMime);
+      // Transform completed ghost reps into the GhostRepVector wire format.
+      const ghostReps: GhostRepVector[] = repStateRef.current.completedReps.map((r) => ({
+        rep_index: r.rep_index,
+        features: {
+          rep_duration_s: r.rep_duration_s,
+          eccentric_duration_s: r.eccentric_duration_s,
+          concentric_duration_s: r.concentric_duration_s,
+          tempo_ratio_ecc_over_con: r.tempo_ratio_ecc_over_con,
+          min_visibility: r.min_visibility,
+        },
+      }));
+      const result = await analyzeGymVideo(capturedBlob, exerciseId, capturedMime, ghostReps);
       setCanonicalResult(result);
       setUploadStatus("done");
     } catch (err: unknown) {

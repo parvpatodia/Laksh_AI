@@ -135,6 +135,15 @@ export async function fetchSports(): Promise<SportInfo[]> {
   return apiFetch<SportInfo[]>("/v1/sports");
 }
 
+/**
+ * One ghost rep vector as accumulated by the browser-side repCounter.
+ * Sent alongside the video blob to populate the parity_probe block.
+ */
+export interface GhostRepVector {
+  rep_index: number;
+  features: Record<string, { value: number | null; unit: string; status: string; reason_codes: string[] }>;
+}
+
 export interface GymAnalyzeRequest {
   exercise_id: string;
   fps: number;
@@ -153,23 +162,30 @@ export async function analyzeGym(req: GymAnalyzeRequest): Promise<AnalyzeRespons
 }
 
 /**
- * POST /v1/analyze/gym/video  (Day 7)
+ * POST /v1/analyze/gym/video  (Day 7+8)
  *
  * Uploads the raw WebM blob from MediaRecorder and triggers the full
  * canonical backend pipeline (MediaPipe heavy model + gym measurement spine).
+ * When ``ghostReps`` is provided, the backend runs the parity probe and
+ * returns a populated ``parity_probe`` block in the response envelope.
  *
  * @param blob        - Raw WebM/MP4 Blob from MediaRecorder.
  * @param exerciseId  - Exercise identifier, e.g. "back_squat".
  * @param mimeType    - MIME type of the blob (default "video/webm").
+ * @param ghostReps   - Optional ghost rep vectors from the browser repCounter.
  */
 export async function analyzeGymVideo(
   blob: Blob,
   exerciseId: string,
   mimeType = "video/webm",
+  ghostReps?: GhostRepVector[],
 ): Promise<AnalyzeResponse> {
   const form = new FormData();
   form.append("exercise_id", exerciseId);
   form.append("video", new File([blob], "clip.webm", { type: mimeType }));
+  if (ghostReps && ghostReps.length > 0) {
+    form.append("realtime_vectors_json", JSON.stringify(ghostReps));
+  }
 
   const url = `${apiBase()}/v1/analyze/gym/video`;
   const res = await fetch(url, { method: "POST", body: form });

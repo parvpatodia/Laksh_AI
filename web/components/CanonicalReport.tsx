@@ -14,6 +14,7 @@ import type {
   FieldValue,
   RepVector,
 } from "@/lib/api";
+import ParityProbePanel from "@/components/ParityProbePanel";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -211,6 +212,11 @@ export default function CanonicalReport({
             <RepCard key={rep.rep_index} rep={rep} />
           ))}
         </div>
+      )}
+
+      {/* Parity probe (only when realtime vectors were submitted) */}
+      {result.parity_probe !== null && (
+        <ParityProbePanel probe={result.parity_probe} />
       )}
 
       {/* Calibration notice */}
