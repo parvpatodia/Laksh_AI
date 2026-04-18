@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: 226 232 240;   /* slate-200 */
+  --background: 15 23 42;      /* slate-900 */
+}
+
+body {
+  color: rgb(var(--foreground));
+  background: rgb(var(--background));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Skeleton canvas overlay sits on top of the video element */
+.pose-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Status chip colours matching the measurement spine taxonomy */
+.chip-valid     { @apply bg-emerald-900/60 text-emerald-300 border border-emerald-700; }
+.chip-degraded  { @apply bg-amber-900/60   text-amber-300   border border-amber-700; }
+.chip-unknown   { @apply bg-slate-800      text-slate-400   border border-slate-600; }
+.chip-preview   { @apply bg-sky-900/60     text-sky-300     border border-sky-700; }
+
+/* Parity status */
+.parity-within  { @apply bg-emerald-900/40 text-emerald-300; }
+.parity-outside { @apply bg-rose-900/40    text-rose-300; }
+.parity-insuf   { @apply bg-slate-800      text-slate-400; }
