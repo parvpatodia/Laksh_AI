@@ -1,15 +1,28 @@
 "use client";
 
 /**
- * /basketball  -> sport capture page for basketball jump shot
+ * /basketball  -> capture page for basketball jump shot
  * /gym         -> exercise picker, then capture page
  *
- * This shell is wired up in Day 5 (PoseCamera) and Day 7 (canonical upload).
- * For now it renders the exercise selector for gym or a capture stub for basketball.
+ * Day 5: PoseCamera wired in (LIVE_STREAM skeleton).
+ * Day 7: canonical upload + SSE poll wired in.
+ * Day 8: parity probe surfaced.
  */
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useCallback, useState } from "react";
+import dynamic from "next/dynamic";
+import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
+
+// PoseCamera uses WebAPIs; disable SSR.
+const PoseCamera = dynamic(() => import("@/components/PoseCamera"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full aspect-video rounded-2xl border border-surface-700 bg-surface-900 flex items-center justify-center">
+      <p className="text-sm text-slate-600">Loading camera…</p>
+    </div>
+  ),
+});
 
 const GYM_EXERCISES: { id: string; label: string }[] = [
   { id: "back_squat",        label: "Back Squat" },
@@ -31,10 +44,29 @@ function SportPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const sport = params.sport;
+  const sport = params.sport as "basketball" | "gym";
   const exerciseId = searchParams.get("exercise");
 
-  // Unknown sport: 404-ish fallback.
+  const [cameraActive, setCameraActive] = useState(false);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [landmarkCount, setLandmarkCount] = useState(0);
+
+  const handleLandmarks = useCallback(
+    (landmarks: NormalizedLandmark[], _ts: number) => {
+      // Count visible landmarks for the ghost metrics panel.
+      const visible = landmarks.filter((lm) => (lm.visibility ?? 0) >= 0.5).length;
+      setLandmarkCount(visible);
+    },
+    [],
+  );
+
+  const handleCaptureComplete = useCallback((blob: Blob, _mime: string) => {
+    setCapturedBlob(blob);
+    setCameraActive(false); // release camera; Day 7 will POST blob to backend
+  }, []);
+
+  // Unknown sport
   if (sport !== "basketball" && sport !== "gym") {
     return (
       <div className="max-w-2xl mx-auto px-6 py-24 text-center">
@@ -46,7 +78,7 @@ function SportPageInner() {
     );
   }
 
-  // Gym with no exercise selected: show exercise picker.
+  // Gym with no exercise: show picker
   if (sport === "gym" && !exerciseId) {
     return (
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -75,7 +107,6 @@ function SportPageInner() {
     );
   }
 
-  // Capture view: basketball or gym+exercise.
   const sportLabel = sport === "basketball" ? "Basketball" : "Gym";
   const exerciseLabel =
     sport === "gym"
@@ -99,58 +130,101 @@ function SportPageInner() {
         )}
       </div>
 
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">{exerciseLabel}</h1>
           <p className="text-sm text-slate-500 mt-0.5">{sportLabel} analysis</p>
         </div>
+        {/* Start / stop toggle */}
+        {!capturedBlob && (
+          <button
+            onClick={() => {
+              setCapturedBlob(null);
+              setCameraError(null);
+              setCameraActive((v) => !v);
+            }}
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors
+              ${cameraActive
+                ? "bg-surface-700 text-slate-300 hover:bg-surface-600 border border-surface-600"
+                : "bg-brand-500 text-white hover:bg-brand-600"}`}
+          >
+            {cameraActive ? "Stop camera" : "Start camera"}
+          </button>
+        )}
+        {capturedBlob && (
+          <button
+            onClick={() => {
+              setCapturedBlob(null);
+              setCameraActive(false);
+            }}
+            className="px-5 py-2.5 rounded-lg text-sm font-medium bg-surface-700 text-slate-300
+                       hover:bg-surface-600 transition-colors"
+          >
+            New clip
+          </button>
+        )}
       </div>
 
-      {/* Camera + overlay area (wired in Day 5) */}
-      <div className="relative w-full aspect-video rounded-2xl border border-surface-700
-                      bg-surface-900 flex items-center justify-center mb-6">
-        <div className="text-center text-slate-600">
-          <p className="text-4xl mb-3">📷</p>
-          <p className="text-sm">Camera feed loads here (Day 5)</p>
-          <p className="text-xs text-slate-700 mt-1">
-            @mediapipe/tasks-vision LIVE_STREAM
-          </p>
+      {/* Camera error */}
+      {cameraError && (
+        <div className="mb-4 rounded-lg border border-rose-700/50 bg-rose-900/20 px-4 py-3 text-sm text-rose-300">
+          {cameraError}
         </div>
-      </div>
+      )}
 
-      {/* Control bar (wired in Day 5-7) */}
-      <div className="flex items-center gap-3 mb-8">
-        <button
-          disabled
-          className="px-5 py-2.5 rounded-lg bg-brand-500/30 text-brand-300 text-sm font-medium
-                     border border-brand-500/40 cursor-not-allowed opacity-60"
-        >
-          Start (coming Day 5)
-        </button>
-        <span className="text-xs text-slate-600">
-          Grant camera permission, then click Start to begin pose tracking
-        </span>
-      </div>
+      {/* Camera / capture complete */}
+      {!capturedBlob ? (
+        <PoseCamera
+          active={cameraActive}
+          onLandmarks={handleLandmarks}
+          onCaptureComplete={handleCaptureComplete}
+          onError={setCameraError}
+        />
+      ) : (
+        <div className="w-full aspect-video rounded-2xl border border-emerald-700/50 bg-surface-800
+                        flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-4xl mb-3">✓</p>
+            <p className="text-sm text-emerald-300 font-medium">
+              Clip captured ({(capturedBlob.size / 1024).toFixed(0)} KB)
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Backend analysis coming Day 7
+            </p>
+          </div>
+        </div>
+      )}
 
-      {/* Results area (wired in Day 7-8) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Ghost metrics + canonical panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            Ghost metrics{" "}
-            <span className="chip-preview text-xs px-1.5 py-0.5 rounded font-normal ml-1">
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+            Ghost metrics
+            <span className="chip-preview text-xs px-1.5 py-0.5 rounded font-normal">
               realtime_preview
             </span>
           </h2>
-          <p className="text-xs text-slate-600">Appears during live pose tracking.</p>
+          {cameraActive ? (
+            <p className="text-sm text-slate-300 font-mono">
+              Visible joints: <span className="text-brand-500">{landmarkCount}</span>/33
+            </p>
+          ) : (
+            <p className="text-xs text-slate-600">Appears during live pose tracking.</p>
+          )}
         </div>
         <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            Canonical result{" "}
-            <span className="chip-valid text-xs px-1.5 py-0.5 rounded font-normal ml-1">
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+            Canonical result
+            <span className="chip-valid text-xs px-1.5 py-0.5 rounded font-normal">
               canonical_backend
             </span>
           </h2>
-          <p className="text-xs text-slate-600">Appears after clip upload + analysis.</p>
+          <p className="text-xs text-slate-600">
+            {capturedBlob
+              ? "Upload to backend coming Day 7"
+              : "Appears after clip upload + analysis."}
+          </p>
         </div>
       </div>
     </div>
