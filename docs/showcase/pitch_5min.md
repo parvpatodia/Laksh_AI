@@ -1,195 +1,203 @@
-# 5-Minute Pitch Script - Laksh.ai
-## Research Showcase - Northeastern University
+# 5-Minute Pitch Script -- Laksh.ai
+## Research Showcase -- Northeastern University, Khoury College of Computer Sciences
 
 **Total time: 5:00**
-**Pace guide: ~130 words/min. Practice until each block lands on its timestamp.**
+**Pace guide: ~130 words/min. Practice each block to its timestamp.**
 
 ---
 
 ### [0:00 - 0:30] HOOK
 
-"Think about the last time you went to the gym.
-Maybe you squatted. Maybe you benched.
-And unless you had a coach standing right there, you had no idea
-whether your form was actually good - or just felt good.
+"Every serious sports-AI paper since 2017 starts the same way:
+'We extract skeleton landmarks from video.'
+And then it goes quiet about what comes next.
 
-Coaches don't scale. One good coach, maybe 10 athletes.
-One billion gym members. The math doesn't work.
+Landmarks are not biomechanics.
+A hip joint coordinate is a float.
+A measurement of eccentric-phase duration with an explicit uncertainty label
+and a calibration provenance trail -- that is biomechanics infrastructure.
 
-So what if your phone could watch your rep and tell you something useful?"
+The gap between those two things is where every app that says
+'AI coaching' lives. They have the landmarks. They hardcode the ranges.
+Nobody is honest about the gap.
+
+Laksh.ai starts at the gap."
 
 *(pause 1 second)*
 
 ---
 
-### [0:30 - 1:00] THE HARD PROBLEM
+### [0:30 - 1:30] LIVE DEMO
 
-"There are apps that try to do this. Most of them have a dirty secret:
-they hardcode ideal angles. 'Your knee should be at 90 degrees.'
-Based on what? Which population? What evidence?
+*[Switch to browser -- Tab 1, https://laksh-ai.vercel.app]*
 
-The number is invented. The system looks confident. The user trusts it.
-That is not AI. That is theater.
+"This is the system running in production.
+Next.js 14 on Vercel. FastAPI backend on Fly.io."
 
-Laksh.ai starts from a different place.
-We build the measurement infrastructure first - and we are honest about
-what we haven't measured yet."
+*[Click Gym -> Back Squat]*
 
----
+"I'll do a back squat. The browser is running MediaPipe Tasks Vision JS --
+the lite model, 33 landmarks at about 30 FPS. Watch the left panel."
 
-### [1:00 - 1:45] THE SYSTEM - WHAT WE BUILT
+*[Click Start camera. Do 2-3 squats.]*
 
-"We built what I call the measurement spine. Four layers.
+"Ghost metrics: rep count, phase, tempo ratio -- all labeled
+`realtime_preview` so you know these are indicative, not authoritative.
 
-Layer one: a frozen exercise taxonomy. Twelve compound movements -
-squat, deadlift, bench press, pull-up, plank - each one defines
-what joint to watch and how to read a rep signal. No ideal angles.
-Just: here is what this movement looks like mechanically.
+Now I record and send it to the server."
 
-Layer two: a rep segmenter. It takes a video, runs MediaPipe to get
-skeleton landmarks, and detects where each rep starts and ends.
-Deterministic - same video, same result, every time.
+*[Click Record. One squat. Stop & Analyse. Click Analyse clip.]*
 
-Layer three: a per-rep feature vector. Seven measurements per rep.
-Total duration. Eccentric phase. Concentric phase. Tempo ratio.
-Range of motion. Visibility quality. Missingness fraction.
-Every field carries its own status: valid, degraded, or unknown.
+"The backend is running MediaPipe heavy model in VIDEO mode,
+then the full gym pipeline. Takes 10-15 seconds. Here it comes."
 
-Layer four: a calibration config. This is the honest part."
+*[When result loads, point to Canonical result panel.]*
+
+"Per-rep cards. Each field has a status chip -- valid, degraded, or unknown.
+And here: the parity probe. That block compares the ghost metrics
+from 30 seconds ago to what the heavy model computed.
+p90 absolute delta: that number is the reproducible research contribution."
 
 ---
 
-### [1:45 - 2:15] THE HONEST PART
+### [1:30 - 2:30] RESEARCH CONTRIBUTION 1: MEASUREMENT SPINE
 
-"The calibration config is a versioned JSON file. Right now, every
-entry says 'uncalibrated_v0' with empty reference ranges.
+"Every measured number in the response envelope has this shape:
 
-Why would we ship that? Because the alternative is worse.
-The alternative is making up numbers.
+    {
+      'value':        1.73,
+      'unit':         'ratio',
+      'status':       'valid',
+      'reason_codes': []
+    }
 
-And I've made this policy impossible to accidentally violate:
-the validator literally rejects a config entry that has
-'uncalibrated_v0' and non-empty ranges in the same entry.
-You cannot silently hardcode an ideal band and call it calibrated.
-The code won't let you.
+Not a bare float. A FieldValue. The status field is not cosmetic --
+it propagates. If MediaPipe drops landmarks for 25% of a rep's frames,
+that rep's `primary_joints_missing_frac` exceeds the threshold,
+the rep status becomes `degraded`, and downstream code knows not to
+treat it as authoritative.
 
-When we have labeled data - when a biomechanist has reviewed
-clips and said this tempo ratio range is good for a back squat -
-that entry flips to 'cited' with a pointer to the eval run
-that justified the numbers. No evidence, no range. That's the contract."
+The rep segmenter uses scipy.signal.find_peaks on a 1D signal extracted
+from the skeleton -- hip y-coordinate for squats, elbow angle for pulls.
+NaN-safe centered moving average handles frames where MediaPipe drops joints.
+
+Seven features per rep. Duration, eccentric phase, concentric phase,
+tempo ratio, signal amplitude, min visibility, missingness fraction.
+All deterministic. Same video, same result, every run.
+
+205 tests pass. Zero learned parameters in the measurement spine.
+The value of the system is not in the model. It is in the pipeline."
+
+---
+
+### [2:30 - 3:30] RESEARCH CONTRIBUTION 2: CALIBRATION HONESTY CONTRACT
+
+"Look at the calibration block in the response."
+
+*[Point to the calibration notice in the UI, or read aloud:]*
+
+    evidence_status: 'uncalibrated_v0'
+
+"This is deliberate. The system measured tempo ratio at 1.73.
+It does NOT say 1.73 is good or bad. Because we don't have labeled data yet.
+No biomechanist has reviewed enough back squat clips to say
+'this range is within normal' for this population.
+
+And I have made it impossible to accidentally violate this contract.
+The Pydantic model at serialisation time rejects any calibration entry
+that has `evidence_status='uncalibrated_v0'` AND non-null reference ranges.
+You cannot ship vaporware ranges silently. The code rejects the payload.
+
+When labeled data exists -- when a biomechanist reviews clips from
+`evaluation/gym_manifest_hard.csv` and annotates quality scores --
+a calibration entry graduates from `uncalibrated_v0` to `cited`
+with an `evidence_source` pointer to the exact scorecard and eval run.
+
+No evidence, no range. That is the contract."
 
 *(pause)*
 
 ---
 
-### [2:15 - 3:15] LIVE DEMO
+### [3:30 - 4:30] RESEARCH CONTRIBUTION 3: DUAL-PATH PARITY PROBE
 
-*[Switch to terminal]*
+"The third contribution is the one that required building the web frontend.
 
-"Let me show you the whole pipeline in under 30 seconds."
+Most biomechanics research either ships a real-time system with no
+offline validation, or an offline pipeline with no real-time surface.
+We built both, deliberately, and then compared them numerically.
 
-```
-python scripts/analyze_gym_clip.py \
-  --exercise-id back_squat \
-  --frames-json evaluation/fixtures/demo_squat_frames.json \
-  --pretty
-```
+The browser runs `repCounter.ts` -- an EMA smoother on the landmark stream,
+sign-change peak detection, five ghost features per rep.
+Label: `realtime_preview`.
 
-*[While it runs, narrate:]*
-"This is taking pre-extracted pose frames - a synthetic squat - through
-the full stack. Segmenter finds the reps. Feature extractor measures
-each one. Calibration layer looks up any reference ranges."
+The backend runs the full Python gym pipeline.
+Label: `canonical_backend`.
 
-*[When output appears, point to:]*
+When the clip is submitted, `app.parity.realtime.probe_reps` pools all
+valid-status field pairs across matched reps and computes:
 
-"Two reps detected. Each one has a rep_duration_s - valid.
-tempo_ratio_ecc_over_con - valid, value is 2.0, meaning the athlete
-took twice as long to lower as to lift. Classic eccentric control.
+  - `p90_abs_delta`  -- 90th-percentile absolute difference
+  - `max_abs_delta`  -- worst-case field
+  - `status`         -- within_tolerance | outside_tolerance | insufficient_data
 
-And here -" *(point to calibration block)*
-"- status: no_reference_yet. The system knows its number. It does not
-pretend to know if that number is good. That is the right posture."
+Default thresholds: p90 <= 0.15, max <= 0.50.
 
----
-
-### [3:15 - 3:45] WHY THIS MATTERS FOR RESEARCH
-
-"This architecture is interesting for three reasons.
-
-First: the per-field status taxonomy - valid, degraded, unknown -
-mirrors how we'd want any scientific measurement to behave.
-A degraded measurement is still informative. An unknown is not zero.
-
-Second: the calibration contract decouples measurement from evaluation.
-You can deploy the measurement spine now and add reference ranges later
-when you have the evidence. Most systems conflate these two things.
-
-Third: 187 unit tests, all deterministic, no GPU required for the fast
-subset. The entire measurement spine runs in nine seconds on my laptop.
-That matters for reproducibility."
+This gives a judge a factual number: the lite browser path agreed with
+the heavy server path to within X units on these five fields.
+That number is what makes the dual-path architecture a research contribution,
+not just a UX choice."
 
 ---
 
-### [3:45 - 4:30] TECHNICAL DEPTH (for technical judges)
+### [4:30 - 5:00] WHAT'S NEXT / MILESTONE 2
 
-"The rep segmenter uses scipy.signal.find_peaks on a 1D signal extracted
-from the skeleton. For a squat, that signal is the hip's y-coordinate.
-For a bench press, it's the elbow flexion angle computed from
-a shoulder-elbow-wrist triplet. Duration holds like planks get a
-stability proxy instead of cyclic peaks - the variance of a body-midline
-signal over time.
+"Milestone 2 is labeled data.
 
-The feature extractor tolerates both in-memory pose output -
-enum keys, frozen dataclasses - and serialized JSON -
-string keys, plain dicts - without a conversion step at every call site.
-That matters when you're building evaluation pipelines that process
-thousands of clips from disk.
+We need a biomechanist or experienced coach to annotate rep boundaries
+and quality scores on clips from the gym manifest. Once that cohort exists:
 
-The parity gate - ADR 0002 Phase C - uses a Tukey fence p90 outlier
-detector to decide when the canonical joint path is production-ready
-to replace the legacy coordinate path in KinematicAnalyzer."
+- Calibration entries graduate from `uncalibrated_v0` to `cited`.
+- The rep segmenter gets an F1 / IoU harness against labeled boundaries.
+- The parity probe thresholds tighten as we know what tolerance is clinically meaningful.
 
----
-
-### [4:30 - 5:00] CLOSE
-
-"So what's next?
-
-Labeled rep boundary annotations - IoU and F1 to measure whether the
-segmenter actually finds the right frames. Once we have those,
-the calibration entries graduate from 'uncalibrated_v0' to 'cited',
-and the system starts giving real feedback grounded in real evidence.
+The infrastructure is ready to receive that evidence.
+The schema is already parameterised for it.
+The constraint that blocks fake calibration is already enforced.
 
 Laksh.ai is not trying to replace a coach.
-It's trying to be the thing between the camera and the coach -
-a measurement layer that is honest, testable, and reproducible.
+It is the measurement layer between the camera and the coach --
+honest, testable, and reproducible.
 
-The code is on GitHub. The poster has the architecture.
-I'm happy to go deep on any of the four layers."
+Frontend: https://laksh-ai.vercel.app
+Backend:  https://laksh-api.fly.dev/v1/health
+Code:     github.com/parvpatodia/Laksh_AI
 
-*(step back, smile, stop)*
+I'm happy to go deep on any of the three contributions."
+
+*(step back, stop)*
 
 ---
 
-## TIMING REFERENCE
+## Timing reference
 
-| Segment | Duration | Cumulative |
-|---|---|---|
-| Hook | 0:30 | 0:30 |
-| Hard problem | 0:30 | 1:00 |
-| System overview | 0:45 | 1:45 |
-| Honest calibration | 0:30 | 2:15 |
-| Live demo | 1:00 | 3:15 |
-| Research contribution | 0:30 | 3:45 |
-| Technical depth | 0:45 | 4:30 |
-| Close | 0:30 | 5:00 |
+| Segment              | Duration | Cumulative |
+|----------------------|----------|------------|
+| Hook                 | 0:30     | 0:30       |
+| Live demo            | 1:00     | 1:30       |
+| Measurement spine    | 1:00     | 2:30       |
+| Calibration honesty  | 1:00     | 3:30       |
+| Parity probe         | 1:00     | 4:30       |
+| Next steps / close   | 0:30     | 5:00       |
 
-## REHEARSAL NOTES
+## Rehearsal notes
 
-- Slow down on "valid, degraded, unknown" - say each word separately.
-- Do not read the JSON output. Point to specific keys and narrate.
-- "That is not AI. That is theater." - pause after this line.
-- "The code won't let you." - let it land, then continue.
-- Practice the demo command until you can type it without looking.
-- If the demo fails: "This is why we have the --frames-json flag -
-  reproducibility first." (it will not fail; the fixture is deterministic)
+- Slow down on "valid, degraded, unknown" -- say each word separately.
+- Do not read the JSON blob during the demo. Point to specific fields, narrate.
+- "No evidence, no range. That is the contract." -- let it land, then continue.
+- If the parity probe shows `insufficient_data`: explain it as expected
+  behavior when not enough fields survived the `valid` filter. Not a failure.
+- If canonical analysis takes > 20 s: narrate the pipeline phases while waiting.
+  Do not apologise for the latency -- cite ADR 0003 and say async queue is designed.
+- Practice the squat rep count to match the ghost metrics panel update rate.
+  Two clean reps at normal speed work better than three rushed ones.
