@@ -4,15 +4,25 @@
  * /basketball  -> capture page for basketball jump shot
  * /gym         -> exercise picker, then capture page
  *
- * Day 5: PoseCamera wired in (LIVE_STREAM skeleton).
- * Day 7: canonical upload + SSE poll wired in.
+ * Day 5: PoseCamera wired (LIVE_STREAM skeleton).
+ * Day 6: repCounter + GhostMetricsPanel wired.
+ * Day 7: canonical upload + CanonicalReport wired in.
  * Day 8: parity probe surfaced.
  */
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
+
+import {
+  feedFrame,
+  makeRepCounterState,
+  type GhostRepMetrics,
+  type Phase,
+  type RepCounterState,
+} from "@/lib/realtime/repCounter";
+import GhostMetricsPanel from "@/components/GhostMetricsPanel";
 
 // PoseCamera uses WebAPIs; disable SSR.
 const PoseCamera = dynamic(() => import("@/components/PoseCamera"), {
@@ -45,25 +55,46 @@ function SportPageInner() {
   const router = useRouter();
 
   const sport = params.sport as "basketball" | "gym";
-  const exerciseId = searchParams.get("exercise");
+  const exerciseId = searchParams.get("exercise") ?? (sport === "basketball" ? "basketball" : null);
 
   const [cameraActive, setCameraActive] = useState(false);
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [landmarkCount, setLandmarkCount] = useState(0);
+
+  // Rep counter state: kept in a ref so RAF mutations don't trigger re-renders.
+  const repStateRef = useRef<RepCounterState>(makeRepCounterState());
+
+  // Derived display state (updated at ~10 Hz via requestAnimationFrame subsample).
+  const [repCount, setRepCount] = useState(0);
+  const [currentPhase, setCurrentPhase] = useState<Phase>("rest");
+  const [currentSignal, setCurrentSignal] = useState<number | null>(null);
+  const [lastRep, setLastRep] = useState<GhostRepMetrics | null>(null);
 
   const handleLandmarks = useCallback(
-    (landmarks: NormalizedLandmark[], _ts: number) => {
-      // Count visible landmarks for the ghost metrics panel.
-      const visible = landmarks.filter((lm) => (lm.visibility ?? 0) >= 0.5).length;
-      setLandmarkCount(visible);
+    (landmarks: NormalizedLandmark[], ts: number) => {
+      if (!exerciseId) return;
+      const completed = feedFrame(repStateRef.current, landmarks, exerciseId, ts);
+      const s = repStateRef.current;
+      // Batched state update: only set state to avoid per-frame React renders.
+      setCurrentSignal(s.currentSignal);
+      setCurrentPhase(s.currentPhase);
+      if (s.repCount !== repCount) setRepCount(s.repCount);
+      if (completed) setLastRep(completed);
     },
-    [],
+    [exerciseId, repCount],
   );
 
   const handleCaptureComplete = useCallback((blob: Blob, _mime: string) => {
     setCapturedBlob(blob);
-    setCameraActive(false); // release camera; Day 7 will POST blob to backend
+    setCameraActive(false);
+  }, []);
+
+  const resetCounter = useCallback(() => {
+    repStateRef.current = makeRepCounterState();
+    setRepCount(0);
+    setCurrentPhase("rest");
+    setCurrentSignal(null);
+    setLastRep(null);
   }, []);
 
   // Unknown sport
@@ -71,9 +102,7 @@ function SportPageInner() {
     return (
       <div className="max-w-2xl mx-auto px-6 py-24 text-center">
         <p className="text-slate-400">Unknown sport: {sport}</p>
-        <a href="/" className="mt-4 inline-block text-brand-500 hover:underline">
-          Back to home
-        </a>
+        <a href="/" className="mt-4 inline-block text-brand-500 hover:underline">Back to home</a>
       </div>
     );
   }
@@ -83,9 +112,7 @@ function SportPageInner() {
     return (
       <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <a href="/" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
-            ← Home
-          </a>
+          <a href="/" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">← Home</a>
           <h1 className="text-3xl font-bold text-slate-100 mt-3 mb-1">Gym</h1>
           <p className="text-slate-400">Select an exercise to begin.</p>
         </div>
@@ -136,44 +163,40 @@ function SportPageInner() {
           <h1 className="text-2xl font-bold text-slate-100">{exerciseLabel}</h1>
           <p className="text-sm text-slate-500 mt-0.5">{sportLabel} analysis</p>
         </div>
-        {/* Start / stop toggle */}
-        {!capturedBlob && (
-          <button
-            onClick={() => {
-              setCapturedBlob(null);
-              setCameraError(null);
-              setCameraActive((v) => !v);
-            }}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors
-              ${cameraActive
-                ? "bg-surface-700 text-slate-300 hover:bg-surface-600 border border-surface-600"
-                : "bg-brand-500 text-white hover:bg-brand-600"}`}
-          >
-            {cameraActive ? "Stop camera" : "Start camera"}
-          </button>
-        )}
-        {capturedBlob && (
-          <button
-            onClick={() => {
-              setCapturedBlob(null);
-              setCameraActive(false);
-            }}
-            className="px-5 py-2.5 rounded-lg text-sm font-medium bg-surface-700 text-slate-300
-                       hover:bg-surface-600 transition-colors"
-          >
-            New clip
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {cameraActive && (
+            <button onClick={resetCounter} className="px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Reset counter
+            </button>
+          )}
+          {!capturedBlob ? (
+            <button
+              onClick={() => { setCapturedBlob(null); setCameraError(null); setCameraActive((v) => !v); }}
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors
+                ${cameraActive
+                  ? "bg-surface-700 text-slate-300 hover:bg-surface-600 border border-surface-600"
+                  : "bg-brand-500 text-white hover:bg-brand-600"}`}
+            >
+              {cameraActive ? "Stop camera" : "Start camera"}
+            </button>
+          ) : (
+            <button
+              onClick={() => { setCapturedBlob(null); resetCounter(); setCameraActive(false); }}
+              className="px-5 py-2.5 rounded-lg text-sm font-medium bg-surface-700 text-slate-300 hover:bg-surface-600 transition-colors"
+            >
+              New clip
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Camera error */}
       {cameraError && (
         <div className="mb-4 rounded-lg border border-rose-700/50 bg-rose-900/20 px-4 py-3 text-sm text-rose-300">
           {cameraError}
         </div>
       )}
 
-      {/* Camera / capture complete */}
+      {/* Camera or capture-done placeholder */}
       {!capturedBlob ? (
         <PoseCamera
           active={cameraActive}
@@ -182,37 +205,26 @@ function SportPageInner() {
           onError={setCameraError}
         />
       ) : (
-        <div className="w-full aspect-video rounded-2xl border border-emerald-700/50 bg-surface-800
-                        flex items-center justify-center">
+        <div className="w-full aspect-video rounded-2xl border border-emerald-700/50 bg-surface-800 flex items-center justify-center">
           <div className="text-center">
             <p className="text-4xl mb-3">✓</p>
             <p className="text-sm text-emerald-300 font-medium">
               Clip captured ({(capturedBlob.size / 1024).toFixed(0)} KB)
             </p>
-            <p className="text-xs text-slate-500 mt-1">
-              Backend analysis coming Day 7
-            </p>
+            <p className="text-xs text-slate-500 mt-1">Backend analysis — Day 7</p>
           </div>
         </div>
       )}
 
-      {/* Ghost metrics + canonical panels */}
+      {/* Metrics panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            Ghost metrics
-            <span className="chip-preview text-xs px-1.5 py-0.5 rounded font-normal">
-              realtime_preview
-            </span>
-          </h2>
-          {cameraActive ? (
-            <p className="text-sm text-slate-300 font-mono">
-              Visible joints: <span className="text-brand-500">{landmarkCount}</span>/33
-            </p>
-          ) : (
-            <p className="text-xs text-slate-600">Appears during live pose tracking.</p>
-          )}
-        </div>
+        <GhostMetricsPanel
+          repCount={repCount}
+          currentPhase={currentPhase}
+          currentSignal={currentSignal}
+          lastRep={lastRep}
+          active={cameraActive}
+        />
         <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
           <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
             Canonical result
@@ -221,9 +233,7 @@ function SportPageInner() {
             </span>
           </h2>
           <p className="text-xs text-slate-600">
-            {capturedBlob
-              ? "Upload to backend coming Day 7"
-              : "Appears after clip upload + analysis."}
+            {capturedBlob ? "Upload to backend — Day 7" : "Appears after clip upload + analysis."}
           </p>
         </div>
       </div>
