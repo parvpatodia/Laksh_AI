@@ -1,13 +1,19 @@
 """``/v1/analyze`` routes.
 
-Day-1 exposes the gym path only. Basketball lands on a later day once
-:class:`~app.physics_engine.KinematicAnalyzer` is adapted to emit the
-unified ``feature_vectors`` schema; until then, basketball analysis
-continues to flow through the legacy ``/analyze-video`` endpoint.
+Day-1: gym frames_json path.
+Day-7: gym video path (multipart WebM -> MediaPipe heavy -> pipeline).
+
+Basketball analysis still flows through the legacy ``/analyze-video``
+endpoint until the KinematicAnalyzer result-builder is adapted to the
+unified feature_vectors schema (planned post-showcase).
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+import os
+import tempfile
+import uuid
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
 
 from app.api.v1.provenance import build_provenance
@@ -20,46 +26,15 @@ from app.gym.pose_adapter import frames_json_to_canonical_frames
 
 router = APIRouter(tags=["analyze"])
 
+# ---------------------------------------------------------------------------
+# Shared helper
+# ---------------------------------------------------------------------------
 
-@router.post(
-    "/analyze/gym",
-    response_model=AnalyzeResponseModel,
-    status_code=status.HTTP_200_OK,
-    summary="Analyse a gym clip from pre-extracted canonical pose frames",
-)
-def analyze_gym(req: AnalyzeGymRequest) -> AnalyzeResponseModel:
-    """Run the gym measurement spine on ``req.frames``.
+_MAX_CLIP_BYTES = 50 * 1024 * 1024  # 50 MB
 
-    The endpoint accepts pre-extracted canonical-joint frames (the same
-    shape as the ``--frames-json`` CLI fixture) so it does not require
-    MediaPipe at request time. This is the path the browser will POST
-    to after computing landmarks client-side via @mediapipe/tasks-vision.
-    """
-    try:
-        canonical_frames = frames_json_to_canonical_frames(req.frames)
-    except Exception as e:  # pose_adapter is permissive; explicit guard is cheap
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"invalid frames payload: {e}",
-        ) from e
 
-    try:
-        result = analyze_gym_clip(
-            exercise_id=req.exercise_id,
-            fps=req.fps,
-            canonical_frames=canonical_frames,
-            source="frames_json",
-        )
-    except UnknownExerciseError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        ) from e
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        ) from e
-
-    # Wrap the pipeline result into the v1 response envelope.
+def _build_envelope(result: dict, model: str) -> AnalyzeResponseModel:
+    """Wrap a pipeline result dict into the v1 response envelope."""
     envelope = {
         "sport_id": "gym",
         "exercise_id": result["exercise_id"],
@@ -67,7 +42,7 @@ def analyze_gym(req: AnalyzeGymRequest) -> AnalyzeResponseModel:
         "fps": result["fps"],
         "n_frames": result["n_frames"],
         "analysis_mode": "canonical_backend",
-        "provenance": build_provenance(model="none_frames_json").model_dump(),
+        "provenance": build_provenance(model=model).model_dump(),
         "segment": result["segment"],
         "feature_vectors": [
             {
@@ -86,9 +61,132 @@ def analyze_gym(req: AnalyzeGymRequest) -> AnalyzeResponseModel:
     try:
         return AnalyzeResponseModel.model_validate(envelope)
     except ValidationError as e:
-        # A schema drift between pipeline and response model is a server
-        # bug, not a client error.
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"response envelope failed validation: {e.errors()}",
         ) from e
+
+
+# ---------------------------------------------------------------------------
+# POST /v1/analyze/gym  (frames_json source)
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/analyze/gym",
+    response_model=AnalyzeResponseModel,
+    status_code=status.HTTP_200_OK,
+    summary="Analyse a gym clip from pre-extracted canonical pose frames",
+)
+def analyze_gym(req: AnalyzeGymRequest) -> AnalyzeResponseModel:
+    """Run the gym measurement spine on ``req.frames``.
+
+    Accepts pre-extracted canonical-joint frames (same shape as the
+    ``--frames-json`` CLI fixture). The browser POSTs here after computing
+    landmarks client-side via @mediapipe/tasks-vision.
+    """
+    try:
+        canonical_frames = frames_json_to_canonical_frames(req.frames)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"invalid frames payload: {e}",
+        ) from e
+
+    try:
+        result = analyze_gym_clip(
+            exercise_id=req.exercise_id,
+            fps=req.fps,
+            canonical_frames=canonical_frames,
+            source="frames_json",
+        )
+    except UnknownExerciseError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
+    return _build_envelope(result, model="none_frames_json")
+
+
+# ---------------------------------------------------------------------------
+# POST /v1/analyze/gym/video  (raw video source — Day 7)
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/analyze/gym/video",
+    response_model=AnalyzeResponseModel,
+    status_code=status.HTTP_200_OK,
+    summary="Analyse a gym clip from a raw video file (MediaPipe heavy backend)",
+)
+async def analyze_gym_video(
+    exercise_id: str = Form(..., description="Exercise identifier, e.g. 'back_squat'"),
+    video: UploadFile = File(..., description="Raw WebM/MP4 clip from MediaRecorder"),
+) -> AnalyzeResponseModel:
+    """Run the full canonical pipeline on an uploaded video file.
+
+    1. Write the upload to a secure temp file.
+    2. Call ``extract_canonical_frames`` (MediaPipe heavy, VIDEO mode).
+    3. Run the gym measurement spine via ``analyze_gym_clip``.
+    4. Return the v1 response envelope with ``source='video'`` and
+       ``model='mediapipe_pose_landmarker_heavy'``.
+
+    The endpoint is synchronous from the client's perspective (it blocks
+    until MediaPipe finishes). On a 1 GB Fly machine a 5-second 720p clip
+    takes ~8-15 seconds. This is acceptable for the showcase demo; see
+    ADR 0003 for async queue plans.
+    """
+    raw = await video.read()
+    if len(raw) > _MAX_CLIP_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"clip too large: {len(raw)} bytes > {_MAX_CLIP_BYTES} limit",
+        )
+    if len(raw) < 512:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="clip appears empty or truncated",
+        )
+
+    # Write to a temp file that MediaPipe can open via OpenCV.
+    suffix = ".webm" if (video.content_type or "").startswith("video/webm") else ".mp4"
+    tmp_path = os.path.join(tempfile.gettempdir(), f"laksh_{uuid.uuid4().hex}{suffix}")
+    try:
+        with open(tmp_path, "wb") as f:
+            f.write(raw)
+
+        try:
+            from app.gym.pose_adapter import extract_canonical_frames
+        except ImportError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"MediaPipe not available: {e}",
+            ) from e
+
+        try:
+            fps, canonical_frames = extract_canonical_frames(tmp_path)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"pose extraction failed: {e}",
+            ) from e
+
+        try:
+            result = analyze_gym_clip(
+                exercise_id=exercise_id,
+                fps=fps,
+                canonical_frames=canonical_frames,
+                source="video",
+            )
+        except UnknownExerciseError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+    return _build_envelope(result, model="mediapipe_pose_landmarker_heavy")

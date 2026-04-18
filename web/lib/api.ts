@@ -151,3 +151,31 @@ export async function analyzeGym(req: GymAnalyzeRequest): Promise<AnalyzeRespons
     body: JSON.stringify(req),
   });
 }
+
+/**
+ * POST /v1/analyze/gym/video  (Day 7)
+ *
+ * Uploads the raw WebM blob from MediaRecorder and triggers the full
+ * canonical backend pipeline (MediaPipe heavy model + gym measurement spine).
+ *
+ * @param blob        - Raw WebM/MP4 Blob from MediaRecorder.
+ * @param exerciseId  - Exercise identifier, e.g. "back_squat".
+ * @param mimeType    - MIME type of the blob (default "video/webm").
+ */
+export async function analyzeGymVideo(
+  blob: Blob,
+  exerciseId: string,
+  mimeType = "video/webm",
+): Promise<AnalyzeResponse> {
+  const form = new FormData();
+  form.append("exercise_id", exerciseId);
+  form.append("video", new File([blob], "clip.webm", { type: mimeType }));
+
+  const url = `${apiBase()}/v1/analyze/gym/video`;
+  const res = await fetch(url, { method: "POST", body: form });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`API ${res.status} /v1/analyze/gym/video: ${text}`);
+  }
+  return res.json() as Promise<AnalyzeResponse>;
+}

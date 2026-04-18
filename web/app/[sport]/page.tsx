@@ -4,9 +4,9 @@
  * /basketball  -> capture page for basketball jump shot
  * /gym         -> exercise picker, then capture page
  *
- * Day 5: PoseCamera wired (LIVE_STREAM skeleton).
- * Day 6: repCounter + GhostMetricsPanel wired.
- * Day 7: canonical upload + CanonicalReport wired in.
+ * Day 5: PoseCamera (LIVE_STREAM skeleton).
+ * Day 6: repCounter + GhostMetricsPanel.
+ * Day 7: clip upload -> /v1/analyze/gym/video -> CanonicalReport.
  * Day 8: parity probe surfaced.
  */
 
@@ -22,9 +22,10 @@ import {
   type Phase,
   type RepCounterState,
 } from "@/lib/realtime/repCounter";
+import { analyzeGymVideo, type AnalyzeResponse } from "@/lib/api";
 import GhostMetricsPanel from "@/components/GhostMetricsPanel";
+import CanonicalReport from "@/components/CanonicalReport";
 
-// PoseCamera uses WebAPIs; disable SSR.
 const PoseCamera = dynamic(() => import("@/components/PoseCamera"), {
   ssr: false,
   loading: () => (
@@ -49,6 +50,8 @@ const GYM_EXERCISES: { id: string; label: string }[] = [
   { id: "hip_thrust",        label: "Hip Thrust" },
 ];
 
+type UploadStatus = "idle" | "uploading" | "done" | "error";
+
 function SportPageInner() {
   const params = useParams<{ sport: string }>();
   const searchParams = useSearchParams();
@@ -57,14 +60,21 @@ function SportPageInner() {
   const sport = params.sport as "basketball" | "gym";
   const exerciseId = searchParams.get("exercise") ?? (sport === "basketball" ? "basketball" : null);
 
+  // Camera
   const [cameraActive, setCameraActive] = useState(false);
-  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Rep counter state: kept in a ref so RAF mutations don't trigger re-renders.
-  const repStateRef = useRef<RepCounterState>(makeRepCounterState());
+  // Capture
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const [capturedMime, setCapturedMime] = useState("video/webm");
 
-  // Derived display state (updated at ~10 Hz via requestAnimationFrame subsample).
+  // Upload / canonical result
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+  const [uploadError, setUploadError] = useState<string | undefined>();
+  const [canonicalResult, setCanonicalResult] = useState<AnalyzeResponse | null>(null);
+
+  // Rep counter (ref so RAF mutations don't trigger re-renders)
+  const repStateRef = useRef<RepCounterState>(makeRepCounterState());
   const [repCount, setRepCount] = useState(0);
   const [currentPhase, setCurrentPhase] = useState<Phase>("rest");
   const [currentSignal, setCurrentSignal] = useState<number | null>(null);
@@ -75,7 +85,6 @@ function SportPageInner() {
       if (!exerciseId) return;
       const completed = feedFrame(repStateRef.current, landmarks, exerciseId, ts);
       const s = repStateRef.current;
-      // Batched state update: only set state to avoid per-frame React renders.
       setCurrentSignal(s.currentSignal);
       setCurrentPhase(s.currentPhase);
       if (s.repCount !== repCount) setRepCount(s.repCount);
@@ -84,17 +93,38 @@ function SportPageInner() {
     [exerciseId, repCount],
   );
 
-  const handleCaptureComplete = useCallback((blob: Blob, _mime: string) => {
+  const handleCaptureComplete = useCallback((blob: Blob, mime: string) => {
     setCapturedBlob(blob);
+    setCapturedMime(mime);
     setCameraActive(false);
   }, []);
 
-  const resetCounter = useCallback(() => {
+  const handleUpload = useCallback(async () => {
+    if (!capturedBlob || !exerciseId) return;
+    setUploadStatus("uploading");
+    setUploadError(undefined);
+    try {
+      const result = await analyzeGymVideo(capturedBlob, exerciseId, capturedMime);
+      setCanonicalResult(result);
+      setUploadStatus("done");
+    } catch (err: unknown) {
+      setUploadStatus("error");
+      setUploadError(err instanceof Error ? err.message : String(err));
+    }
+  }, [capturedBlob, capturedMime, exerciseId]);
+
+  const resetAll = useCallback(() => {
+    setCapturedBlob(null);
+    setCanonicalResult(null);
+    setUploadStatus("idle");
+    setUploadError(undefined);
+    setCameraError(null);
     repStateRef.current = makeRepCounterState();
     setRepCount(0);
     setCurrentPhase("rest");
     setCurrentSignal(null);
     setLastRep(null);
+    setCameraActive(false);
   }, []);
 
   // Unknown sport
@@ -107,7 +137,7 @@ function SportPageInner() {
     );
   }
 
-  // Gym with no exercise: show picker
+  // Gym exercise picker
   if (sport === "gym" && !exerciseId) {
     return (
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -164,27 +194,20 @@ function SportPageInner() {
           <p className="text-sm text-slate-500 mt-0.5">{sportLabel} analysis</p>
         </div>
         <div className="flex items-center gap-2">
-          {cameraActive && (
-            <button onClick={resetCounter} className="px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 transition-colors">
-              Reset counter
+          {(capturedBlob || canonicalResult) && (
+            <button onClick={resetAll} className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 transition-colors border border-surface-700">
+              Start over
             </button>
           )}
-          {!capturedBlob ? (
+          {!capturedBlob && !canonicalResult && (
             <button
-              onClick={() => { setCapturedBlob(null); setCameraError(null); setCameraActive((v) => !v); }}
+              onClick={() => { setCameraError(null); setCameraActive((v) => !v); }}
               className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors
                 ${cameraActive
                   ? "bg-surface-700 text-slate-300 hover:bg-surface-600 border border-surface-600"
                   : "bg-brand-500 text-white hover:bg-brand-600"}`}
             >
               {cameraActive ? "Stop camera" : "Start camera"}
-            </button>
-          ) : (
-            <button
-              onClick={() => { setCapturedBlob(null); resetCounter(); setCameraActive(false); }}
-              className="px-5 py-2.5 rounded-lg text-sm font-medium bg-surface-700 text-slate-300 hover:bg-surface-600 transition-colors"
-            >
-              New clip
             </button>
           )}
         </div>
@@ -196,25 +219,28 @@ function SportPageInner() {
         </div>
       )}
 
-      {/* Camera or capture-done placeholder */}
-      {!capturedBlob ? (
+      {/* Camera or captured-clip placeholder */}
+      {!capturedBlob && !canonicalResult ? (
         <PoseCamera
           active={cameraActive}
           onLandmarks={handleLandmarks}
           onCaptureComplete={handleCaptureComplete}
           onError={setCameraError}
         />
-      ) : (
-        <div className="w-full aspect-video rounded-2xl border border-emerald-700/50 bg-surface-800 flex items-center justify-center">
+      ) : !canonicalResult ? (
+        <div className="w-full aspect-video rounded-2xl border border-emerald-700/40 bg-surface-800
+                        flex items-center justify-center mb-2">
           <div className="text-center">
-            <p className="text-4xl mb-3">✓</p>
+            <p className="text-4xl mb-2">🎬</p>
             <p className="text-sm text-emerald-300 font-medium">
-              Clip captured ({(capturedBlob.size / 1024).toFixed(0)} KB)
+              Clip ready — {(capturedBlob!.size / 1024).toFixed(0)} KB
             </p>
-            <p className="text-xs text-slate-500 mt-1">Backend analysis — Day 7</p>
+            <p className="text-xs text-slate-600 mt-1">
+              Click &ldquo;Analyse clip&rdquo; below to run the canonical pipeline
+            </p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Metrics panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -223,19 +249,15 @@ function SportPageInner() {
           currentPhase={currentPhase}
           currentSignal={currentSignal}
           lastRep={lastRep}
-          active={cameraActive}
+          active={cameraActive || !!canonicalResult}
         />
-        <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            Canonical result
-            <span className="chip-valid text-xs px-1.5 py-0.5 rounded font-normal">
-              canonical_backend
-            </span>
-          </h2>
-          <p className="text-xs text-slate-600">
-            {capturedBlob ? "Upload to backend — Day 7" : "Appears after clip upload + analysis."}
-          </p>
-        </div>
+        <CanonicalReport
+          result={canonicalResult}
+          uploadState={{ status: uploadStatus, error: uploadError }}
+          capturedBlob={capturedBlob}
+          exerciseId={exerciseId}
+          onUpload={handleUpload}
+        />
       </div>
     </div>
   );
