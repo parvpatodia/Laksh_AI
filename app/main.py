@@ -6,6 +6,7 @@ import base64
 import io
 import logging
 import tempfile
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -79,9 +80,10 @@ def calculate_market_index(vector: list[float], match_distance: float) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Configure logging, initialise ChromaDB; yield for request handling."""
+    """Configure logging, initialise ChromaDB, warm pose landmarker; yield for request handling."""
     configure_logging()
     _init_chroma()
+    threading.Thread(target=_warm_pose_landmarker, daemon=True).start()
     yield
 
 
@@ -116,6 +118,21 @@ app.include_router(v1_router)
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 _DASHBOARD = _REPO_ROOT / "static" / "dashboard.html"
+
+
+def _warm_pose_landmarker() -> None:
+    """Pre-load the MediaPipe pose model file into OS disk cache.
+
+    Called in a daemon thread at startup. Failure is non-fatal -- the first
+    video request will pay the cold-start cost instead.
+    """
+    try:
+        from app.pose.mediapipe_common import create_pose_landmarker
+        lm = create_pose_landmarker()
+        lm.close()
+        logger.info("[app.main] pose landmarker warm-load complete")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[app.main] pose landmarker warm-load failed: %s", exc)
 
 
 def _init_chroma():

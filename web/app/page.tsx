@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FailureModeCards from "@/components/FailureModeCards";
 
 const SPORTS = [
   {
@@ -151,6 +152,9 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Failure modes & honesty section */}
+      <FailureModeCards />
     </div>
   );
 }
