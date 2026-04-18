@@ -2,7 +2,7 @@
 # Use the same interpreter you install requirements into (override: make PYTHON=python3.12 …).
 PYTHON ?= python3
 
-.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report freeze-exercise-v0 verify-exercise-v0 verify-calibration-v0 print-calibration-v0
+.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report freeze-exercise-v0 verify-exercise-v0 verify-calibration-v0 print-calibration-v0 analyze-gym-clip
 
 test:
 	pytest tests/ -q
@@ -43,7 +43,8 @@ test-pose-core:
 		tests/test_pose_jitter.py tests/test_subject_split_check.py \
 		tests/test_pose_calibration.py tests/test_pose_parity_report.py \
 		tests/test_exercises_v0.py tests/test_rep_segmenter.py \
-		tests/test_rep_features.py tests/test_calibration_v0.py -q
+		tests/test_rep_features.py tests/test_calibration_v0.py \
+		tests/test_analyze_gym_clip.py -q
 
 eval-model:
 	$(PYTHON) scripts/download_pose_model.py
@@ -111,3 +112,15 @@ verify-calibration-v0:
 
 print-calibration-v0:
 	$(PYTHON) scripts/freeze_calibration_v0.py --print
+
+# Milestone 1 end-to-end demo: pose -> rep segmentation -> features -> calibration.
+# With a real video (needs MediaPipe):
+#   make analyze-gym-clip VIDEO=evaluation/gym_clips/squat_001.mp4 EXERCISE=back_squat
+# Offline / test (pre-extracted frames JSON):
+#   make analyze-gym-clip FRAMES=evaluation/fixtures/squat_frames.json EXERCISE=back_squat
+analyze-gym-clip:
+ifdef VIDEO
+	$(PYTHON) scripts/analyze_gym_clip.py --exercise-id $(EXERCISE) --video $(VIDEO) --pretty
+else
+	$(PYTHON) scripts/analyze_gym_clip.py --exercise-id $(EXERCISE) --frames-json $(FRAMES) --pretty
+endif
