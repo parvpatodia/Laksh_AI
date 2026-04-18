@@ -42,7 +42,8 @@ test-pose-core:
 		tests/test_scorecard_command.py tests/test_build_scorecard.py \
 		tests/test_pose_jitter.py tests/test_subject_split_check.py \
 		tests/test_pose_calibration.py tests/test_pose_parity_report.py \
-		tests/test_exercises_v0.py tests/test_rep_segmenter.py -q
+		tests/test_exercises_v0.py tests/test_rep_segmenter.py \
+		tests/test_rep_features.py -q
 
 eval-model:
 	$(PYTHON) scripts/download_pose_model.py
