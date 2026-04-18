@@ -62,22 +62,22 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from app.gym.calibration_v0 import (  # noqa: E402
-    apply_calibration,
-    load_calibration_v0,
-)
 from app.gym.exercises_v0 import get_exercise, validate_exercise_id  # noqa: E402
+from app.gym.pipeline import (  # noqa: E402
+    DEFAULT_CALIBRATION_CONFIG,
+    GYM_PIPELINE_SCHEMA_VERSION,
+    UnknownExerciseError,
+    analyze_gym_clip,
+)
 from app.gym.pose_adapter import (  # noqa: E402
     frames_json_to_canonical_frames,
 )
-from app.gym.rep_features import (  # noqa: E402
-    RepFeaturesConfig,
-    feature_vectors_from_segment,
-)
-from app.gym.rep_segmenter import SegmenterConfig, segment_reps  # noqa: E402
+from app.gym.rep_features import RepFeaturesConfig  # noqa: E402
+from app.gym.rep_segmenter import SegmenterConfig  # noqa: E402
 
-ANALYZE_SCHEMA_VERSION = "1.0.0"
-DEFAULT_CALIBRATION_CONFIG = REPO_ROOT / "evaluation" / "gym_calibration_v0.json"
+#: Retained for backwards-compat with anything that imported from this script.
+#: New code should import :data:`GYM_PIPELINE_SCHEMA_VERSION` directly.
+ANALYZE_SCHEMA_VERSION = GYM_PIPELINE_SCHEMA_VERSION
 
 
 def _load_frames_json(path: Path) -> tuple[float, list]:
@@ -133,60 +133,24 @@ def _build_output(
     seg_config: SegmenterConfig | None,
     feat_config: RepFeaturesConfig | None,
 ) -> dict[str, Any]:
-    """Run segmentation + feature extraction + calibration; build output dict."""
-    exercise = get_exercise(exercise_id)
-    if exercise is None:
-        raise RuntimeError(f"unknown exercise_id {exercise_id!r}")
+    """Thin CLI shim that delegates to :func:`app.gym.pipeline.analyze_gym_clip`.
 
-    from app.gym.rep_features import extract_rep_signal
-
-    signal, _miss = extract_rep_signal(canonical_frames, exercise)
-
-    seg_result = segment_reps(
-        signal=signal,
-        fps=fps,
-        exercise=exercise,
-        config=seg_config,
-    )
-
-    feature_vectors = feature_vectors_from_segment(
-        segment=seg_result,
-        canonical_frames=canonical_frames,
-        exercise=exercise,
-        config=feat_config,
-    )
-
-    # Calibration
-    cal_manifest = load_calibration_v0(calibration_path)
-    cal_entry = cal_manifest.get(exercise_id)
-
-    per_rep_cal: list[dict[str, Any]] = []
-    if cal_entry is not None:
-        for fv in feature_vectors:
-            per_rep_cal.append(
-                {
-                    "rep_index": fv.rep_index,
-                    "fields": apply_calibration(cal_entry, fv),
-                }
-            )
-    cal_block: dict[str, Any] = {
-        "exercise_id": exercise_id,
-        "evidence_status": cal_entry.evidence_status if cal_entry else "no_config",
-        "evidence_source": cal_entry.evidence_source if cal_entry else None,
-        "comparable_fields": list(cal_entry.comparable_fields) if cal_entry else [],
-        "per_rep": per_rep_cal,
-    }
-
-    return {
-        "schema_version": ANALYZE_SCHEMA_VERSION,
-        "exercise_id": exercise_id,
-        "source": source,
-        "fps": fps,
-        "n_frames": len(canonical_frames),
-        "segment": seg_result.to_dict(),
-        "feature_vectors": [fv.to_dict() for fv in feature_vectors],
-        "calibration": cal_block,
-    }
+    Kept for backwards-compatible imports from any notebook or helper script
+    that called ``_build_output`` directly. New code should import
+    :func:`app.gym.pipeline.analyze_gym_clip`.
+    """
+    try:
+        return analyze_gym_clip(
+            exercise_id=exercise_id,
+            fps=fps,
+            canonical_frames=canonical_frames,
+            source=source,
+            calibration_path=calibration_path,
+            seg_config=seg_config,
+            feat_config=feat_config,
+        )
+    except UnknownExerciseError as e:
+        raise RuntimeError(str(e)) from e
 
 
 def main() -> int:

@@ -23,6 +23,7 @@ import chromadb
 from gtts import gTTS
 
 from app.api_contract import API_SCHEMA_VERSION
+from app.api.v1 import router as v1_router
 from app.logging_config import configure_logging
 from app.physics_engine import KinematicAnalyzer
 from app.correction_engine import generate_correction_video
@@ -106,6 +107,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Versioned API surface. All new clients should target /v1/*.
+# The legacy /analyze-video route below remains in place for one release
+# cycle while the v2-adapter for basketball lands.
+app.include_router(v1_router)
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
