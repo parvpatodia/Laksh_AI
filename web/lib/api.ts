@@ -108,6 +108,42 @@ function apiBase(): string {
   return base.replace(/\/$/, "");
 }
 
+/** Browser → Fly round-trip can exceed 60s (MediaPipe + Gemini). */
+const ANALYZE_VIDEO_TIMEOUT_MS = 180_000;
+
+async function fetchVideoAnalyze(
+  url: string,
+  form: FormData,
+  label: string,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ANALYZE_VIDEO_TIMEOUT_MS);
+  const base = apiBase();
+  try {
+    return await fetch(url, {
+      method: "POST",
+      body: form,
+      mode: "cors",
+      credentials: "omit",
+      signal: controller.signal,
+    });
+  } catch (e: unknown) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new Error(
+        `${label}: timed out after ${ANALYZE_VIDEO_TIMEOUT_MS / 1000}s. Is ${base} up?`,
+      );
+    }
+    if (e instanceof TypeError) {
+      throw new Error(
+        `${label}: ${e.message} — cannot reach API at ${base}. Check NEXT_PUBLIC_API_BASE (Vercel) and CORS on the Fly app.`,
+      );
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${apiBase()}${path}`;
   const res = await fetch(url, {
@@ -242,7 +278,7 @@ export async function analyzeBasketballVideo(
     form.append("athlete_name", athleteName.trim());
   }
   const url = `${apiBase()}/analyze-video`;
-  const res = await fetch(url, { method: "POST", body: form });
+  const res = await fetchVideoAnalyze(url, form, "Basketball analyze");
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`API ${res.status} /analyze-video: ${text}`);
@@ -277,7 +313,7 @@ export async function analyzeGymVideo(
   }
 
   const url = `${apiBase()}/v1/analyze/gym/video`;
-  const res = await fetch(url, { method: "POST", body: form });
+  const res = await fetchVideoAnalyze(url, form, "Gym analyze");
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`API ${res.status} /v1/analyze/gym/video: ${text}`);

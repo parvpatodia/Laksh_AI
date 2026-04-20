@@ -324,7 +324,7 @@ function SportPageInner() {
             <span className="font-medium text-slate-200">Setup:</span>{" "}
             {sport === "gym"
               ? exerciseMeta?.tip ?? "Side view, full body in frame, ~2 m from camera"
-              : "Side view, hip-height camera, full body in frame for the entire shot motion"}
+              : "Arms + shoulders visible (chest-up / selfie angle is fine). Side view is optional. Rep = one release cycle."}
             <span className="text-xs text-slate-500 ml-2">
               · Counter waits ~0.5 s for you to settle before counting.
             </span>

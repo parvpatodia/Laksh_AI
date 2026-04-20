@@ -177,14 +177,16 @@ const EXERCISE_CONFIGS: Record<string, ExerciseRepConfig> = {
   pull_up: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.20, minRepS: 0.7 },
   push_up: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.15, minRepS: 0.6 },
   // Demo-driven addition v0.2.0: single-DB elbow flexion. Same triplet as
-  // bench/OHP. minAmplitude=0.18 (≈32° elbow change) is the smallest "real"
-  // half-curl we want to count; full ROM curls are ~110-150°.
-  dumbbell_bicep_curl: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.18, minRepS: 0.5 },
+  // bench/OHP. Slightly lower amplitude floor so bodyweight / empty-hand
+  // curls still register when ROM is good but smaller than a heavy DB curl.
+  dumbbell_bicep_curl: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.12, minRepS: 0.5 },
   // cyclic_angle (backend rep_signal_joint = right_hip)
   romanian_deadlift: { signalKind: "hip_angle", peakDirection: "trough", minAmplitude: 0.10, minRepS: 0.7 },
-  // basketball: realtime-only release counter; "rep" = one shot release
-  basketball: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.10, minRepS: 0.6 },
-  jump_shot: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.10, minRepS: 0.6 },
+  // basketball: "rep" = one release–follow-through cycle.  Amplitude kept
+  // moderate so chest-up / phone-tripod framing still crosses the gate when
+  // legs are out of frame (signal is arm-dominant; see frameQualityVisibility).
+  basketball: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.055, minRepS: 0.45 },
+  jump_shot: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.055, minRepS: 0.45 },
 };
 
 /** Public: list of exercises supported by the realtime ghost counter.
@@ -198,6 +200,106 @@ export function isRealtimeSupported(exerciseId: string): boolean {
 // ---------------------------------------------------------------------------
 
 const SIGNAL_MIN_VISIBILITY = 0.3;
+/** Slightly lower floor for wrist-only shot signal when one arm tracks better. */
+const SIGNAL_MIN_VISIBILITY_WRIST = 0.22;
+
+/**
+ * Best-of-side arm-chain visibility: max(min(shoulder,elbow,wrist) left,
+ * same right).  Matches how coaches film jump shots (chest-up, legs often
+ * out of frame).  The old min-over-hips+knees gate falsely read ~0 whenever
+ * legs were cropped — blocking warmup entirely.
+ */
+function armChainVisibility(landmarks: NormalizedLandmark[]): number {
+  const get = (idx: number) => landmarks[idx];
+  const chain = (s: number, e: number, w: number) => {
+    const a = get(s), b = get(e), c = get(w);
+    if (!a || !b || !c) return 0;
+    return Math.min(a.visibility ?? 0, b.visibility ?? 0, c.visibility ?? 0);
+  };
+  return Math.max(
+    chain(LM.LEFT_SHOULDER, LM.LEFT_ELBOW, LM.LEFT_WRIST),
+    chain(LM.RIGHT_SHOULDER, LM.RIGHT_ELBOW, LM.RIGHT_WRIST),
+  );
+}
+
+/**
+ * Lower-body + torso visibility (squat, lunge, hinge with full body in frame).
+ */
+function coreTorsoVisibility(landmarks: NormalizedLandmark[]): number {
+  return Math.min(
+    ...landmarks
+      .filter((_, i) =>
+        [
+          LM.LEFT_HIP,
+          LM.RIGHT_HIP,
+          LM.LEFT_KNEE,
+          LM.RIGHT_KNEE,
+          LM.LEFT_ELBOW,
+          LM.RIGHT_ELBOW,
+          LM.LEFT_SHOULDER,
+          LM.RIGHT_SHOULDER,
+        ].includes(i),
+      )
+      .map((l) => l.visibility ?? 0),
+  );
+}
+
+/** Hip-hinge triplet visibility (best of left / right side). */
+function hipHingeVisibility(landmarks: NormalizedLandmark[]): number {
+  const get = (idx: number) => landmarks[idx];
+  const triple = (s: number, h: number, k: number) => {
+    const a = get(s), b = get(h), c = get(k);
+    if (!a || !b || !c) return 0;
+    return Math.min(a.visibility ?? 0, b.visibility ?? 0, c.visibility ?? 0);
+  };
+  return Math.max(
+    triple(LM.LEFT_SHOULDER, LM.LEFT_HIP, LM.LEFT_KNEE),
+    triple(LM.RIGHT_SHOULDER, LM.RIGHT_HIP, LM.RIGHT_KNEE),
+  );
+}
+
+/**
+ * Single frame quality for warmup + validation: use the same landmarks
+ * the 1-D signal is sensitive to, not an arbitrary global min over hips.
+ */
+function frameQualityVisibility(
+  cfg: ExerciseRepConfig,
+  landmarks: NormalizedLandmark[],
+): number {
+  switch (cfg.signalKind) {
+    case "vertical_wrist":
+      return armChainVisibility(landmarks);
+    case "elbow_angle":
+      return armChainVisibility(landmarks);
+    case "hip_angle":
+      return Math.max(
+        hipHingeVisibility(landmarks),
+        armChainVisibility(landmarks) * 0.85,
+      );
+    default:
+      return coreTorsoVisibility(landmarks);
+  }
+}
+
+function warmupVisibilityFloor(cfg: ExerciseRepConfig): number {
+  if (cfg.signalKind === "vertical_wrist" || cfg.signalKind === "elbow_angle") {
+    return 0.32;
+  }
+  if (cfg.signalKind === "hip_angle") {
+    return 0.34;
+  }
+  return 0.4;
+}
+
+function validateVisibilityFloor(cfg: ExerciseRepConfig): number {
+  if (cfg.signalKind === "vertical_wrist" || cfg.signalKind === "elbow_angle") {
+    return 0.26;
+  }
+  if (cfg.signalKind === "hip_angle") {
+    return 0.3;
+  }
+  return 0.4;
+}
 
 /**
  * Extract the primary 1-D rep signal for the given exercise.
@@ -233,18 +335,41 @@ export function extractSignal(
       return 1 - k.y;
     }
     case "vertical_wrist": {
-      // Basketball release: maximum wrist height (top of follow-through).
-      // We use the dominant wrist (whichever is higher physically /
-      // smaller image-y) so left- and right-handed shooters both work.
-      const lw = get(LM.LEFT_WRIST), rw = get(LM.RIGHT_WRIST);
-      const lOk = lw && (lw.visibility ?? 0) >= SIGNAL_MIN_VISIBILITY;
-      const rOk = rw && (rw.visibility ?? 0) >= SIGNAL_MIN_VISIBILITY;
+      // Basketball / jump shot: blend wrist height with elbow extension.
+      // Research-style cue: release is near max elbow extension + wrist above
+      // shoulder line; front-facing cameras show less vertical wrist travel
+      // than side view — the elbow-angle channel stabilizes peak detection.
+      const lw = get(LM.LEFT_WRIST),
+        rw = get(LM.RIGHT_WRIST);
+      const ls = get(LM.LEFT_SHOULDER),
+        le = get(LM.LEFT_ELBOW);
+      const rs = get(LM.RIGHT_SHOULDER),
+        re = get(LM.RIGHT_ELBOW);
+      const lOk = lw && (lw.visibility ?? 0) >= SIGNAL_MIN_VISIBILITY_WRIST;
+      const rOk = rw && (rw.visibility ?? 0) >= SIGNAL_MIN_VISIBILITY_WRIST;
       if (!lOk && !rOk) return null;
-      let y: number;
-      if (lOk && rOk) y = Math.min(lw!.y, rw!.y);
-      else if (lOk) y = lw!.y;
-      else y = rw!.y;
-      return 1 - y;
+      let wristPart: number;
+      if (lOk && rOk) wristPart = 1 - Math.min(lw!.y, rw!.y);
+      else if (lOk) wristPart = 1 - lw!.y;
+      else wristPart = 1 - rw!.y;
+
+      let elbowPart = wristPart;
+      const leftChain =
+        ls && le && lw && minVis(ls, le, lw) >= SIGNAL_MIN_VISIBILITY_WRIST
+          ? angle2d(ls, le, lw) / 180
+          : null;
+      const rightChain =
+        rs && re && rw && minVis(rs, re, rw) >= SIGNAL_MIN_VISIBILITY_WRIST
+          ? angle2d(rs, re, rw) / 180
+          : null;
+      if (leftChain !== null && rightChain !== null) {
+        elbowPart = Math.max(leftChain, rightChain);
+      } else if (leftChain !== null) {
+        elbowPart = leftChain;
+      } else if (rightChain !== null) {
+        elbowPart = rightChain;
+      }
+      return 0.52 * wristPart + 0.48 * elbowPart;
     }
     case "elbow_angle": {
       // Mirror backend rep_features triplet: shoulder-elbow-wrist.  Use
@@ -418,10 +543,11 @@ function validateRep(
 ): { ok: true } | { ok: false; reason: string } {
   const durS = (endTs - rep.start_ts) / 1000;
   const amp = rep.signal_max - rep.signal_min;
+  const visFloor = validateVisibilityFloor(cfg);
   if (durS < cfg.minRepS) return { ok: false, reason: "too_short" };
   if (durS > 8) return { ok: false, reason: "too_long" };
   if (amp < cfg.minAmplitude) return { ok: false, reason: "low_amplitude" };
-  if (rep.min_vis < PRIMARY_JOINT_VIS_GATE) return { ok: false, reason: "low_visibility" };
+  if (rep.min_vis < visFloor) return { ok: false, reason: "low_visibility" };
   return { ok: true };
 }
 
@@ -505,18 +631,10 @@ export function feedFrame(
     return null;
   }
 
-  // ---- Visibility on the canonical core joints (used by the gate
-  // AND surfaced as min_visibility on the emitted rep). ---------------
-  const vis = Math.min(
-    ...landmarks
-      .filter((_, i) => [
-        LM.LEFT_HIP, LM.RIGHT_HIP,
-        LM.LEFT_KNEE, LM.RIGHT_KNEE,
-        LM.LEFT_ELBOW, LM.RIGHT_ELBOW,
-        LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER,
-      ].includes(i))
-      .map((l) => l.visibility ?? 0),
-  );
+  // ---- Per-exercise visibility (see frameQualityVisibility): arm-dominant
+  // moves no longer require hips/knees in frame. ------------------------
+  const vis = frameQualityVisibility(cfg, landmarks);
+  const warmupFloor = warmupVisibilityFloor(cfg);
 
   // ---- 1. Gap-reset on returning signal -------------------------------
   const gap =
@@ -551,7 +669,7 @@ export function feedFrame(
   // ---- 5. Warm-up gate ------------------------------------------------
   // Count consecutive good-vis frames.  Only after WARMUP_FRAMES do we
   // allow transitions to start/end reps.
-  if (vis >= PRIMARY_JOINT_VIS_GATE) {
+  if (vis >= warmupFloor) {
     state.warmupFrames = Math.min(state.warmupFrames + 1, WARMUP_FRAMES + 5);
   } else {
     state.warmupFrames = 0;

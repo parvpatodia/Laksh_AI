@@ -14,7 +14,7 @@ from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from google import genai
@@ -150,6 +150,7 @@ async def lifespan(app: FastAPI):
 _DEFAULT_ORIGINS = [
     "https://lakshai-production.up.railway.app",
     "https://laksh-ai.vercel.app",
+    "https://laksh-ai-tawny.vercel.app",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8000",
@@ -160,10 +161,12 @@ _DEFAULT_ORIGINS = [
 _CORS_ORIGINS = [
     o.strip() for o in os.environ.get("CORS_ORIGINS", ",".join(_DEFAULT_ORIGINS)).split(",") if o.strip()
 ]
+# Matches stable alias, per-deployment URLs, and team preview hostnames.
 _VERCEL_PREVIEW_REGEX = (
     r"^https://laksh-ai\.vercel\.app$"
     r"|^https://laksh(-[a-z0-9]+)+-laksh-ai\.vercel\.app$"
     r"|^https://laksh-ai-[a-z0-9-]+\.vercel\.app$"
+    r"|^https://[a-z0-9-]+-laksh-ai\.vercel\.app$"
 )
 
 app = FastAPI(lifespan=lifespan)
@@ -268,13 +271,31 @@ def _init_chroma():
 
 
 @app.get("/")
-def root():
+def root(request: Request):
+    """Browser → legacy dashboard HTML; API clients → JSON discovery (no SPA confusion)."""
+    accept = (request.headers.get("accept") or "").lower()
+    if "application/json" in accept or request.query_params.get("format") == "json":
+        return {
+            "service": "laksh-api",
+            "v1_health": "/v1/health",
+            "openapi": "/docs",
+            "legacy_basketball_analyze": "POST /analyze-video",
+            "gym_canonical_video": "POST /v1/analyze/gym/video",
+            "note": "Opening this URL in a browser shows the legacy dashboard HTML; use /docs or /v1/health for the HTTP API.",
+        }
     return FileResponse(_DASHBOARD) if _DASHBOARD.exists() else {"status": "Apex Oracle Engine Active", "docs": "/docs"}
 
 
 @app.get("/api")
 def api_status():
-    return {"status": "Apex Oracle Engine Active", "docs": "/docs"}
+    return {
+        "status": "ok",
+        "service": "laksh-api",
+        "v1_health": "/v1/health",
+        "openapi": "/docs",
+        "legacy_basketball_analyze": "POST /analyze-video",
+        "gym_canonical_video": "POST /v1/analyze/gym/video",
+    }
 
 
 @app.get("/health")
