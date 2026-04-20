@@ -1,12 +1,9 @@
 "use client";
 
 /**
- * GhostMetricsPanel: live display of realtime_preview ghost metrics.
- *
- * Shows rep count, current phase, smoothed signal bar, and the most
- * recently completed rep's feature vector.  All values are labelled with
- * their status chip (valid / degraded / unknown) so the distinction from
- * canonical_backend results is visually clear.
+ * GhostMetricsPanel — live realtime_preview ghost metrics with
+ * user-facing labels.  The wire-format field names are kept in a
+ * <details> block so technical reviewers can still see them.
  */
 
 import type { GhostRepMetrics, GhostField, Phase } from "@/lib/realtime/repCounter";
@@ -17,15 +14,15 @@ interface Props {
   currentSignal: number | null;
   lastRep: GhostRepMetrics | null;
   active: boolean;
+  /** "rep" for gym, "shot" for basketball — labels the counter accurately. */
+  unitLabel?: "rep" | "shot";
 }
 
 function StatusChip({ status }: { status: GhostField["status"] }) {
   const cls =
-    status === "valid"
-      ? "chip-valid"
-      : status === "degraded"
-      ? "chip-degraded"
-      : "chip-unknown";
+    status === "valid" ? "chip-valid"
+      : status === "degraded" ? "chip-degraded"
+        : "chip-unknown";
   return (
     <span className={`${cls} text-xs px-1.5 py-0.5 rounded font-mono`}>
       {status}
@@ -33,14 +30,28 @@ function StatusChip({ status }: { status: GhostField["status"] }) {
   );
 }
 
-function FieldRow({ label, f }: { label: string; f: GhostField }) {
+function FieldRow({
+  label,
+  wire,
+  f,
+  format,
+}: {
+  label: string;
+  wire: string;
+  f: GhostField;
+  format?: (v: number) => string;
+}) {
+  const display =
+    f.value !== null
+      ? format
+        ? `${format(f.value)} ${f.unit !== "ratio" && f.unit !== "norm" ? f.unit : ""}`.trim()
+        : `${f.value} ${f.unit}`
+      : "—";
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-surface-700/50 last:border-0">
-      <span className="text-xs text-slate-500 font-mono">{label}</span>
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-slate-200 font-mono tabular-nums">
-          {f.value !== null ? `${f.value} ${f.unit}` : "--"}
-        </span>
+    <div className="flex items-center justify-between py-1.5 border-b border-surface-700/50 last:border-0 gap-2">
+      <span className="text-xs text-slate-300" title={wire}>{label}</span>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-sm text-slate-200 font-mono tabular-nums">{display}</span>
         <StatusChip status={f.status} />
       </div>
     </div>
@@ -53,18 +64,19 @@ export default function GhostMetricsPanel({
   currentSignal,
   lastRep,
   active,
+  unitLabel = "rep",
 }: Props) {
   const phaseColor =
-    currentPhase === "eccentric"
-      ? "text-amber-400"
-      : currentPhase === "concentric"
-      ? "text-emerald-400"
-      : "text-slate-500";
+    currentPhase === "eccentric" ? "text-amber-400"
+      : currentPhase === "concentric" ? "text-emerald-400"
+        : "text-slate-500";
+
+  const counterLabel = unitLabel === "shot" ? "Shots" : "Reps";
 
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
       <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-        Ghost metrics
+        Live metrics
         <span className="chip-preview text-xs px-1.5 py-0.5 rounded font-normal">
           realtime_preview
         </span>
@@ -77,7 +89,7 @@ export default function GhostMetricsPanel({
           {/* Live counters */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="rounded-lg bg-surface-900/60 px-3 py-2">
-              <p className="text-xs text-slate-500 mb-0.5">Reps</p>
+              <p className="text-xs text-slate-500 mb-0.5">{counterLabel}</p>
               <p className="text-2xl font-bold text-slate-100 font-mono tabular-nums">
                 {repCount}
               </p>
@@ -110,21 +122,58 @@ export default function GhostMetricsPanel({
           {lastRep ? (
             <div>
               <p className="text-xs text-slate-500 mb-2">
-                Rep {lastRep.rep_index + 1} features
+                {unitLabel === "shot" ? "Shot" : "Rep"} {lastRep.rep_index + 1} breakdown
               </p>
-              <FieldRow label="rep_duration_s"          f={lastRep.rep_duration_s} />
-              <FieldRow label="eccentric_duration_s"    f={lastRep.eccentric_duration_s} />
-              <FieldRow label="concentric_duration_s"   f={lastRep.concentric_duration_s} />
-              <FieldRow label="tempo_ratio"             f={lastRep.tempo_ratio_ecc_over_con} />
-              <FieldRow label="min_visibility"          f={lastRep.min_visibility} />
+              <FieldRow
+                label="Rep duration"
+                wire="rep_duration_s"
+                f={lastRep.rep_duration_s}
+                format={(v) => v.toFixed(2)}
+              />
+              <FieldRow
+                label={unitLabel === "shot" ? "Setup time" : "Lowering (eccentric)"}
+                wire="eccentric_duration_s"
+                f={lastRep.eccentric_duration_s}
+                format={(v) => v.toFixed(2)}
+              />
+              <FieldRow
+                label={unitLabel === "shot" ? "Release time" : "Lifting (concentric)"}
+                wire="concentric_duration_s"
+                f={lastRep.concentric_duration_s}
+                format={(v) => v.toFixed(2)}
+              />
+              <FieldRow
+                label="Tempo (down ÷ up)"
+                wire="tempo_ratio_ecc_over_con"
+                f={lastRep.tempo_ratio_ecc_over_con}
+                format={(v) => `${v.toFixed(2)}×`}
+              />
+              <FieldRow
+                label="Range of motion"
+                wire="signal_amplitude"
+                f={lastRep.signal_amplitude}
+                format={(v) => v.toFixed(2)}
+              />
+              <FieldRow
+                label="Body visibility"
+                wire="min_visibility"
+                f={lastRep.min_visibility}
+                format={(v) => `${(v * 100).toFixed(0)}%`}
+              />
             </div>
           ) : (
             <p className="text-xs text-slate-600">
               {repCount === 0
-                ? "Perform a rep to see feature breakdown."
-                : "Waiting for next rep…"}
+                ? `Perform a ${unitLabel} to see the breakdown.`
+                : `Waiting for next ${unitLabel}…`}
             </p>
           )}
+
+          <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
+            Counts only after a 0.5 s warm-up and only if each {unitLabel} clears
+            duration, range-of-motion, and visibility gates. Under-counting by 1
+            is possible; over-counting from camera noise is not.
+          </p>
         </>
       )}
     </div>

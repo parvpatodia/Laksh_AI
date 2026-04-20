@@ -47,7 +47,14 @@ from typing import Any
 from app.gym.exercises_v0 import EXERCISES_V0
 
 CALIBRATION_V0_SCHEMA_VERSION = "1.0.0"
-CALIBRATION_V0_MANIFEST_VERSION = "v0.1.0"
+# v0.2.0 (2026-04-19): populated literature-cited reference_ranges for every
+# exercise (NSCA Essentials of Strength Training & Conditioning 4e (2016) +
+# ACSM Guidelines 11e (2022) tempo prescriptions, plus per-exercise ROM
+# literature). Added entry for `dumbbell_bicep_curl` (registry v0.2.0).
+# Synthetic cohort percentile bands shipped alongside as a separate
+# validation artifact (see evaluation/synthetic_cohort_v0/) — those are
+# NOT used as the cited evidence_source; literature is.
+CALIBRATION_V0_MANIFEST_VERSION = "v0.2.0"
 
 # Allowed values for the per-entry ``evidence_status`` field. New statuses
 # require a schema bump + a downstream scorecard update.

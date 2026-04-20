@@ -1,0 +1,74 @@
+{
+  "exercises": [
+    "back_squat",
+    "barbell_row",
+    "bench_press",
+    "conventional_deadlift",
+    "dumbbell_bicep_curl",
+    "farmer_carry",
+    "front_squat",
+    "overhead_press",
+    "plank",
+    "pull_up",
+    "push_up",
+    "romanian_deadlift",
+    "walking_lunge"
+  ],
+  "files": [
+    {
+      "exercise_id": "back_squat",
+      "sha256": "ad9a98638872402090ecd768e5b5550fb75b00ffd705ec10e7bed12fa1a75d59"
+    },
+    {
+      "exercise_id": "barbell_row",
+      "sha256": "c6a7da630e78f0a2657fbbfb5363296be01f42d873340bcf4ff66ec364b75436"
+    },
+    {
+      "exercise_id": "bench_press",
+      "sha256": "626cb3f93697476e0d00f24acdae23b477a78573014750385f4f51b7e4e780c1"
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "sha256": "8d3ac301682956e2cbba4854f49f75d5c437c1f94b528ba4e6a1af3683eab578"
+    },
+    {
+      "exercise_id": "dumbbell_bicep_curl",
+      "sha256": "3f3b2101c19f4edf6773ccc25a9eccee9856e1a60643916ca83f482d560a9637"
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "sha256": "63cce66cca0a979e354f91cb308c9641e917890b9078132f6c1fddc60d7b8272"
+    },
+    {
+      "exercise_id": "front_squat",
+      "sha256": "cfa59dc07b1e9c176b984e262f733153b60648dc0f5766c7f80c85535806a1ac"
+    },
+    {
+      "exercise_id": "overhead_press",
+      "sha256": "954635455fa722051e37f2fd0c0bdbed642bc4d10daa6ac95765179880f1c832"
+    },
+    {
+      "exercise_id": "plank",
+      "sha256": "cb977182706bfbbc56c0e6b3bc403b761f809abded2a052bd59c74efb08ce0c7"
+    },
+    {
+      "exercise_id": "pull_up",
+      "sha256": "d91bee210d46eddb276480ef00a6d86515183da0a85eeafd3eca2a8575a4e601"
+    },
+    {
+      "exercise_id": "push_up",
+      "sha256": "c9e2245188f752f8c508dade1d52e7b076fd27b89ce37c8715b9eefca7af000a"
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "sha256": "c9d9a329071d892145d0eb95fe69f45a2325eabb7fdb12ed8c471ea19d228957"
+    },
+    {
+      "exercise_id": "walking_lunge",
+      "sha256": "1e9a423c7c1cdbff9a34d6493a15bd48a8d706a20e98332c14b86f290a19a403"
+    }
+  ],
+  "n_reps_per_exercise": 30,
+  "schema_version": "1.0.0",
+  "seed": 0
+}

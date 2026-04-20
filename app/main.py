@@ -45,6 +45,58 @@ COLLECTION_NAME = "apex_oracle_v7"
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 PERSIST_DIR = str(_REPO_ROOT / "chroma_db")
 
+# ── Confidence scoring constants ─────────────────────────────────────────────
+# These are multiplicative engineering heuristics, NOT statistical
+# probabilities. They compound: final_confidence = base × Π(penalties).
+# Documented in evaluation/calibration_evidence_v0/basketball_literature_v0.md.
+#
+# Base confidence = (100 - cosine_distance × 100), clamped [0, 100].
+
+CONF_MULTI_PERSON_FACTOR = 0.85
+"""15% penalty when >1 person detected. Multi-person scenes cause
+landmark swapping and unstable joint traces."""
+
+CONF_WARNING_PENALTY_PER = 0.03
+"""Per-validation-warning penalty (max total penalty capped at 30%).
+Each warning (e.g. short clip, low fps, bad aspect) degrades the
+input quality that metrics depend on."""
+
+CONF_WARNING_FLOOR = 0.70
+"""Floor multiplier for validation-warning penalties so confidence
+never drops below 70% of its pre-warning value from warnings alone."""
+
+CONF_RELIABILITY_BASE = 0.55
+"""Minimum reliability multiplier even when all metrics are unavailable.
+The remaining 0.45 is weighted by metric confidence + availability."""
+
+CONF_RELIABILITY_METRIC_WEIGHT = 0.60
+"""Within the reliability band (0.45), this fraction weights per-metric
+confidence (from physics_engine._calibrate_metric_confidence)."""
+
+CONF_RELIABILITY_AVAIL_WEIGHT = 0.40
+"""Within the reliability band, this fraction weights the ratio of
+available (non-unavailable) metrics to total metrics."""
+
+CONF_PARTIAL_MODE_FACTOR = 0.90
+"""10% penalty for partial analysis mode (enough detections to
+compute some metrics but not all)."""
+
+CONF_FALLBACK_CAP = 25.0
+"""Hard cap on confidence in fallback mode (< 3 frames or < 2
+detections). Prevents misleading high confidence on garbage input."""
+
+CONF_DEGRADED_ORACLE_FACTOR = 0.88
+"""12% penalty when oracle match is degraded (partial mode, ≥3
+predicted metrics, or low mean metric confidence)."""
+
+CONF_ORACLE_PREDICTED_THRESHOLD = 3
+"""If this many or more metrics are 'predicted' (not measured),
+the oracle match is marked degraded."""
+
+CONF_ORACLE_MEAN_MC_THRESHOLD = 0.52
+"""If mean metric confidence is below this, the oracle match is
+marked degraded even if no individual metric is predicted."""
+
 # Module-level client and collection — populated in lifespan startup
 chroma_client = None
 _collection = None
@@ -87,9 +139,17 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# CORS: Production URL + local dev. Set CORS_ORIGINS env to override (comma-separated).
+# CORS: explicit allowlist for stable origins, plus a regex that matches any
+# Vercel deployment URL for the laksh-ai project.
+#
+# Why the regex: Vercel assigns each production deployment its own hashed
+# subdomain (e.g. https://laksh-im4hx7f36-laksh-ai.vercel.app) in addition to
+# the stable alias (https://laksh-ai.vercel.app). Without the regex we'd have
+# to rotate CORS_ORIGINS on every deploy. Pattern is scoped to the laksh-ai
+# project name so it does not allow arbitrary *.vercel.app sites.
 _DEFAULT_ORIGINS = [
     "https://lakshai-production.up.railway.app",
+    "https://laksh-ai.vercel.app",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8000",
@@ -100,11 +160,17 @@ _DEFAULT_ORIGINS = [
 _CORS_ORIGINS = [
     o.strip() for o in os.environ.get("CORS_ORIGINS", ",".join(_DEFAULT_ORIGINS)).split(",") if o.strip()
 ]
+_VERCEL_PREVIEW_REGEX = (
+    r"^https://laksh-ai\.vercel\.app$"
+    r"|^https://laksh(-[a-z0-9]+)+-laksh-ai\.vercel\.app$"
+    r"|^https://laksh-ai-[a-z0-9-]+\.vercel\.app$"
+)
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
+    allow_origin_regex=_VERCEL_PREVIEW_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -386,12 +452,12 @@ async def analyze_video(
         raw_vector = [
             _num(biomech.get("release_velocity_mps"), 7.0),
             _num(biomech.get("shot_arc_deg"), 45.0),
-            _num(biomech.get("knee_angle"), 145.0),
+            _num(biomech.get("knee_angle"), 150.0),
             _num(biomech.get("elbow_angle"), 165.0),
-            _num(biomech.get("kinetic_sync_ms"), 150.0),
-            _num(biomech.get("fluidity_score"), 65.0),
+            _num(biomech.get("kinetic_sync_ms"), 300.0),
+            _num(biomech.get("fluidity_score"), 75.0),
             _num(biomech.get("hip_rotation_deg"), 5.0),
-            _num(biomech.get("balance_index"), 85.0),
+            _num(biomech.get("balance_index"), 75.0),
         ]
         query_vector = [v * w for v, w in zip(raw_vector, FEATURE_WEIGHTS)]
 
@@ -465,7 +531,7 @@ async def analyze_video(
                 deltas["elbow_gap"] = round(pro_stats.get("elbow_angle", 165) - (user_stats.get("elbow_flexion_at_release") or 165), 1)
                 deltas["fluid_gap"] = round(pro_stats.get("fluidity_score", 80) - (user_stats.get("fluidity_score") or 80), 1)
                 deltas["hip_gap"] = round(pro_stats.get("hip_rotation_deg", 5) - (user_stats.get("hip_rotation_deg") or 5), 1)
-                deltas["ksync_gap"] = round(pro_stats.get("kinetic_sync_ms", 15) - (user_stats.get("kinetic_sync_ms") or 15), 1)
+                deltas["ksync_gap"] = round(pro_stats.get("kinetic_sync_ms", 300.0) - (user_stats.get("kinetic_sync_ms") or 300.0), 1)
                 deltas["bal_gap"] = round(pro_stats.get("balance_index", 80) - (user_stats.get("balance_index") or 80), 1)
             except Exception:
                 deltas = {"error": "Delta calc failed"}
@@ -520,12 +586,11 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         # Reduce confidence when multiple people detected (improves pro-match reliability)
         det = (biomech.get("telemetry") or {}).get("detection_metadata") or {}
         if det.get("people_detected_max", 1) > 1:
-            confidence_score = round(confidence_score * 0.85, 1)  # 15% penalty
-        # Reduce confidence when validation warnings exist (video quality, pose visibility, etc.)
+            confidence_score = round(confidence_score * CONF_MULTI_PERSON_FACTOR, 1)
         vw = (biomech.get("telemetry") or {}).get("validation_warnings") or []
         if vw:
-            confidence_score = round(confidence_score * max(0.7, 1.0 - len(vw) * 0.03), 1)
-        # Calibrate with per-metric reliability so confidence reflects data quality.
+            warning_factor = max(CONF_WARNING_FLOOR, 1.0 - len(vw) * CONF_WARNING_PENALTY_PER)
+            confidence_score = round(confidence_score * warning_factor, 1)
         metric_status = biomech.get("metric_status") or {}
         if metric_status:
             available = [m for m in metric_status.values() if m.get("source") != "unavailable"]
@@ -534,12 +599,17 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
                 sum(float(m.get("confidence", 0.0)) for m in available) / len(available)
                 if available else 0.0
             )
-            reliability_factor = 0.55 + (0.45 * ((0.6 * mean_metric_conf) + (0.4 * availability_ratio)))
+            reliability_factor = CONF_RELIABILITY_BASE + (
+                (1.0 - CONF_RELIABILITY_BASE) * (
+                    CONF_RELIABILITY_METRIC_WEIGHT * mean_metric_conf
+                    + CONF_RELIABILITY_AVAIL_WEIGHT * availability_ratio
+                )
+            )
             confidence_score = round(confidence_score * reliability_factor, 1)
         if analysis_mode == "partial":
-            confidence_score = round(confidence_score * 0.9, 1)
+            confidence_score = round(confidence_score * CONF_PARTIAL_MODE_FACTOR, 1)
         elif analysis_mode == "fallback":
-            confidence_score = min(confidence_score, 25.0)
+            confidence_score = min(confidence_score, CONF_FALLBACK_CAP)
 
         ms_all = biomech.get("metric_status") or {}
         av_metrics = [m for m in ms_all.values() if isinstance(m, dict) and m.get("source") != "unavailable"]
@@ -551,8 +621,8 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         )
         oracle_match_degraded = (
             analysis_mode in ("partial", "fallback")
-            or n_predicted >= 3
-            or (len(av_metrics) >= 1 and mean_mc < 0.52)
+            or n_predicted >= CONF_ORACLE_PREDICTED_THRESHOLD
+            or (len(av_metrics) >= 1 and mean_mc < CONF_ORACLE_MEAN_MC_THRESHOLD)
         )
         out["oracle_match_degraded"] = oracle_match_degraded
         if oracle_match_degraded:
@@ -566,7 +636,7 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
                     "Re-record from a 45° front offset for a tighter vector match."
                 )
             if analysis_mode != "fallback":
-                confidence_score = round(confidence_score * 0.88, 1)
+                confidence_score = round(confidence_score * CONF_DEGRADED_ORACLE_FACTOR, 1)
         else:
             out["oracle_caveat"] = None
 

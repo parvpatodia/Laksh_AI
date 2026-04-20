@@ -1,53 +1,87 @@
 "use client";
 
 /**
- * /basketball  -> capture page for basketball jump shot
- * /gym         -> exercise picker, then capture page
+ * /basketball   -> capture page for jump shot (legacy /analyze-video)
+ * /gym          -> exercise picker, then capture page (v1 /analyze/gym/video)
  *
- * Day 5: PoseCamera (LIVE_STREAM skeleton).
- * Day 6: repCounter + GhostMetricsPanel.
- * Day 7: clip upload -> /v1/analyze/gym/video -> CanonicalReport.
- * Day 8: parity probe surfaced.
+ * Both sports share:
+ *   - PoseCamera   (MediaPipe LIVE_STREAM)
+ *   - repCounter   (browser ghost counter w/ quality gates)
+ *   - GhostMetricsPanel
+ *
+ * Where they differ:
+ *   - Backend endpoint + response schema
+ *   - CanonicalReport vs BasketballReport renderer
+ *   - FormInsights (rule-based) for gym; basketball ships its own AI
+ *     scout block as part of the canonical response.
  */
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 import {
   feedFrame,
+  isRealtimeSupported,
   makeRepCounterState,
+  toWireVector,
   type GhostRepMetrics,
   type Phase,
   type RepCounterState,
 } from "@/lib/realtime/repCounter";
-import { analyzeGymVideo, type AnalyzeResponse, type GhostRepVector } from "@/lib/api";
+import {
+  analyzeBasketballVideo,
+  analyzeGymVideo,
+  type AnalyzeResponse,
+  type BasketballAnalyzeResponse,
+  type GhostRepVector,
+} from "@/lib/api";
 import GhostMetricsPanel from "@/components/GhostMetricsPanel";
 import CanonicalReport from "@/components/CanonicalReport";
+import BasketballReport from "@/components/BasketballReport";
+import TrustPanel from "@/components/TrustPanel";
+import FormInsights from "@/components/FormInsights";
 
 const PoseCamera = dynamic(() => import("@/components/PoseCamera"), {
   ssr: false,
   loading: () => (
-    <div className="w-full aspect-video rounded-2xl border border-surface-700 bg-surface-900 flex items-center justify-center">
+    <div className="w-full aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/10] max-h-[80vh]
+                    rounded-2xl border border-surface-700 bg-surface-900 flex items-center justify-center">
       <p className="text-sm text-slate-600">Loading camera…</p>
     </div>
   ),
 });
 
-const GYM_EXERCISES: { id: string; label: string }[] = [
-  { id: "back_squat",        label: "Back Squat" },
-  { id: "front_squat",       label: "Front Squat" },
-  { id: "deadlift",          label: "Deadlift" },
-  { id: "romanian_deadlift", label: "Romanian Deadlift" },
-  { id: "bench_press",       label: "Bench Press" },
-  { id: "overhead_press",    label: "Overhead Press" },
-  { id: "barbell_row",       label: "Barbell Row" },
-  { id: "pull_up",           label: "Pull-up" },
-  { id: "dumbbell_curl",     label: "Dumbbell Curl" },
-  { id: "tricep_pushdown",   label: "Tricep Pushdown" },
-  { id: "lunge",             label: "Lunge" },
-  { id: "hip_thrust",        label: "Hip Thrust" },
+// ---------------------------------------------------------------------------
+// Exercise registry (frontend mirror of app/gym/exercises_v0.py)
+// ---------------------------------------------------------------------------
+//
+// IDs MUST match the backend exactly (verified 2026-04-19).  Each entry
+// also carries a one-line camera tip surfaced as a contextual hint card,
+// derived from the backend's `camera_instruction` field but trimmed for
+// the live UI context.
+//
+// hip_thrust is INTENTIONALLY OMITTED — backend exercises_v0 does not
+// register it, so picking it would 400 with UnknownExerciseError on
+// upload.  Same for plank/farmer_carry which need different rep models.
+//
+// `dumbbell` flag → exercise works with a single dumbbell or a pair (also
+// works barbell/bodyweight where applicable). Exposed in the UI as a chip
+// so judges with only DBs can quickly pick a demo movement.
+
+const GYM_EXERCISES: { id: string; label: string; tip: string; dumbbell?: boolean }[] = [
+  { id: "dumbbell_bicep_curl", label: "Dumbbell Bicep Curl", tip: "Side view, chest-height, full arm visible; keep elbow pinned to torso", dumbbell: true },
+  { id: "overhead_press", label: "Overhead Press", tip: "Side view, chest-height, head-to-hips visible. Works with dumbbells.", dumbbell: true },
+  { id: "bench_press", label: "Bench Press", tip: "Side view, bar-height, bench + bar end-to-end. Works with dumbbells (flat bench or floor press).", dumbbell: true },
+  { id: "romanian_deadlift", label: "Romanian Deadlift", tip: "Side view, hip-height, capture the hinge angle. Works with dumbbells.", dumbbell: true },
+  { id: "push_up", label: "Push-up", tip: "Side view, ground-level, shoulder-to-ankle in frame. No equipment." },
+  { id: "back_squat", label: "Back Squat", tip: "Side view, hip-height camera, full body in frame" },
+  { id: "front_squat", label: "Front Squat", tip: "Side view, hip-height, keep bar path in frame" },
+  { id: "conventional_deadlift", label: "Deadlift", tip: "Side view, knee-to-hip height, bar visible at lockout" },
+  { id: "barbell_row", label: "Barbell Row", tip: "Side view, hip-height, torso hinge + bar in frame" },
+  { id: "pull_up", label: "Pull-up", tip: "Front view, bar slightly above head, full torso visible" },
+  { id: "walking_lunge", label: "Walking Lunge", tip: "Side view, hip-height; counts every right-leg step" },
 ];
 
 type UploadStatus = "idle" | "uploading" | "done" | "error";
@@ -68,19 +102,18 @@ function SportPageInner() {
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [capturedMime, setCapturedMime] = useState("video/webm");
 
-  // Upload / canonical result
+  // Upload + canonical results (one of two — never both at once for a session)
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
   const [uploadError, setUploadError] = useState<string | undefined>();
-  const [canonicalResult, setCanonicalResult] = useState<AnalyzeResponse | null>(null);
+  const [gymResult, setGymResult] = useState<AnalyzeResponse | null>(null);
+  const [bballResult, setBballResult] = useState<BasketballAnalyzeResponse | null>(null);
+  const haveCanonicalResult = gymResult !== null || bballResult !== null;
 
-  // Eagerly start loading the pose model as soon as the page mounts.
-  // loadPoseLandmarker() is a cached promise -- calling it here races the
-  // model download against the judge reading the page, so by the time they
-  // click Start Camera the model is usually ready.
+  // Eagerly load the pose model so it's ready by the time the user clicks.
   useEffect(() => {
     import("@/lib/pose/landmarkerLoader").then(({ loadPoseLandmarker }) => {
       loadPoseLandmarker().catch(() => {
-        // Silently ignore -- PoseCamera will surface the error when it tries.
+        // Silently ignore -- PoseCamera surfaces this error itself.
       });
     });
   }, []);
@@ -92,6 +125,11 @@ function SportPageInner() {
   const [currentSignal, setCurrentSignal] = useState<number | null>(null);
   const [lastRep, setLastRep] = useState<GhostRepMetrics | null>(null);
 
+  // IMPORTANT: do NOT include `repCount` in the deps. Including it would
+  // recreate this callback on every rep, which propagates into PoseCamera's
+  // detection-loop useEffect (onLandmarks is in its deps), tearing down and
+  // recreating the requestAnimationFrame loop.  That caused brief frame gaps
+  // at every rep boundary -- and missed reps.
   const handleLandmarks = useCallback(
     (landmarks: NormalizedLandmark[], ts: number) => {
       if (!exerciseId) return;
@@ -99,10 +137,10 @@ function SportPageInner() {
       const s = repStateRef.current;
       setCurrentSignal(s.currentSignal);
       setCurrentPhase(s.currentPhase);
-      if (s.repCount !== repCount) setRepCount(s.repCount);
+      setRepCount(s.repCount);
       if (completed) setLastRep(completed);
     },
-    [exerciseId, repCount],
+    [exerciseId],
   );
 
   const handleCaptureComplete = useCallback((blob: Blob, mime: string) => {
@@ -116,29 +154,34 @@ function SportPageInner() {
     setUploadStatus("uploading");
     setUploadError(undefined);
     try {
-      // Transform completed ghost reps into the GhostRepVector wire format.
-      const ghostReps: GhostRepVector[] = repStateRef.current.completedReps.map((r) => ({
-        rep_index: r.rep_index,
-        features: {
-          rep_duration_s: r.rep_duration_s,
-          eccentric_duration_s: r.eccentric_duration_s,
-          concentric_duration_s: r.concentric_duration_s,
-          tempo_ratio_ecc_over_con: r.tempo_ratio_ecc_over_con,
-          min_visibility: r.min_visibility,
-        },
-      }));
-      const result = await analyzeGymVideo(capturedBlob, exerciseId, capturedMime, ghostReps);
-      setCanonicalResult(result);
+      if (sport === "basketball") {
+        const result = await analyzeBasketballVideo(capturedBlob, null, capturedMime);
+        setBballResult(result);
+      } else {
+        // Build the ghost-rep wire format via toWireVector — single source of
+        // truth that handles BOTH the field-name rename
+        // (min_visibility → primary_joints_min_visibility) and the
+        // signal_amplitude unit conversion (×180 for cyclic_angle exercises
+        // so the parity probe compares degrees-with-degrees).  See
+        // app/parity/realtime.py probe_reps and the comment block in
+        // web/lib/realtime/repCounter.ts toWireVector for why.
+        const ghostReps: GhostRepVector[] = repStateRef.current.completedReps.map(
+          (r) => toWireVector(r, exerciseId) as GhostRepVector,
+        );
+        const result = await analyzeGymVideo(capturedBlob, exerciseId, capturedMime, ghostReps);
+        setGymResult(result);
+      }
       setUploadStatus("done");
     } catch (err: unknown) {
       setUploadStatus("error");
       setUploadError(err instanceof Error ? err.message : String(err));
     }
-  }, [capturedBlob, capturedMime, exerciseId]);
+  }, [capturedBlob, capturedMime, exerciseId, sport]);
 
   const resetAll = useCallback(() => {
     setCapturedBlob(null);
-    setCanonicalResult(null);
+    setGymResult(null);
+    setBballResult(null);
     setUploadStatus("idle");
     setUploadError(undefined);
     setCameraError(null);
@@ -150,7 +193,14 @@ function SportPageInner() {
     setCameraActive(false);
   }, []);
 
-  // Unknown sport
+  // Camera tip for the contextual hint card (gym only — basketball
+  // gets its own static instruction below).
+  const exerciseMeta = useMemo(
+    () => sport === "gym" ? GYM_EXERCISES.find((e) => e.id === exerciseId) ?? null : null,
+    [sport, exerciseId],
+  );
+
+  // ---- Unknown sport ---------------------------------------------------
   if (sport !== "basketball" && sport !== "gym") {
     return (
       <div className="max-w-2xl mx-auto px-6 py-24 text-center">
@@ -160,7 +210,7 @@ function SportPageInner() {
     );
   }
 
-  // Gym exercise picker
+  // ---- Gym exercise picker --------------------------------------------
   if (sport === "gym" && !exerciseId) {
     return (
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -168,6 +218,10 @@ function SportPageInner() {
           <a href="/" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">← Home</a>
           <h1 className="text-3xl font-bold text-slate-100 mt-3 mb-1">Gym</h1>
           <p className="text-slate-400">Select an exercise to begin.</p>
+        </div>
+        <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
+          <span className="rounded-md bg-brand-500/15 px-1.5 py-0.5 text-brand-400 font-medium">DB</span>
+          <span>= works with a single pair of dumbbells (no rack required)</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {GYM_EXERCISES.map((ex) => (
@@ -177,24 +231,48 @@ function SportPageInner() {
               className="rounded-xl border border-surface-700 bg-surface-800 px-4 py-3
                          text-sm font-medium text-slate-300 text-left
                          hover:border-brand-500/60 hover:bg-surface-700/50 hover:text-slate-100
-                         transition-all duration-150"
+                         transition-all duration-150 flex items-center justify-between gap-2"
             >
-              {ex.label}
+              <span>{ex.label}</span>
+              {ex.dumbbell && (
+                <span className="rounded-md bg-brand-500/15 px-1.5 py-0.5 text-[10px] text-brand-400 font-semibold">
+                  DB
+                </span>
+              )}
             </button>
           ))}
         </div>
+        <p className="text-xs text-slate-600 mt-6 leading-relaxed">
+          Twelve movements covering squat / hinge / push / pull / lunge / curl.
+          Each exercise streams to MediaPipe BlazePose at ~30 fps for live
+          rep counting, then runs the canonical biomech pipeline server-side
+          when you stop the recording.
+        </p>
       </div>
     );
   }
 
   const sportLabel = sport === "basketball" ? "Basketball" : "Gym";
   const exerciseLabel =
-    sport === "gym"
-      ? GYM_EXERCISES.find((e) => e.id === exerciseId)?.label ?? exerciseId
+    sport === "gym" ? exerciseMeta?.label ?? exerciseId ?? "—"
       : "Jump Shot";
 
+  // Unsupported gym exercise (e.g., user hand-typed ?exercise=xxx)
+  if (sport === "gym" && exerciseId && !isRealtimeSupported(exerciseId)) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-24 text-center">
+        <p className="text-slate-400 mb-2">
+          Exercise <code className="font-mono text-slate-300">{exerciseId}</code> is not supported by the realtime ghost counter.
+        </p>
+        <a href="/gym" className="inline-block text-brand-500 hover:underline">
+          Back to gym picker
+        </a>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Breadcrumb */}
       <div className="mb-6 flex items-center gap-2 text-sm text-slate-500">
         <a href="/" className="hover:text-slate-300 transition-colors">Home</a>
@@ -211,18 +289,18 @@ function SportPageInner() {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">{exerciseLabel}</h1>
           <p className="text-sm text-slate-500 mt-0.5">{sportLabel} analysis</p>
         </div>
         <div className="flex items-center gap-2">
-          {(capturedBlob || canonicalResult) && (
+          {(capturedBlob || haveCanonicalResult) && (
             <button onClick={resetAll} className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 transition-colors border border-surface-700">
               Start over
             </button>
           )}
-          {!capturedBlob && !canonicalResult && (
+          {!capturedBlob && !haveCanonicalResult && (
             <button
               onClick={() => { setCameraError(null); setCameraActive((v) => !v); }}
               className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -236,6 +314,24 @@ function SportPageInner() {
         </div>
       </div>
 
+      {/* Camera framing hint (single source of truth: GYM_EXERCISES.tip
+          for gym; static line for basketball) */}
+      {!capturedBlob && !haveCanonicalResult && (
+        <div className="mb-4 rounded-lg border border-surface-700 bg-surface-800/60 px-4 py-3
+                        flex items-start gap-3 text-sm">
+          <span aria-hidden className="text-brand-400 mt-0.5">◉</span>
+          <div className="text-slate-300">
+            <span className="font-medium text-slate-200">Setup:</span>{" "}
+            {sport === "gym"
+              ? exerciseMeta?.tip ?? "Side view, full body in frame, ~2 m from camera"
+              : "Side view, hip-height camera, full body in frame for the entire shot motion"}
+            <span className="text-xs text-slate-500 ml-2">
+              · Counter waits ~0.5 s for you to settle before counting.
+            </span>
+          </div>
+        </div>
+      )}
+
       {cameraError && (
         <div className="mb-4 rounded-lg border border-rose-700/50 bg-rose-900/20 px-4 py-3 text-sm text-rose-300">
           {cameraError}
@@ -243,15 +339,16 @@ function SportPageInner() {
       )}
 
       {/* Camera or captured-clip placeholder */}
-      {!capturedBlob && !canonicalResult ? (
+      {!capturedBlob && !haveCanonicalResult ? (
         <PoseCamera
           active={cameraActive}
           onLandmarks={handleLandmarks}
           onCaptureComplete={handleCaptureComplete}
           onError={setCameraError}
         />
-      ) : !canonicalResult ? (
-        <div className="w-full aspect-video rounded-2xl border border-emerald-700/40 bg-surface-800
+      ) : !haveCanonicalResult ? (
+        <div className="w-full aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/10] max-h-[80vh]
+                        rounded-2xl border border-emerald-700/40 bg-surface-800
                         flex items-center justify-center mb-2">
           <div className="text-center">
             <p className="text-4xl mb-2">🎬</p>
@@ -259,29 +356,51 @@ function SportPageInner() {
               Clip ready — {(capturedBlob!.size / 1024).toFixed(0)} KB
             </p>
             <p className="text-xs text-slate-600 mt-1">
-              Click &ldquo;Analyse clip&rdquo; below to run the canonical pipeline
+              Click &ldquo;Analyse&rdquo; to run the canonical pipeline
             </p>
           </div>
         </div>
       ) : null}
 
-      {/* Metrics panels */}
+      {/* Trust panel — gym only (it consumes the v1 envelope). */}
+      {gymResult && <TrustPanel result={gymResult} />}
+
+      {/* Metrics + canonical report */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <GhostMetricsPanel
           repCount={repCount}
           currentPhase={currentPhase}
           currentSignal={currentSignal}
           lastRep={lastRep}
-          active={cameraActive || !!canonicalResult}
+          active={cameraActive || haveCanonicalResult}
+          unitLabel={sport === "basketball" ? "shot" : "rep"}
         />
-        <CanonicalReport
-          result={canonicalResult}
-          uploadState={{ status: uploadStatus, error: uploadError }}
-          capturedBlob={capturedBlob}
-          exerciseId={exerciseId}
-          onUpload={handleUpload}
-        />
+        {sport === "gym" ? (
+          <CanonicalReport
+            result={gymResult}
+            uploadState={{ status: uploadStatus, error: uploadError }}
+            capturedBlob={capturedBlob}
+            exerciseId={exerciseId}
+            onUpload={handleUpload}
+          />
+        ) : (
+          <BasketballReport
+            result={bballResult}
+            uploadState={{ status: uploadStatus, error: uploadError }}
+            capturedBlob={capturedBlob}
+            onUpload={handleUpload}
+          />
+        )}
       </div>
+
+      {/* Form insights — gym only.  Basketball ships its AI scout block
+          inside BasketballReport (legacy /analyze-video already returns
+          3 athlete_feedback bullets). */}
+      {gymResult && (
+        <div className="mt-6">
+          <FormInsights result={gymResult} />
+        </div>
+      )}
     </div>
   );
 }

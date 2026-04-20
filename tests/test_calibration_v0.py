@@ -287,15 +287,34 @@ def test_shipped_v0_config_parses_cleanly() -> None:
     assert set(manifest.entries.keys()) == set(EXERCISES_V0.keys())
 
 
-def test_shipped_v0_config_is_all_uncalibrated() -> None:
-    """Policy guard: no entry in the shipped v0 may carry a cited range."""
+def test_shipped_v0_config_is_all_cited_v0_2_0() -> None:
+    """Policy guard (v0.2.0+): every entry MUST be cited with a verifiable
+    evidence_source. v0.1.0 shipped uncalibrated; v0.2.0 swapped that for
+    literature-cited bands sourced from
+    ``evaluation/calibration_evidence_v0/literature_bundle_v0.md``.
+
+    The invariant flips intentionally: any future regression to
+    ``uncalibrated_v0`` for a registered exercise is a policy violation, and
+    so is shipping ``evidence_status='cited'`` without an evidence_source
+    file that actually exists on disk.
+    """
     manifest = load_calibration_v0(SHIPPED_CONFIG)
+    assert manifest.manifest_version == "v0.2.0", (
+        "shipped calibration must be on the v0.2.0 cited-bands manifest"
+    )
     for eid, entry in manifest.entries.items():
-        assert entry.evidence_status == "uncalibrated_v0", (
-            f"{eid}: v0 must not ship cited ranges; flip policy deliberately."
+        assert entry.evidence_status == "cited", (
+            f"{eid}: v0.2.0 ships cited ranges; uncalibrated_v0 is a regression"
         )
-        assert entry.reference_ranges == {}, f"{eid}: v0 must ship empty ranges."
-        assert entry.evidence_source is None, f"{eid}: v0 must leave source null."
+        assert entry.reference_ranges, f"{eid}: cited entries must carry ranges"
+        assert entry.evidence_source, f"{eid}: cited entries must name a source"
+        # The shipped source must be a real file in the repo so a reviewer
+        # can verify the citation. We allow only the literature bundle path
+        # in v0.2.0; later milestones may add scorecard paths alongside.
+        src_path = REPO_ROOT / entry.evidence_source
+        assert src_path.is_file(), (
+            f"{eid}: evidence_source {entry.evidence_source!r} must exist on disk"
+        )
 
 
 def test_shipped_v0_sha_is_deterministic() -> None:
@@ -328,8 +347,10 @@ def test_freeze_cli_verify_default_config_ok() -> None:
     payload = json.loads(res.stdout)
     assert payload["ok"] is True
     assert payload["n_entries"] == len(EXERCISES_V0)
-    assert payload["n_cited"] == 0
-    assert payload["n_uncalibrated_v0"] == len(EXERCISES_V0)
+    # v0.2.0+: every entry is literature-cited (see
+    # evaluation/calibration_evidence_v0/literature_bundle_v0.md).
+    assert payload["n_cited"] == len(EXERCISES_V0)
+    assert payload["n_uncalibrated_v0"] == 0
 
 
 def test_freeze_cli_expected_sha_match() -> None:

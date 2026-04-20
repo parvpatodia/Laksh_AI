@@ -25,8 +25,8 @@ function StatusChip({ status }: { status: FieldValue["status"] }) {
     status === "valid"
       ? "chip-valid"
       : status === "degraded"
-      ? "chip-degraded"
-      : "chip-unknown";
+        ? "chip-degraded"
+        : "chip-unknown";
   return (
     <span className={`${cls} text-xs px-1.5 py-0.5 rounded font-mono`}>
       {status}
@@ -39,8 +39,8 @@ function CalibStatusChip({ status }: { status: CalibrationField["status"] }) {
     status === "within_reference"
       ? "chip-valid"
       : status === "outside_reference"
-      ? "chip-degraded"
-      : "chip-unknown";
+        ? "chip-degraded"
+        : "chip-unknown";
   return (
     <span className={`${cls} text-xs px-1.5 py-0.5 rounded font-mono`}>
       {status.replace(/_/g, " ")}
@@ -48,14 +48,36 @@ function CalibStatusChip({ status }: { status: CalibrationField["status"] }) {
   );
 }
 
+// Wire-format -> user-friendly label + value formatter.
+// Unknown wire keys fall through to the raw key + raw value (so adding
+// a backend field doesn't break the UI).
+const FIELD_DISPLAY: Record<
+  string,
+  { label: string; format?: (v: number, unit: string) => string }
+> = {
+  rep_duration_s: { label: "Rep duration", format: (v) => `${v.toFixed(2)} s` },
+  eccentric_duration_s: { label: "Lowering (eccentric)", format: (v) => `${v.toFixed(2)} s` },
+  concentric_duration_s: { label: "Lifting (concentric)", format: (v) => `${v.toFixed(2)} s` },
+  tempo_ratio_ecc_over_con: { label: "Tempo (down ÷ up)", format: (v) => `${v.toFixed(2)}×` },
+  signal_amplitude: { label: "Range of motion", format: (v, u) => `${v.toFixed(1)}${u === "deg" ? "°" : ""}` },
+  primary_joints_min_visibility: { label: "Joint visibility", format: (v) => `${(v * 100).toFixed(0)}%` },
+  primary_joints_missing_frac: { label: "Frames missing joints", format: (v) => `${(v * 100).toFixed(0)}%` },
+};
+
 function FieldRow({ label, f }: { label: string; f: FieldValue }) {
+  const meta = FIELD_DISPLAY[label];
+  const display = meta?.label ?? label;
+  const value =
+    f.value !== null
+      ? meta?.format
+        ? meta.format(f.value, f.unit)
+        : `${f.value} ${f.unit}`
+      : "—";
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-surface-700/40 last:border-0 gap-2">
-      <span className="text-xs text-slate-500 font-mono truncate">{label}</span>
+      <span className="text-xs text-slate-300" title={label}>{display}</span>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-sm text-slate-200 font-mono tabular-nums">
-          {f.value !== null ? `${f.value} ${f.unit}` : "--"}
-        </span>
+        <span className="text-sm text-slate-200 font-mono tabular-nums">{value}</span>
         <StatusChip status={f.status} />
       </div>
     </div>
@@ -67,8 +89,8 @@ function RepCard({ rep }: { rep: RepVector }) {
     rep.rep_status === "valid"
       ? "border-emerald-700/50"
       : rep.rep_status === "degraded"
-      ? "border-amber-700/50"
-      : "border-slate-700";
+        ? "border-amber-700/50"
+        : "border-slate-700";
 
   return (
     <div className={`rounded-lg border ${statusColor} bg-surface-900/50 p-4`}>
@@ -225,8 +247,9 @@ export default function CanonicalReport({
           <span className="font-mono text-slate-400">
             {result.calibration.evidence_status}
           </span>{" "}
-          — calibration not yet available for {result.calibration.exercise_id}.
-          Reference ranges require collected cohort data.
+          {result.calibration.evidence_status === "cited"
+            ? `— ${result.calibration.exercise_id} metrics compared against literature-cited reference ranges (NSCA, ACSM).`
+            : `— calibration not yet available for ${result.calibration.exercise_id}. Reference ranges require collected cohort data.`}
         </p>
       </div>
 

@@ -1,0 +1,1868 @@
+{
+  "exercise_id": "front_squat",
+  "n_reps": 30,
+  "reps": [
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2985
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.858
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8381
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1004
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.1126
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.197
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.037
+        }
+      },
+      "rep_index": 0
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4681
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6099
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8005
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.013
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.7315
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2108
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4458
+        }
+      },
+      "rep_index": 1
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.011
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1449
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6744
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0697
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.4582
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1458
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5087
+        }
+      },
+      "rep_index": 2
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5211
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0017
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7021
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0838
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.0038
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2406
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6524
+        }
+      },
+      "rep_index": 3
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2397
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5315
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8401
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.044
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.3287
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2541
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.9653
+        }
+      },
+      "rep_index": 4
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4314
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3544
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7541
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0438
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.5174
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2431
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0694
+        }
+      },
+      "rep_index": 5
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8588
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8042
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7907
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0295
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.609
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1443
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4151
+        }
+      },
+      "rep_index": 6
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.6095
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6562
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.856
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0782
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9724
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1485
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8008
+        }
+      },
+      "rep_index": 7
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1737
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8604
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6175
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0788
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.596
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.217
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5382
+        }
+      },
+      "rep_index": 8
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9365
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4382
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.781
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0448
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.4742
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1968
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3881
+        }
+      },
+      "rep_index": 9
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7922
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2249
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6501
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0025
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.7671
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2082
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1704
+        }
+      },
+      "rep_index": 10
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0988
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9113
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6307
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.058
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.331
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0931
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3632
+        }
+      },
+      "rep_index": 11
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2747
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8092
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7257
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1584
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.3851
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2245
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.1627
+        }
+      },
+      "rep_index": 12
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.397
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9516
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7042
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.482
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.224
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.0044
+        }
+      },
+      "rep_index": 13
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1878
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.487
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7742
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0276
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.9569
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.178
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0897
+        }
+      },
+      "rep_index": 14
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4016
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9907
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8986
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0125
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.7143
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1399
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6406
+        }
+      },
+      "rep_index": 15
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9905
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2706
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8589
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1019
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7031
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2039
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8952
+        }
+      },
+      "rep_index": 16
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.264
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.639
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.919
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1497
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.308
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2887
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.5013
+        }
+      },
+      "rep_index": 17
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5241
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5848
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8156
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1217
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.2435
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.242
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3447
+        }
+      },
+      "rep_index": 18
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.597
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6729
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8251
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0984
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1639
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.7169
+        }
+      },
+      "rep_index": 19
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6833
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7656
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7473
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1093
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5528
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1998
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.579
+        }
+      },
+      "rep_index": 20
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.6592
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8816
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8767
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.9544
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1773
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6606
+        }
+      },
+      "rep_index": 21
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7011
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1349
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7973
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0271
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8785
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.3434
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.7166
+        }
+      },
+      "rep_index": 22
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3448
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6912
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8089
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1055
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6422
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2158
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.8489
+        }
+      },
+      "rep_index": 23
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1775
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6424
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8388
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0797
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.0433
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.228
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0323
+        }
+      },
+      "rep_index": 24
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1889
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2963
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7677
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1423
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5946
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1706
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3121
+        }
+      },
+      "rep_index": 25
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9507
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7875
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6298
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1387
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.5529
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1214
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.7692
+        }
+      },
+      "rep_index": 26
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0996
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4147
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6908
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0098
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.9617
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1999
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6576
+        }
+      },
+      "rep_index": 27
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6646
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.0451
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8099
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0466
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.6004
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2889
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5867
+        }
+      },
+      "rep_index": 28
+    },
+    {
+      "exercise_id": "front_squat",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4392
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5158
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8539
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0692
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.7943
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2545
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.1933
+        }
+      },
+      "rep_index": 29
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed": 0
+}

@@ -1,0 +1,908 @@
+{
+  "exercise_id": "farmer_carry",
+  "n_reps": 30,
+  "reps": [
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6976
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.03
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0395
+        }
+      },
+      "rep_index": 0
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6637
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.07
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0358
+        }
+      },
+      "rep_index": 1
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6935
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.064
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0801
+        }
+      },
+      "rep_index": 2
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8341
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0594
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0289
+        }
+      },
+      "rep_index": 3
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.5514
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0808
+        }
+      },
+      "rep_index": 4
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8699
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1105
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0315
+        }
+      },
+      "rep_index": 5
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9651
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.2037
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0766
+        }
+      },
+      "rep_index": 6
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.5388
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0659
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0669
+        }
+      },
+      "rep_index": 7
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8539
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0992
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0571
+        }
+      },
+      "rep_index": 8
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6445
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0962
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0614
+        }
+      },
+      "rep_index": 9
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6858
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0645
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0372
+        }
+      },
+      "rep_index": 10
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6899
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0812
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0589
+        }
+      },
+      "rep_index": 11
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7287
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1488
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0472
+        }
+      },
+      "rep_index": 12
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8927
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0411
+        }
+      },
+      "rep_index": 13
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7127
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0353
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0422
+        }
+      },
+      "rep_index": 14
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7795
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0732
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0334
+        }
+      },
+      "rep_index": 15
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6268
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1272
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0619
+        }
+      },
+      "rep_index": 16
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7694
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0597
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0545
+        }
+      },
+      "rep_index": 17
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7632
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0721
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0691
+        }
+      },
+      "rep_index": 18
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7528
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1575
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0628
+        }
+      },
+      "rep_index": 19
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7521
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1759
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0513
+        }
+      },
+      "rep_index": 20
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6988
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0723
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.04
+        }
+      },
+      "rep_index": 21
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.5988
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0093
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0253
+        }
+      },
+      "rep_index": 22
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7993
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1258
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0697
+        }
+      },
+      "rep_index": 23
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.5684
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0603
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0593
+        }
+      },
+      "rep_index": 24
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7107
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0568
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0316
+        }
+      },
+      "rep_index": 25
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8492
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0773
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0461
+        }
+      },
+      "rep_index": 26
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7469
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1876
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0297
+        }
+      },
+      "rep_index": 27
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7815
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0308
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0527
+        }
+      },
+      "rep_index": 28
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "features": {
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7539
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.148
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0421
+        }
+      },
+      "rep_index": 29
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed": 0
+}

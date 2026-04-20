@@ -1,0 +1,1868 @@
+{
+  "exercise_id": "romanian_deadlift",
+  "n_reps": 30,
+  "reps": [
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3582
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7488
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.906
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0512
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.2438
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 39.802
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6545
+        }
+      },
+      "rep_index": 0
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1527
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7122
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.808
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0229
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3806
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 81.5666
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.4737
+        }
+      },
+      "rep_index": 1
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7953
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8111
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7188
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0797
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.6722
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 67.6347
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.3028
+        }
+      },
+      "rep_index": 2
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0612
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7736
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7782
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0166
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0862
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 50.6942
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.0991
+        }
+      },
+      "rep_index": 3
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0135
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6634
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9181
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0121
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1878
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 57.4845
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.3734
+        }
+      },
+      "rep_index": 4
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5879
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0389
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.749
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0188
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.932
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 87.5555
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.914
+        }
+      },
+      "rep_index": 5
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.6384
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5485
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7113
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0862
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.8244
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 77.7269
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.7214
+        }
+      },
+      "rep_index": 6
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7359
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5812
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8411
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0522
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.2503
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 61.9547
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.7676
+        }
+      },
+      "rep_index": 7
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4464
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3177
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9249
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1406
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 90.3714
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.1268
+        }
+      },
+      "rep_index": 8
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6272
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8509
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9245
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0763
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1277
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 75.8862
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4207
+        }
+      },
+      "rep_index": 9
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3901
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.122
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8455
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1135
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.1027
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 62.2255
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0863
+        }
+      },
+      "rep_index": 10
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6043
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7134
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7696
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0758
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7296
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 76.1526
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.3083
+        }
+      },
+      "rep_index": 11
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4173
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7866
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8971
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0953
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7339
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 50.8935
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8371
+        }
+      },
+      "rep_index": 12
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.881
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.941
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.5662
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0978
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1694
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 60.0525
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.104
+        }
+      },
+      "rep_index": 13
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2605
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5662
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.763
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0996
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.4875
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 68.6485
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.9474
+        }
+      },
+      "rep_index": 14
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.117
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1797
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6505
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0094
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.8273
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 54.5261
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.598
+        }
+      },
+      "rep_index": 15
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.437
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5774
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7382
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0547
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.1986
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 72.1978
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2069
+        }
+      },
+      "rep_index": 16
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7425
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.4135
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8411
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0953
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.6091
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 33.2276
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0043
+        }
+      },
+      "rep_index": 17
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3136
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8193
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7488
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0205
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.5055
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 52.3067
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.9833
+        }
+      },
+      "rep_index": 18
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0091
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6837
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7148
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0469
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.4809
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 49.3748
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.2307
+        }
+      },
+      "rep_index": 19
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.4586
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6548
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.752
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 6.9979
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 72.4453
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2577
+        }
+      },
+      "rep_index": 20
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.586
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.4739
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8718
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0354
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6027
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 64.4151
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8913
+        }
+      },
+      "rep_index": 21
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2938
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8602
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7734
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0774
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.6945
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 43.7639
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3316
+        }
+      },
+      "rep_index": 22
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9763
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1891
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.806
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0489
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.6638
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 64.4532
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2061
+        }
+      },
+      "rep_index": 23
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4351
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7475
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.802
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1116
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1452
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 67.14
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0728
+        }
+      },
+      "rep_index": 24
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6063
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.449
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6558
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1428
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.4607
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 63.8141
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0995
+        }
+      },
+      "rep_index": 25
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2007
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3135
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9093
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0401
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.0496
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 59.9535
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1682
+        }
+      },
+      "rep_index": 26
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1136
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8211
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6469
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.3141
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 51.8782
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4582
+        }
+      },
+      "rep_index": 27
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9294
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8325
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7709
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.035
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.9748
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 88.7187
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8102
+        }
+      },
+      "rep_index": 28
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1141
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.0786
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.795
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0657
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.1064
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 96.8423
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.633
+        }
+      },
+      "rep_index": 29
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed": 0
+}

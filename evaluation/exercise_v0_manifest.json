@@ -201,6 +201,24 @@
       "rep_signal_type": "cyclic_angle"
     },
     {
+      "camera_instruction": "Side view, chest-height, full arm visible from shoulder to wrist; keep elbow pinned to torso.",
+      "camera_view_hint": "side",
+      "category": "vertical_pull",
+      "display_name": "Dumbbell Bicep Curl",
+      "exercise_id": "dumbbell_bicep_curl",
+      "framing": "upper_body",
+      "primary_joints": [
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist"
+      ],
+      "rep_signal_joint": "right_elbow",
+      "rep_signal_type": "cyclic_angle"
+    },
+    {
       "camera_instruction": "Side view, hip-height, pan if needed so full body stays in frame across steps.",
       "camera_view_hint": "side",
       "category": "lunge",
@@ -255,11 +273,11 @@
       "rep_signal_type": "gait_cadence"
     }
   ],
-  "manifest_version": "v0.1.0",
+  "manifest_version": "v0.2.0",
   "reserved_exercise_tokens": [
     "mixed",
     "unknown"
   ],
   "schema_version": "1.0.0",
-  "sha256": "548d15db4c91a8d0de4422233c03382292d5db5083fc9c0179f141b47c4a642b"
+  "sha256": "6cddb9afdbfdc207fcde714e8b7cc440184feba5b7995632d5cba7aa7b607ecd"
 }

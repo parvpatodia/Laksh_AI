@@ -226,23 +226,41 @@ export default function PoseCamera({
   // ---------------------------------------------------------------------------
   return (
     <div className="flex flex-col gap-4">
-      {/* Camera viewport */}
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-surface-700 bg-black">
+      {/* Camera viewport.
+          aspect-[3/4] (portrait-ish) instead of 16:9 so a standing full body
+          fits without cropping. object-contain (not cover) so the entire
+          camera frame is visible -- judges can see exactly what the model
+          sees, including their feet.
+          On large screens we let the box grow up to ~80vh so a full standing
+          shot is comfortably visible from across a research-showcase booth. */}
+      <div className="relative w-full mx-auto aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/10]
+                      max-h-[80vh] rounded-2xl overflow-hidden border border-surface-700 bg-black">
         {/* Video */}
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           playsInline
           muted
           style={{ transform: "scaleX(-1)" }} // mirror for natural selfie view
         />
 
-        {/* Skeleton overlay */}
+        {/* Skeleton overlay (object-contain on the video means the canvas
+            must letterbox the same way; we still draw in video-pixel space
+            inside the canvas, so just match container size). */}
         <canvas
           ref={canvasRef}
-          className="pose-overlay"
+          className="pose-overlay object-contain"
           style={{ transform: "scaleX(-1)" }}
         />
+
+        {/* Framing tip overlay (only while idle; disappears once camera ready) */}
+        {cameraState === "idle" && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2
+                          bg-black/60 text-slate-300 text-xs px-3 py-1.5 rounded-full
+                          border border-surface-600 whitespace-nowrap">
+            Stand 6&#8211;10 ft back, full body in frame, ball or dumbbell in hand
+          </div>
+        )}
 
         {/* Status overlays */}
         {cameraState === "idle" && (
@@ -333,8 +351,8 @@ export default function PoseCamera({
             {isRecording
               ? "Recording — click Stop & Analyse when done"
               : landmarkerLoaded
-              ? "Pose tracking active"
-              : "Loading pose model (~3 MB)…"}
+                ? "Pose tracking active"
+                : "Loading pose model (~3 MB)…"}
           </span>
         )}
       </div>

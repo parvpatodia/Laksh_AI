@@ -161,6 +161,95 @@ export async function analyzeGym(req: GymAnalyzeRequest): Promise<AnalyzeRespons
   });
 }
 
+// ---------------------------------------------------------------------------
+// Basketball (legacy /analyze-video endpoint)
+// ---------------------------------------------------------------------------
+//
+// Basketball was built before the v1 envelope landed and still uses the
+// pre-existing /analyze-video route, which returns a richer payload
+// (Gemini-powered scout report + ChromaDB-matched NBA pro + biomech
+// numbers).  Wiring it through the v1 envelope is a post-showcase task;
+// for the demo we surface the legacy response in a dedicated component
+// so basketball users get a real canonical analysis with form coaching.
+//
+// Schema below is *partial* — only fields the BasketballReport renders.
+// Server returns more (oracle_caveat, witty_catchphrase, etc.) which we
+// allow via index signatures rather than enumerating exhaustively.
+
+export interface BasketballMetricStatus {
+  source?: string;
+  confidence?: number;
+}
+
+export interface MatchedPro {
+  name?: string;
+  team?: string;
+  headshot?: string | null;
+  [k: string]: unknown;
+}
+
+export interface BasketballAthleteFeedback {
+  title?: string;
+  feedback?: string;
+  drill?: string;
+  [k: string]: unknown;
+}
+
+export interface BasketballAnalyzeResponse {
+  athlete_name?: string;
+  sport?: string;
+  confidence?: number;                 // 0-100
+  analysis_reliability_score?: number; // 0-100
+  release_velocity_mps?: number | null;
+  shot_arc_deg?: number | null;
+  knee_angle?: number | null;
+  elbow_angle?: number | null;
+  kinetic_sync_ms?: number | null;
+  fluidity_score?: number | null;
+  hip_rotation_deg?: number | null;
+  balance_index?: number | null;
+  scout_report?: string;
+  athlete_feedback?: BasketballAthleteFeedback[];
+  witty_catchphrase?: string;
+  matched_pro?: MatchedPro | null;
+  oracle_caveat?: string | null;
+  oracle_match_degraded?: boolean;
+  kinematic_deltas?: Record<string, number | string>;
+  metric_status?: Record<string, BasketballMetricStatus>;
+  validation_warnings?: string[];
+  video_quality_label?: string;
+  video_quality_score?: number;
+  api_schema_version?: string;
+  [k: string]: unknown;
+}
+
+/**
+ * POST /analyze-video  (legacy basketball pipeline)
+ *
+ * Slower than the gym pipeline (~20-40 s) because it runs Gemini 2.5
+ * Flash on the clip in addition to MediaPipe + biomech.  Returns a
+ * scout report, 3 athlete-feedback bullets, and an NBA-pro match.
+ */
+export async function analyzeBasketballVideo(
+  blob: Blob,
+  athleteName: string | null = null,
+  mimeType = "video/webm",
+): Promise<BasketballAnalyzeResponse> {
+  const form = new FormData();
+  form.append("video", new File([blob], "clip.webm", { type: mimeType }));
+  form.append("sport", "basketball");
+  if (athleteName && athleteName.trim()) {
+    form.append("athlete_name", athleteName.trim());
+  }
+  const url = `${apiBase()}/analyze-video`;
+  const res = await fetch(url, { method: "POST", body: form });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`API ${res.status} /analyze-video: ${text}`);
+  }
+  return res.json() as Promise<BasketballAnalyzeResponse>;
+}
+
 /**
  * POST /v1/analyze/gym/video  (Day 7+8)
  *

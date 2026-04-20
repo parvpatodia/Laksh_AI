@@ -33,7 +33,10 @@ from typing import Any
 from app.pose.canonical import CanonicalJointName
 
 EXERCISE_V0_SCHEMA_VERSION = "1.0.0"
-EXERCISE_V0_MANIFEST_VERSION = "v0.1.0"
+# v0.2.0 (2026-04-19): added `dumbbell_bicep_curl` (cyclic_angle on right_elbow,
+# vertical_pull category). Demo-driven addition: most natural single-DB
+# motion judges reach for. Schema is unchanged; only the registry list grew.
+EXERCISE_V0_MANIFEST_VERSION = "v0.2.0"
 
 ALLOWED_CATEGORIES: frozenset[str] = frozenset(
     {
@@ -270,6 +273,24 @@ _EXERCISE_LIST: tuple[ExerciseV0, ...] = (
         + (_cj(CanonicalJointName.LEFT_HIP), _cj(CanonicalJointName.RIGHT_HIP)),
         framing="full_body",
         camera_instruction="Side view, ground-level, shoulder-to-ankle in frame for a straight body check.",
+    ),
+    ExerciseV0(
+        exercise_id="dumbbell_bicep_curl",
+        display_name="Dumbbell Bicep Curl",
+        # Single-joint elbow flexion against gravity. Closest-fit category in
+        # ALLOWED_CATEGORIES is `vertical_pull` (the curl IS a vertical pull
+        # of the load via elbow flexion). Not a perfect taxonomy match but
+        # avoids inventing a new category ahead of empirical justification.
+        category="vertical_pull",
+        camera_view_hint="side",
+        rep_signal_type="cyclic_angle",
+        rep_signal_joint=_cj(CanonicalJointName.RIGHT_ELBOW),
+        # Reuse the existing shoulder/elbow/wrist primary-joint set. The
+        # rep_features extractor already knows the right_elbow triplet
+        # (right_shoulder, right_elbow, right_wrist) so no signal change.
+        primary_joints=_SHOULDERS_ELBOWS_WRISTS,
+        framing="upper_body",
+        camera_instruction="Side view, chest-height, full arm visible from shoulder to wrist; keep elbow pinned to torso.",
     ),
     ExerciseV0(
         exercise_id="walking_lunge",

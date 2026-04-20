@@ -1,0 +1,1868 @@
+{
+  "exercise_id": "pull_up",
+  "n_reps": 30,
+  "reps": [
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9875
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.661
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8513
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0722
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.4203
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 154.4908
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4781
+        }
+      },
+      "rep_index": 0
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5457
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6542
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8311
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0865
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3959
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 95.9235
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8999
+        }
+      },
+      "rep_index": 1
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1185
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4367
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6485
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8309
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 90.9513
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8119
+        }
+      },
+      "rep_index": 2
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6215
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0048
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8084
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0572
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.387
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 133.6316
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2153
+        }
+      },
+      "rep_index": 3
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1349
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8807
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8002
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1561
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1007
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 121.3378
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3773
+        }
+      },
+      "rep_index": 4
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8863
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5607
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.811
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9242
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 101.9762
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5123
+        }
+      },
+      "rep_index": 5
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1298
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1824
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7799
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0192
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6855
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 113.3502
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4678
+        }
+      },
+      "rep_index": 6
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6247
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9532
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7377
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7639
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 74.5606
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5552
+        }
+      },
+      "rep_index": 7
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1599
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8453
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8246
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0694
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0587
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 113.5964
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.1849
+        }
+      },
+      "rep_index": 8
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0478
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1189
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6715
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0528
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6441
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 128.2698
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5405
+        }
+      },
+      "rep_index": 9
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8338
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.5225
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7869
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0763
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5152
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 116.1637
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4627
+        }
+      },
+      "rep_index": 10
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6869
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0576
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.747
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0872
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8591
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 111.2789
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.9446
+        }
+      },
+      "rep_index": 11
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.6755
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0847
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8662
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5511
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 100.2037
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4521
+        }
+      },
+      "rep_index": 12
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.798
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0767
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7672
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0862
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.9572
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 130.2438
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.0726
+        }
+      },
+      "rep_index": 13
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0995
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4078
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7628
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0866
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1316
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 95.1044
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4419
+        }
+      },
+      "rep_index": 14
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.3939
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6375
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7726
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0229
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0276
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 131.9289
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5236
+        }
+      },
+      "rep_index": 15
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2106
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.076
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8397
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0969
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1959
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 117.2501
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.8198
+        }
+      },
+      "rep_index": 16
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7344
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8744
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8773
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0652
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.129
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 101.7453
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2438
+        }
+      },
+      "rep_index": 17
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1308
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1936
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8035
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0774
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7436
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 97.2803
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4748
+        }
+      },
+      "rep_index": 18
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2682
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6632
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8304
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0695
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5548
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 84.7241
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2341
+        }
+      },
+      "rep_index": 19
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0642
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0444
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8447
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0256
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6866
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 96.7825
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.9009
+        }
+      },
+      "rep_index": 20
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8289
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6083
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7828
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0554
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3059
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 125.8927
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3486
+        }
+      },
+      "rep_index": 21
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4849
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7303
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8186
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0873
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8976
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 98.7487
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1899
+        }
+      },
+      "rep_index": 22
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9956
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.94
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8744
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0779
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5691
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 105.0165
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.7249
+        }
+      },
+      "rep_index": 23
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9574
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2001
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7817
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9952
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 83.303
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.9525
+        }
+      },
+      "rep_index": 24
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8203
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2372
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7879
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0198
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.6595
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 133.7453
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.521
+        }
+      },
+      "rep_index": 25
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2383
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0459
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7543
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1529
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8189
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 118.1013
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5015
+        }
+      },
+      "rep_index": 26
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2759
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5995
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6938
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0669
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3325
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 113.2116
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1554
+        }
+      },
+      "rep_index": 27
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6101
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0419
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7494
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1233
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2297
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 124.8797
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1797
+        }
+      },
+      "rep_index": 28
+    },
+    {
+      "exercise_id": "pull_up",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7641
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8761
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.839
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0843
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1404
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 76.8342
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8568
+        }
+      },
+      "rep_index": 29
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed": 0
+}

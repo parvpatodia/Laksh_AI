@@ -1,0 +1,1868 @@
+{
+  "exercise_id": "barbell_row",
+  "n_reps": 30,
+  "reps": [
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1182
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8082
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8261
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1467
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8172
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 78.5393
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.148
+        }
+      },
+      "rep_index": 0
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8671
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8781
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8657
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.022
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7936
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 103.2043
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.128
+        }
+      },
+      "rep_index": 1
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0064
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.5613
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6283
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0288
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.8829
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 46.7968
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.1483
+        }
+      },
+      "rep_index": 2
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0657
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.699
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6972
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.0792
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 101.0697
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3421
+        }
+      },
+      "rep_index": 3
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.4362
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7715
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7714
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0316
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.5068
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 75.1275
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5232
+        }
+      },
+      "rep_index": 4
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4143
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.4595
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7116
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0935
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.5047
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 72.9736
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.7253
+        }
+      },
+      "rep_index": 5
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7848
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2407
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7763
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1002
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.469
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 58.6787
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4368
+        }
+      },
+      "rep_index": 6
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8163
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2371
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7188
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1344
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6947
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 68.8595
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4537
+        }
+      },
+      "rep_index": 7
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.825
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1571
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7493
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.031
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.773
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 63.7046
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2675
+        }
+      },
+      "rep_index": 8
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9527
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2464
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6926
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0407
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1961
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 84.5688
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.4039
+        }
+      },
+      "rep_index": 9
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1265
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8521
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8204
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.058
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9755
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 83.3674
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5615
+        }
+      },
+      "rep_index": 10
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.6144
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3687
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.5913
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0742
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6954
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 92.845
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2249
+        }
+      },
+      "rep_index": 11
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0462
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.681
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6914
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7857
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 60.9336
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6191
+        }
+      },
+      "rep_index": 12
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9664
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4566
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6962
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0769
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3934
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 68.4745
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.5358
+        }
+      },
+      "rep_index": 13
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0364
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3152
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.78
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0508
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.6954
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 60.3502
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6547
+        }
+      },
+      "rep_index": 14
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3045
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7124
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.797
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0587
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8901
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 61.2088
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.8297
+        }
+      },
+      "rep_index": 15
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.5418
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3387
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7533
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1206
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.3438
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 43.305
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.3714
+        }
+      },
+      "rep_index": 16
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3573
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0486
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8096
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0624
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.9041
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 82.3499
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.9551
+        }
+      },
+      "rep_index": 17
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9706
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6756
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8555
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1468
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6648
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 54.9029
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0223
+        }
+      },
+      "rep_index": 18
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5464
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8938
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8234
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0347
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.0722
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 102.4821
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.5098
+        }
+      },
+      "rep_index": 19
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0417
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6856
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7502
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0301
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7483
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 80.4711
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2396
+        }
+      },
+      "rep_index": 20
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5259
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9318
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7133
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.202
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.8466
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 60.9974
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.8132
+        }
+      },
+      "rep_index": 21
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8781
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2401
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8078
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0212
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8711
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 108.5932
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1812
+        }
+      },
+      "rep_index": 22
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1469
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5078
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6801
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0639
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.7274
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 53.8806
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6545
+        }
+      },
+      "rep_index": 23
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9845
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8305
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8224
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.089
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8685
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 98.6522
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.768
+        }
+      },
+      "rep_index": 24
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9911
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6455
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9813
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0496
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.3259
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 116.8829
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6842
+        }
+      },
+      "rep_index": 25
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0906
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6808
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7692
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0724
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5423
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 86.525
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.168
+        }
+      },
+      "rep_index": 26
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7436
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4524
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.766
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0462
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6992
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 63.0797
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.9269
+        }
+      },
+      "rep_index": 27
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1227
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8622
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6224
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0733
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1272
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 51.4222
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6178
+        }
+      },
+      "rep_index": 28
+    },
+    {
+      "exercise_id": "barbell_row",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2088
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6332
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8149
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0659
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.8117
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "deg",
+          "value": 78.112
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 2.0711
+        }
+      },
+      "rep_index": 29
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed": 0
+}
