@@ -43,12 +43,13 @@ EXPOSE 8000
 # Single gunicorn worker with uvicorn kernel.
 # -w 1: one process on the 1 GB Fly shared-cpu-1x machine (MediaPipe is not
 #        safely reentrant across workers; keep at 1).
-# --timeout 120: long enough for a 5 s clip round-trip including MediaPipe
-#                VIDEO decode on cold frames.
+# --timeout 300: gym/basketball video analyze can exceed 120s (MediaPipe + FFmpeg +
+#                occasional codec edge cases). Hitting the default 120s kills the worker
+#                mid-request (see Fly logs: WORKER TIMEOUT).
 CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", \
     "-w", "1", \
     "-b", "0.0.0.0:8000", \
-    "--timeout", "120", \
+    "--timeout", "300", \
     "--access-logfile", "-", \
     "--error-logfile", "-", \
     "app.main:app"]

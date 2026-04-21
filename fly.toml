@@ -39,13 +39,23 @@ primary_region = "iad"
     hard_limit = 25
     soft_limit = 20
 
+  # Allow long-running POST /v1/analyze/* without Fly Proxy closing the connection (default
+  # idle window is shorter; gunicorn timeout is 300s).
+  [http_service.http_options]
+    idle_timeout = 360
+
+# Cold start: gunicorn boots quickly but the worker imports TensorFlow/MediaPipe and
+# runs lifespan (ChromaDB) before /v1/health can succeed — often 30–90s on shared-cpu.
+# A short grace_period marks the machine unhealthy while still starting; the proxy then
+# returns "failed to connect" / load-balancing errors (browser: Failed to fetch).
+# Fly caps this at 1 minute (`fly config validate`); 60s is the effective max.
 [[http_service.checks]]
-  grace_period = "15s"
+  grace_period = "60s"
   interval = "30s"
   method = "GET"
   path = "/v1/health"
   protocol = "http"
-  timeout = "10s"
+  timeout = "15s"
 
 [[vm]]
   size = "shared-cpu-1x"

@@ -1,8 +1,12 @@
 /**
  * Typed client for the Laksh.ai v1 backend API.
  *
- * All functions read NEXT_PUBLIC_API_BASE from the environment so the same
- * build works against localhost:8000 (dev) and the Fly.io production URL.
+ * **Production browser → Fly directly** (`https://laksh-api.fly.dev` or
+ * `NEXT_PUBLIC_API_BASE`). We do **not** use same-origin `/api/*` rewrites on Vercel:
+ * Deployment Protection intercepts those routes at the edge and returns 401 HTML before
+ * Next.js runs. Cross-origin calls are allowed via CORS + CORP on FastAPI (see app/main.py).
+ *
+ * **Local dev**: `NEXT_PUBLIC_API_BASE` or `http://localhost:8000`.
  */
 
 // ---------------------------------------------------------------------------
@@ -103,9 +107,33 @@ export interface SportInfo {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+/** Default Fly production API (baked into client bundle if env unset). */
+const PRODUCTION_API_DEFAULT = "https://laksh-api.fly.dev";
+
+/**
+ * Base URL for API calls.
+ *
+ * - **Browser, not localhost**: Fly URL (env override or PRODUCTION_API_DEFAULT).
+ * - **Browser, localhost**: `NEXT_PUBLIC_API_BASE` or :8000.
+ * - **SSR / Node** (no `window`): env or localhost for tests.
+ */
 function apiBase(): string {
-  const base = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
-  return base.replace(/\/$/, "");
+  const env = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
+  const localFallback = "http://localhost:8000";
+
+  if (typeof window === "undefined") {
+    return env || localFallback;
+  }
+
+  const isLocalhostLoopback =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+
+  if (isLocalhostLoopback) {
+    return env || localFallback;
+  }
+
+  return env || PRODUCTION_API_DEFAULT;
 }
 
 /** Browser → Fly round-trip can exceed 60s (MediaPipe + Gemini). */
@@ -130,12 +158,12 @@ async function fetchVideoAnalyze(
   } catch (e: unknown) {
     if (e instanceof Error && e.name === "AbortError") {
       throw new Error(
-        `${label}: timed out after ${ANALYZE_VIDEO_TIMEOUT_MS / 1000}s. Is ${base} up?`,
+        `${label}: timed out after ${ANALYZE_VIDEO_TIMEOUT_MS / 1000}s. Backend: ${base}`,
       );
     }
     if (e instanceof TypeError) {
       throw new Error(
-        `${label}: ${e.message} — cannot reach API at ${base}. Check NEXT_PUBLIC_API_BASE (Vercel) and CORS on the Fly app.`,
+        `${label}: ${e.message} — cannot reach ${base}. Check Fly is up; CORS on app/main.py; no COEP on next.config.js.`,
       );
     }
     throw e;
@@ -144,15 +172,33 @@ async function fetchVideoAnalyze(
   }
 }
 
+function formatFailedApiBody(status: number, pathLabel: string, text: string): string {
+  if (status === 401 && (text.includes("Vercel Authentication") || text.includes("Authentication Required"))) {
+    return (
+      `${status} ${pathLabel}: Vercel Deployment Protection returned HTML (not the Fly API). ` +
+      `The app must call https://laksh-api.fly.dev directly — see apiBase() in lib/api.ts. ` +
+      `Or disable protection: Vercel → Project → Settings → Deployment Protection.`
+    );
+  }
+  const t = text.trim();
+  if (t.startsWith("<!") || t.startsWith("<html")) {
+    return `${status} ${pathLabel}: non-JSON HTML response (${t.length} bytes). First line: ${t.split("\n")[0]?.slice(0, 120)}`;
+  }
+  const snippet = text.length > 1200 ? `${text.slice(0, 1200)}…` : text;
+  return `${status} ${pathLabel}: ${snippet}`;
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${apiBase()}${path}`;
   const res = await fetch(url, {
+    mode: "cors",
+    credentials: "omit",
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     ...init,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(`API ${res.status} ${path}: ${text}`);
+    throw new Error(`API ${formatFailedApiBody(res.status, path, text)}`);
   }
   return res.json() as Promise<T>;
 }
@@ -281,7 +327,7 @@ export async function analyzeBasketballVideo(
   const res = await fetchVideoAnalyze(url, form, "Basketball analyze");
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(`API ${res.status} /analyze-video: ${text}`);
+    throw new Error(`API ${formatFailedApiBody(res.status, "/analyze-video", text)}`);
   }
   return res.json() as Promise<BasketballAnalyzeResponse>;
 }
@@ -316,7 +362,7 @@ export async function analyzeGymVideo(
   const res = await fetchVideoAnalyze(url, form, "Gym analyze");
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(`API ${res.status} /v1/analyze/gym/video: ${text}`);
+    throw new Error(`API ${formatFailedApiBody(res.status, "/v1/analyze/gym/video", text)}`);
   }
   return res.json() as Promise<AnalyzeResponse>;
 }

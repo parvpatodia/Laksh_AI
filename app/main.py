@@ -1,5 +1,7 @@
 import os
 import json
+import re
+import subprocess
 import time
 import uuid
 import base64
@@ -16,7 +18,8 @@ load_dotenv()
 
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
@@ -170,6 +173,19 @@ _VERCEL_PREVIEW_REGEX = (
 )
 
 app = FastAPI(lifespan=lifespan)
+
+
+class CrossOriginResourcePolicyMiddleware(BaseHTTPMiddleware):
+    """Public API responses must be embeddable from COEP pages if we ever re-enable COEP on the web app."""
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
+        return response
+
+
+# CORP outermost, then CORS — so preflight and JSON/video responses all get ACAO + CORP.
+app.add_middleware(CrossOriginResourcePolicyMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
@@ -184,7 +200,9 @@ app.add_middleware(
 # cycle while the v2-adapter for basketball lands.
 app.include_router(v1_router)
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+# Fly often sets GOOGLE_API_KEY; local dev may use GEMINI_API_KEY — GenAI client needs one.
+_genai_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+client = genai.Client(api_key=_genai_key)
 
 _DASHBOARD = _REPO_ROOT / "static" / "dashboard.html"
 
@@ -272,7 +290,9 @@ def _init_chroma():
 
 @app.get("/")
 def root(request: Request):
-    """Browser → legacy dashboard HTML; API clients → JSON discovery (no SPA confusion)."""
+    """API host: browsers → OpenAPI docs; optional legacy SPA via ?legacy_ui=1; JSON via Accept or ?format=json."""
+    if request.query_params.get("legacy_ui") == "1" and _DASHBOARD.exists():
+        return FileResponse(_DASHBOARD)
     accept = (request.headers.get("accept") or "").lower()
     if "application/json" in accept or request.query_params.get("format") == "json":
         return {
@@ -281,9 +301,10 @@ def root(request: Request):
             "openapi": "/docs",
             "legacy_basketball_analyze": "POST /analyze-video",
             "gym_canonical_video": "POST /v1/analyze/gym/video",
-            "note": "Opening this URL in a browser shows the legacy dashboard HTML; use /docs or /v1/health for the HTTP API.",
+            "legacy_ui": "/?legacy_ui=1",
+            "note": "GET / in a browser redirects to /docs. Legacy marketing UI: add ?legacy_ui=1",
         }
-    return FileResponse(_DASHBOARD) if _DASHBOARD.exists() else {"status": "Apex Oracle Engine Active", "docs": "/docs"}
+    return RedirectResponse(url="/docs", status_code=307)
 
 
 @app.get("/api")
@@ -350,6 +371,13 @@ ORACLE_SCHEMA = {
     },
     "required": ["athlete_action", "scout_report", "athlete_feedback", "witty_catchphrase"],
 }
+
+# SDK-typed schema for GenerateContentConfig (some keys 400 if a raw dict is passed).
+try:
+    ORACLE_SCHEMA_GENAI: types.Schema | dict = types.Schema.model_validate(ORACLE_SCHEMA)
+except Exception as _schema_exc:  # noqa: BLE001
+    logger.warning("ORACLE_SCHEMA → types.Schema failed, using dict: %s", _schema_exc)
+    ORACLE_SCHEMA_GENAI = ORACLE_SCHEMA
 
 
 def _build_matched_pro(pro_name: str, player_id: Optional[int], meta: Optional[dict]) -> dict:
@@ -432,6 +460,264 @@ def _normalize_analysis(
     return out
 
 
+def _temp_video_path_and_gemini_mime(upload: UploadFile, raw: bytes) -> tuple[str, str]:
+    """Temp path extension + MIME for Gemini ``files.upload``.
+
+    The browser sends **WebM** (``video/webm``) from MediaRecorder as ``clip.webm``.
+    Writing bytes to ``*.mp4`` makes Google's upload endpoint return **400** (type mismatch).
+    """
+    ct = (upload.content_type or "").split(";")[0].strip().lower()
+    fname = (upload.filename or "").lower()
+
+    def _magic() -> tuple[str, str] | None:
+        if len(raw) >= 4 and raw[:4] == b"\x1a\x45\xdf\xa3":
+            return ".webm", "video/webm"
+        if len(raw) >= 12 and raw[4:8] == b"ftyp":
+            return ".mp4", "video/mp4"
+        return None
+
+    ext_mime: tuple[str, str] | None = None
+    if "webm" in ct or fname.endswith(".webm"):
+        ext_mime = (".webm", "video/webm")
+    elif "mp4" in ct or fname.endswith(".mp4") or fname.endswith(".m4v"):
+        ext_mime = (".mp4", "video/mp4")
+    elif "quicktime" in ct or fname.endswith(".mov"):
+        ext_mime = (".mov", "video/quicktime")
+    elif ct.startswith("video/"):
+        if "mp4" in ct or "mpeg4" in ct:
+            ext_mime = (".mp4", "video/mp4")
+        elif "webm" in ct:
+            ext_mime = (".webm", "video/webm")
+
+    if ext_mime is None:
+        ext_mime = _magic()
+    if ext_mime is None:
+        ext_mime = (".webm", "video/webm")
+
+    ext, mime = ext_mime
+    path = os.path.join(tempfile.gettempdir(), f"laksh_{uuid.uuid4().hex}{ext}")
+    return path, mime
+
+
+# Common misconfiguration: ``gemini-2.5`` is not a valid API id (must be e.g. ``gemini-2.5-flash``).
+_GEMINI_MODEL_ALIASES: dict[str, str] = {
+    "gemini-2.5": "gemini-2.5-flash",
+    "gemini-2.0": "gemini-2.0-flash",
+    "gemini-1.5": "gemini-1.5-flash",
+    "gemini-flash": "gemini-2.0-flash",
+}
+
+
+def _normalize_gemini_model_id(raw: str) -> str | None:
+    """Strip shell garbage and map shorthand ids to full model names."""
+    s = raw.strip()
+    if not s:
+        return None
+    s = re.sub(r"[^a-zA-Z0-9._-]", "", s)
+    if not s:
+        return None
+    key = s.lower()
+    if key in _GEMINI_MODEL_ALIASES:
+        canon = _GEMINI_MODEL_ALIASES[key]
+        if s != canon:
+            logger.warning("Normalized GEMINI model id %r -> %r", raw, canon)
+        return canon
+    return s
+
+
+def _oracle_gemini_models() -> list[str]:
+    """Models to try in order. AI Studio keys often allow 2.0 before 2.5.
+
+    - ``GEMINI_ORACLE_MODELS`` — comma-separated list (highest priority).
+    - ``GEMINI_ORACLE_MODEL`` — single model id.
+    - Default — ``gemini-2.0-flash`` then ``gemini-2.5-flash`` then ``gemini-1.5-flash``.
+
+    **Shell:** quote values — ``fly secrets set -a APP 'GEMINI_ORACLE_MODEL=gemini-2.0-flash'``.
+    A trailing ``;`` starts a new shell command and can corrupt secrets.
+    """
+    raw_m = (os.environ.get("GEMINI_ORACLE_MODELS") or "").strip()
+    raw_1 = (os.environ.get("GEMINI_ORACLE_MODEL") or "").strip()
+    pieces: list[str] = []
+    if raw_m:
+        pieces.extend(raw_m.split(","))
+    elif raw_1:
+        pieces.append(raw_1)
+    else:
+        pieces = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+
+    out: list[str] = []
+    for p in pieces:
+        n = _normalize_gemini_model_id(p)
+        if n:
+            out.append(n)
+    # Dedupe preserving order
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for m in out:
+        if m not in seen:
+            seen.add(m)
+            deduped.append(m)
+    return deduped if deduped else ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+
+
+def _transcode_for_gemini_upload(src_path: str) -> tuple[str, str] | None:
+    """Remux/transcode to H.264 MP4 — Gemini uploads are flaky on arbitrary WebM codecs/containers."""
+    dst = os.path.join(tempfile.gettempdir(), f"laksh_gemini_{uuid.uuid4().hex}.mp4")
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-i",
+        src_path,
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "23",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+        dst,
+    ]
+    try:
+        proc = subprocess.run(cmd, check=False, capture_output=True, timeout=180)
+        if proc.returncode != 0 or not os.path.exists(dst) or os.path.getsize(dst) < 32:
+            tail = (proc.stderr or b"").decode("utf-8", errors="replace")[-800:]
+            logger.warning("ffmpeg gemini transcode failed rc=%s stderr_tail=%s", proc.returncode, tail)
+            if os.path.exists(dst):
+                try:
+                    os.remove(dst)
+                except OSError:
+                    pass
+            return None
+        return dst, "video/mp4"
+    except Exception as exc:
+        logger.warning("ffmpeg gemini transcode exception: %s", exc)
+        if os.path.exists(dst):
+            try:
+                os.remove(dst)
+            except OSError:
+                pass
+        return None
+
+
+def _strip_json_code_fence(text: str) -> str:
+    t = text.strip()
+    m = re.match(r"^```(?:json)?\s*([\s\S]*?)\s*```$", t)
+    if m:
+        return m.group(1).strip()
+    return t
+
+
+def _extract_json_object_from_text(text: str) -> dict:
+    """Parse JSON from model output; tolerate prose or fences around the object."""
+    t = _strip_json_code_fence(text or "")
+    try:
+        out = json.loads(t)
+        if isinstance(out, dict):
+            return out
+    except json.JSONDecodeError:
+        pass
+    i = t.find("{")
+    if i < 0:
+        raise ValueError("no JSON object found in model output")
+    depth = 0
+    for j in range(i, len(t)):
+        if t[j] == "{":
+            depth += 1
+        elif t[j] == "}":
+            depth -= 1
+            if depth == 0:
+                out = json.loads(t[i : j + 1])
+                if isinstance(out, dict):
+                    return out
+                raise ValueError("top-level JSON is not an object")
+    raise ValueError("unbalanced braces in model output")
+
+
+def _generate_oracle_gemini_response(video_part, prompt: str) -> tuple[object, str]:
+    """Call Gemini with a compatibility-first attempt order.
+
+    Structured output (``response_mime_type`` + schema) often returns **400** on some keys;
+    **plain text** + prompt-level JSON instructions succeeds more often. Video attempts
+    are last (upload + multimodal cost).
+
+    *video_part* may be ``None`` if ``files.upload`` failed.
+    """
+    schema = ORACLE_SCHEMA_GENAI
+    text_fallback = (
+        f"{prompt}\n\n"
+        "Return one JSON object only (no markdown). "
+        "Include keys: athlete_action, stats, scout_report, athlete_feedback "
+        "(exactly 3 items with timestamp, category, observation), witty_catchphrase."
+    )
+    last_err: APIError | None = None
+
+    for model in _oracle_gemini_models():
+        # Order matters: plain text first (most compatible), structured modes last.
+        attempts: list[tuple[str, list, types.GenerateContentConfig]] = [
+            (
+                "text+plain",
+                [text_fallback],
+                types.GenerateContentConfig(temperature=0.2),
+            ),
+            (
+                "text+json",
+                [text_fallback],
+                types.GenerateContentConfig(response_mime_type="application/json"),
+            ),
+            (
+                "text+schema",
+                [text_fallback],
+                types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                ),
+            ),
+        ]
+        if video_part is not None:
+            contents_v = [video_part, prompt]
+            attempts.extend(
+                [
+                    (
+                        "video+json",
+                        contents_v,
+                        types.GenerateContentConfig(response_mime_type="application/json"),
+                    ),
+                    (
+                        "video+schema",
+                        contents_v,
+                        types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_schema=schema,
+                        ),
+                    ),
+                ]
+            )
+
+        for tag, contents, cfg in attempts:
+            try:
+                r = client.models.generate_content(model=model, contents=contents, config=cfg)
+                return r, f"{model}/{tag}"
+            except APIError as err:
+                last_err = err
+                logger.warning(
+                    "Gemini oracle attempt model=%s tag=%s code=%s message=%s details=%s",
+                    model,
+                    tag,
+                    err.code,
+                    getattr(err, "message", None),
+                    getattr(err, "details", None),
+                )
+    assert last_err is not None
+    raise last_err
+
+
 @app.post("/analyze-video")
 async def analyze_video(
     video: UploadFile = File(...),
@@ -441,9 +727,13 @@ async def analyze_video(
     sport: Optional[str] = Form(None),
 ):
     """Analyze video. Optional start_sec/end_sec restrict to user-selected clip (single shot)."""
-    safe_name = os.path.join(tempfile.gettempdir(), f"laksh_{uuid.uuid4()}.mp4")
+    raw = await video.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Empty video upload")
+    safe_name, gemini_mime = _temp_video_path_and_gemini_mime(video, raw)
+    extra_cleanup: list[str] = []
     with open(safe_name, "wb") as b:
-        b.write(await video.read())
+        b.write(raw)
     try:
         start_val = None
         end_val = None
@@ -578,26 +868,76 @@ CRITICAL: The `athlete_feedback` array MUST contain exactly 3 items. They must s
 REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specific or basketball-trendy line based on the matched player. Examples: "Splash zone unlocked" or "Step-back energy, Trae-style."
 """
 
+        gemini_upload_path = safe_name
+        gemini_upload_mime = gemini_mime
+        td = _transcode_for_gemini_upload(safe_name)
+        if td:
+            gemini_upload_path, gemini_upload_mime = td
+            extra_cleanup.append(gemini_upload_path)
+
+        video_file_ref = None
         try:
-            video_file = client.files.upload(file=safe_name)
-            while getattr(getattr(video_file, "state", None), "name", None) == "PROCESSING":
-                time.sleep(1)
-                video_file = client.files.get(name=video_file.name)
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[video_file, prompt],
-                config=types.GenerateContentConfig(response_mime_type="application/json", response_schema=ORACLE_SCHEMA),
+            video_file_ref = client.files.upload(
+                file=gemini_upload_path,
+                config=types.UploadFileConfig(mime_type=gemini_upload_mime),
             )
+            deadline = time.time() + 120
+            while video_file_ref is not None and time.time() < deadline:
+                st = getattr(video_file_ref, "state", None)
+                st_name = getattr(st, "name", None) if st is not None else None
+                if st_name == "ACTIVE":
+                    break
+                if st_name == "FAILED":
+                    logger.warning("Gemini file processing FAILED server-side; using text-only oracle")
+                    video_file_ref = None
+                    break
+                time.sleep(1)
+                video_file_ref = client.files.get(name=video_file_ref.name)
+            if video_file_ref is not None:
+                st = getattr(video_file_ref, "state", None)
+                if getattr(st, "name", None) != "ACTIVE":
+                    logger.warning(
+                        "Gemini file not ACTIVE after wait (state=%s); using text-only oracle",
+                        getattr(st, "name", st),
+                    )
+                    video_file_ref = None
+        except APIError as upload_err:
+            logger.warning(
+                "Gemini files.upload failed; using text-only oracle. message=%s",
+                getattr(upload_err, "message", None),
+            )
+
+        try:
+            response, oracle_mode = _generate_oracle_gemini_response(video_file_ref, prompt)
+            logger.info("Gemini oracle succeeded mode=%s", oracle_mode)
         except APIError as e:
-            status = getattr(e, "code", 503)
+            logger.error(
+                "Gemini APIError after retries: code=%s message=%s details=%s",
+                getattr(e, "code", None),
+                getattr(e, "message", None),
+                getattr(e, "details", None),
+            )
+            status = int(getattr(e, "code", 503) or 503)
             msg = "Analysis service temporarily unavailable. Please try again in a moment."
             if status == 429:
                 msg = "Rate limit exceeded. Please try again later."
+            elif status in (400, 404):
+                msg = (
+                    "Gemini request failed (400). Check: (1) use full model ids like "
+                    "gemini-2.0-flash not gemini-2.5; (2) quote secrets: "
+                    "fly secrets set -a laksh-api 'GEMINI_ORACLE_MODEL=gemini-2.0-flash'; "
+                    "(3) see fly logs for details=."
+                )
             raise HTTPException(status_code=min(status, 503), detail=msg)
-        except Exception:
+        except Exception as exc:
+            logger.exception("Gemini file upload or generate_content failed: %s", exc)
             raise HTTPException(status_code=503, detail="Analysis service error. Please try again.")
 
-        data = json.loads(response.text)
+        try:
+            data = _extract_json_object_from_text(response.text or "")
+        except (json.JSONDecodeError, ValueError) as je:
+            logger.error("Gemini JSON parse failed: %s text=%s", je, (response.text or "")[:2000])
+            raise HTTPException(status_code=502, detail="Model returned invalid JSON. Please try again.")
         data["kinematic_deltas"] = deltas
 
         out = _normalize_analysis(data, biomech, market_index, match_name, matched_pro)
@@ -674,8 +1014,12 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         out["api_schema_version"] = API_SCHEMA_VERSION
         return out
     finally:
-        if os.path.exists(safe_name):
-            os.remove(safe_name)
+        for path in {safe_name, *extra_cleanup}:
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
 
 def _placeholder_card_svg(match: str, score) -> str:

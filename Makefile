@@ -2,7 +2,17 @@
 # Use the same interpreter you install requirements into (override: make PYTHON=python3.12 …).
 PYTHON ?= python3
 
-.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report freeze-exercise-v0 verify-exercise-v0 verify-calibration-v0 print-calibration-v0 analyze-gym-clip
+.PHONY: test test-pose-core eval-model eval-bench eval-bench-strict eval-pose-gym eval-gym-validate compare-pose-ab eval-pose-ab-orchestrate eval-pose-isolation-ab check-pose-readiness check-pose-readiness-strict lint lint-fix mypy-pose scorecard-header scorecard pose-parity-report freeze-exercise-v0 verify-exercise-v0 verify-calibration-v0 print-calibration-v0 analyze-gym-clip vercel-prod fly-deploy
+
+# Next.js lives in web/ — deploy from there (or use --archive) so the CLI does not
+# upload the whole monorepo and hit "files should NOT have more than 15000 items".
+vercel-prod:
+	cd web && vercel deploy --prod --archive=tgz
+
+# Fly.io API: fly.toml + Dockerfile live at repo root. Running `fly deploy` from web/
+# fails with "missing an app name" — always deploy from the repository root.
+fly-deploy:
+	fly deploy
 
 test:
 	pytest tests/ -q

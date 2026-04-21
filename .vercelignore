@@ -1,0 +1,26 @@
+# Monorepo: Vercel only builds web/. Excluding backend + datasets keeps CLI uploads
+# under the 15k-file limit (see vercel.com/docs/cli/deploy#archive).
+app/
+evaluation/
+chroma_db/
+tests/
+scripts/
+static/
+docs/
+.claude/
+.cursor/
+.github/
+*.py
+pyproject.toml
+uv.lock
+requirements*.txt
+requirements*.lock
+Dockerfile
+fly.toml
+fly.*.toml
+orchestrator.sh
+setup-schedule.sh
+background-runner.sh
+Makefile
+HANDOFF.md
+SESSION_LOG*.md

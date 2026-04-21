@@ -48,3 +48,5 @@ END_OF_DAY.md
 URGENT.md
 ORCHESTRATOR_REVIEW.md
 SECURITY_AUDIT.md
+.vercel
+.env*.local
