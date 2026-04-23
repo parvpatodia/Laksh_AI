@@ -235,9 +235,18 @@ export const LIVE_COUNTER_DISCLAIMER =
 // Signal extraction
 // ---------------------------------------------------------------------------
 
-const SIGNAL_MIN_VISIBILITY = 0.3;
-/** Slightly lower floor for wrist-only shot signal when one arm tracks better. */
-const SIGNAL_MIN_VISIBILITY_WRIST = 0.22;
+// LITE-model calibration note (2026-04-23):
+// The browser uses MediaPipe LITE (3 MB, ~30 fps on CPU).  The LITE model's
+// per-landmark `visibility` field is poorly calibrated vs. the server-side
+// HEAVY model.  Clearly-visible joints regularly score 0.05–0.2 under LITE.
+// All visibility thresholds below are set for LITE.  If we ever switch the
+// browser to HEAVY, raise these back toward 0.4–0.5.
+
+/** Minimum per-landmark visibility for the arm chain to contribute a signal.
+ *  0.15 is the practical floor for LITE model on a laptop webcam at 720p. */
+const SIGNAL_MIN_VISIBILITY = 0.15;
+/** Slightly lower floor for wrist-only basketball signal when one arm tracks. */
+const SIGNAL_MIN_VISIBILITY_WRIST = 0.10;
 
 /**
  * Best-of-side arm-chain visibility: max(min(shoulder,elbow,wrist) left,
@@ -317,24 +326,35 @@ function frameQualityVisibility(
   }
 }
 
+/**
+ * Minimum frameQualityVisibility for a frame to count toward warm-up.
+ * Calibrated to LITE model: arm chains regularly report 0.1–0.2 even when
+ * clearly visible.  0.18 is the practical floor where arm joints are reliably
+ * detected by LITE at 30 fps on typical indoor lighting.
+ */
 function warmupVisibilityFloor(cfg: ExerciseRepConfig): number {
   if (cfg.signalKind === "vertical_wrist" || cfg.signalKind === "elbow_angle") {
-    return 0.32;
+    return 0.18; // LITE model arm chain floor (was 0.32 for HEAVY)
   }
   if (cfg.signalKind === "hip_angle") {
-    return 0.34;
+    return 0.20; // LITE model hip-hinge floor
   }
-  return 0.4;
+  return 0.25; // full-body floor (squats/deadlifts)
 }
 
+/**
+ * Minimum frameQualityVisibility to accept a completed rep.
+ * Lower than warmup floor: we can complete a rep started during good
+ * visibility even if one or two frames had lower quality.
+ */
 function validateVisibilityFloor(cfg: ExerciseRepConfig): number {
   if (cfg.signalKind === "vertical_wrist" || cfg.signalKind === "elbow_angle") {
-    return 0.26;
+    return 0.13; // LITE model arm chain floor (was 0.26)
   }
   if (cfg.signalKind === "hip_angle") {
-    return 0.3;
+    return 0.15;
   }
-  return 0.4;
+  return 0.20;
 }
 
 /**
@@ -609,8 +629,9 @@ function buildCompletedRep(
 
   // A rep that PASSED gating is conservatively "valid" on duration /
   // amplitude.  Visibility status reflects per-rep min visibility.
+  // Thresholds are calibrated to LITE model range (0.1–0.3 typical).
   const visStatus: GhostField["status"] =
-    repVis >= 0.6 ? "valid" : repVis >= 0.4 ? "degraded" : "unknown";
+    repVis >= 0.28 ? "valid" : repVis >= 0.14 ? "degraded" : "unknown";
 
   return {
     rep_index: rep.rep_index,

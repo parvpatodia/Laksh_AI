@@ -76,12 +76,15 @@ export default function GhostMetricsPanel({
 
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-        Live metrics
-        <span className="chip-preview text-xs px-1.5 py-0.5 rounded font-normal">
-          realtime_preview
+      <h2 className="text-base font-semibold text-slate-200 mb-1 flex items-center gap-2">
+        Live Tracking
+        <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/15
+                         text-brand-400 border border-brand-500/30 text-[10px] px-2 py-0.5 font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
+          Real-time
         </span>
       </h2>
+      <p className="text-xs text-slate-500 mb-4">Live estimates — final report uses stricter video analysis</p>
 
       {!active ? (
         <p className="text-xs text-slate-600">Start camera to see live metrics.</p>
@@ -158,7 +161,7 @@ export default function GhostMetricsPanel({
                 format={(v) => v.toFixed(2)}
               />
               <FieldRow
-                label="Tracking quality"
+                label="Joints tracked"
                 wire="min_visibility"
                 f={lastRep.min_visibility}
                 format={(v) => `${(v * 100).toFixed(0)}%`}
