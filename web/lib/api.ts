@@ -136,9 +136,11 @@ function apiBase(): string {
   return env || PRODUCTION_API_DEFAULT;
 }
 
-/** Browser → Fly round-trip. MediaPipe + Gemini upload run in parallel on backend (~105s).
- *  250s gives comfortable headroom under gunicorn's 300s worker timeout. */
-const ANALYZE_VIDEO_TIMEOUT_MS = 250_000;
+/** Browser -> Fly round-trip.
+ *  Backend: MediaPipe Heavy (~45-60s) + text-only Gemini (~10-15s) = ~60-80s p50.
+ *  Backend hard timeout is 150s (returns HTTP 504 before this fires).
+ *  180s client timeout gives headroom above the 150s backend limit. */
+const ANALYZE_VIDEO_TIMEOUT_MS = 180_000;
 
 async function fetchVideoAnalyze(
   url: string,

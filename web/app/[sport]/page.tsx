@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * /basketball   -> capture + analysis page for jump shot
- * /gym          -> exercise picker, then capture + analysis
+ * /basketball  -> jump shot capture + analysis page
+ * /gym         -> exercise picker, then capture + analysis
  *
- * Both sports share PoseCamera, repCounter, and GhostMetricsPanel.
+ * TV-compatible: max-w-screen-2xl container, xl/2xl responsive grid.
  */
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -37,16 +37,15 @@ import FormInsights from "@/components/FormInsights";
 const PoseCamera = dynamic(() => import("@/components/PoseCamera"), {
   ssr: false,
   loading: () => (
-    <div className="w-full aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/10] max-h-[80vh]
-                    rounded-2xl border border-surface-700 bg-surface-900 flex items-center justify-center">
+    <div className="w-full aspect-video max-h-[75vh] rounded-2xl border border-surface-700
+                    bg-surface-850 flex items-center justify-center">
       <p className="text-sm text-slate-600">Loading camera...</p>
     </div>
   ),
 });
 
 // ---------------------------------------------------------------------------
-// Exercise registry
-// IDs must match app/gym/exercises_v0.py exactly.
+// Exercise registry -- IDs must match app/gym/exercises_v0.py exactly.
 // ---------------------------------------------------------------------------
 
 const GYM_EXERCISES: {
@@ -203,8 +202,6 @@ function SportPageInner() {
   const [preflightOk, setPreflightOk] = useState<boolean | null>(null);
   const [preflightHint, setPreflightHint] = useState<string | null>(null);
 
-  // IMPORTANT: do NOT add repCount to deps — it would recreate this callback
-  // on every rep and tear down the RAF loop, causing missed reps.
   const handleLandmarks = useCallback(
     (landmarks: NormalizedLandmark[], ts: number) => {
       if (!exerciseId) return;
@@ -322,63 +319,68 @@ function SportPageInner() {
   // ---------------------------------------------------------------------------
   if (sport === "gym" && !exerciseId) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        <div className="mb-8">
-          <a href="/" className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors mb-6">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Home
-          </a>
-          <h1 className="text-2xl font-bold text-slate-100 mt-2 mb-1">Choose an exercise</h1>
-          <p className="text-sm text-slate-500">
+      <div className="max-w-screen-2xl mx-auto px-6 xl:px-16 py-10">
+
+        {/* Back link */}
+        <a href="/"
+           className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500
+                      hover:text-slate-300 transition-colors mb-8">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Home
+        </a>
+
+        <div className="mb-10">
+          <h1 className="text-3xl xl:text-4xl font-black text-white mb-2">Choose an exercise</h1>
+          <p className="text-slate-500 text-sm">
             12 compound movements. Select one to begin live tracking and analysis.
           </p>
         </div>
 
-        {CATEGORIES.map((cat) => {
-          const exercises = GYM_EXERCISES.filter((e) => e.category === cat);
-          return (
-            <div key={cat} className="mb-6">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                {cat}
-              </p>
-              <div className="space-y-1.5">
-                {exercises.map((ex) => (
-                  <button
-                    key={ex.id}
-                    onClick={() => router.push(`/gym?exercise=${ex.id}`)}
-                    className="w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3
-                               flex items-center justify-between gap-4
-                               hover:border-brand-500/50 hover:bg-surface-700/40
-                               transition-all duration-150 group text-left"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-slate-200 group-hover:text-slate-100 mb-0.5">
-                        {ex.label}
-                      </p>
-                      <p className="text-xs text-slate-500">{ex.tip}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {ex.dumbbell && (
-                        <span className="text-[10px] font-semibold text-brand-400 border border-brand-500/30
-                                         bg-brand-500/10 rounded px-1.5 py-0.5">
-                          DB
-                        </span>
-                      )}
-                      <svg className="w-4 h-4 text-slate-600 group-hover:text-brand-500 transition-colors"
-                           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </button>
-                ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+          {CATEGORIES.map((cat) => {
+            const exercises = GYM_EXERCISES.filter((e) => e.category === cat);
+            return (
+              <div key={cat}>
+                <p className="label-section mb-3">{cat}</p>
+                <div className="space-y-2">
+                  {exercises.map((ex) => (
+                    <button
+                      key={ex.id}
+                      onClick={() => router.push(`/gym?exercise=${ex.id}`)}
+                      className="w-full rounded-xl border border-surface-700 bg-surface-800 px-5 py-4
+                                 flex items-center justify-between gap-4
+                                 hover:border-brand-500/50 hover:bg-surface-750
+                                 transition-all duration-150 group text-left"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-200 group-hover:text-white mb-0.5">
+                          {ex.label}
+                        </p>
+                        <p className="text-xs text-slate-500 leading-snug">{ex.tip}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {ex.dumbbell && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-brand-400
+                                           border border-brand-500/40 bg-brand-500/10 rounded px-1.5 py-0.5">
+                            DB
+                          </span>
+                        )}
+                        <svg className="w-4 h-4 text-slate-600 group-hover:text-brand-500 transition-colors"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
 
-        <p className="text-xs text-slate-600 mt-2">
+        <p className="text-xs text-slate-600 mt-6">
           DB = works with a single pair of dumbbells, no rack required.
         </p>
       </div>
@@ -389,7 +391,7 @@ function SportPageInner() {
     return (
       <div className="max-w-2xl mx-auto px-6 py-24 text-center">
         <p className="text-slate-400 mb-3">
-          &ldquo;{exerciseId}&rdquo; is not supported for live tracking.
+          &ldquo;{exerciseId}&rdquo; is not yet supported for live tracking.
         </p>
         <a href="/gym" className="inline-block text-brand-500 text-sm hover:underline">
           Back to exercise list
@@ -407,36 +409,34 @@ function SportPageInner() {
   // Main capture + analysis page
   // ---------------------------------------------------------------------------
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-screen-2xl mx-auto px-6 xl:px-16 py-8 xl:py-10">
 
       {/* Breadcrumb */}
-      <nav className="mb-5 flex items-center gap-2 text-xs text-slate-500">
-        <a href="/" className="hover:text-slate-300 transition-colors">Home</a>
-        <span className="text-slate-700">/</span>
+      <nav className="mb-6 flex items-center gap-2 text-xs text-slate-600">
+        <a href="/" className="hover:text-slate-300 transition-colors font-medium">Home</a>
+        <span className="text-surface-600">/</span>
         {sport === "gym" && exerciseId ? (
           <>
             <a href="/gym" className="hover:text-slate-300 transition-colors">Gym</a>
-            <span className="text-slate-700">/</span>
-            <span className="text-slate-300">{exerciseLabel}</span>
+            <span className="text-surface-600">/</span>
+            <span className="text-slate-400 font-medium">{exerciseLabel}</span>
           </>
         ) : (
-          <span className="text-slate-300">{sportLabel}</span>
+          <span className="text-slate-400 font-medium">{sportLabel}</span>
         )}
       </nav>
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5">
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">{exerciseLabel}</h1>
-          <p className="text-xs text-slate-500 mt-0.5 uppercase tracking-wide">
-            {sportLabel} analysis
-          </p>
+          <h1 className="text-2xl xl:text-3xl font-black text-white leading-tight">{exerciseLabel}</h1>
+          <p className="label-section mt-1">{sportLabel} analysis</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {(capturedBlob || haveCanonicalResult) && (
             <button
               onClick={resetAll}
-              className="px-3.5 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200
+              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white
                          border border-surface-700 hover:border-surface-600 transition-all"
             >
               Start over
@@ -445,10 +445,10 @@ function SportPageInner() {
           {!capturedBlob && !haveCanonicalResult && (
             <button
               onClick={() => { setCameraError(null); setCameraActive((v) => !v); }}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
                 ${cameraActive
                   ? "bg-surface-700 text-slate-300 hover:bg-surface-600 border border-surface-600"
-                  : "bg-brand-500 text-white hover:bg-brand-600 shadow-lg shadow-brand-500/20"}`}
+                  : "bg-brand-500 text-white hover:bg-brand-400 shadow-lg shadow-brand-500/25"}`}
             >
               {cameraActive ? "Stop camera" : "Start camera"}
             </button>
@@ -458,8 +458,14 @@ function SportPageInner() {
 
       {/* Camera setup hint */}
       {!capturedBlob && !haveCanonicalResult && (
-        <div className="mb-4 rounded-lg border-l-2 border-brand-500/60 bg-surface-800/60 pl-4 pr-4 py-3 flex items-start gap-3">
-          <div className="min-w-0">
+        <div className="mb-5 rounded-xl border-l-2 border-brand-500/60 bg-surface-800/70
+                        pl-4 pr-5 py-3.5 flex items-start gap-3">
+          <svg className="w-4 h-4 text-brand-500/70 shrink-0 mt-0.5" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M15 10l4.55-2.55A1 1 0 0121 8.39V15.6a1 1 0 01-1.45.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+          </svg>
+          <div>
             <span className="text-xs font-semibold text-slate-300">Camera setup: </span>
             <span className="text-xs text-slate-400">
               {sport === "gym"
@@ -475,10 +481,11 @@ function SportPageInner() {
 
       {/* Camera error */}
       {cameraError && (
-        <div className="mb-4 rounded-lg border border-rose-700/50 bg-rose-900/15 px-4 py-3
-                        flex items-center gap-2 text-sm text-rose-300">
+        <div className="mb-5 rounded-xl border border-rose-700/50 bg-rose-900/15 px-4 py-3
+                        flex items-center gap-2.5 text-sm text-rose-300">
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           {cameraError}
         </div>
@@ -486,19 +493,21 @@ function SportPageInner() {
 
       {/* Pre-flight quality warning */}
       {cameraActive && preflightOk === false && preflightHint && (
-        <div className="mb-4 rounded-lg border border-amber-600/40 bg-amber-900/10 px-4 py-3
+        <div className="mb-5 rounded-xl border border-amber-600/40 bg-amber-900/10 px-4 py-3
                         flex items-start gap-3">
-          <svg className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          <svg className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <div>
-            <p className="text-sm font-medium text-amber-200">Tracking quality low</p>
+            <p className="text-sm font-semibold text-amber-200">Tracking quality low</p>
             <p className="text-xs text-amber-300/70 mt-0.5">{preflightHint}</p>
           </div>
         </div>
       )}
 
-      {/* Camera viewport or captured clip placeholder */}
+      {/* Camera viewport or clip placeholder */}
       {!capturedBlob && !haveCanonicalResult ? (
         <PoseCamera
           active={cameraActive}
@@ -508,21 +517,21 @@ function SportPageInner() {
           maxDurationS={15}
         />
       ) : !haveCanonicalResult ? (
-        <div className="w-full aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/10] max-h-[80vh]
-                        rounded-2xl border border-emerald-700/30 bg-surface-800
-                        flex flex-col items-center justify-center gap-3 mb-2">
-          <div className="rounded-full border border-emerald-700/50 bg-emerald-900/20 p-4">
-            <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-full aspect-video max-h-[60vh] rounded-2xl border border-emerald-700/30
+                        bg-surface-800 flex flex-col items-center justify-center gap-4 mb-2">
+          <div className="rounded-full border border-emerald-700/50 bg-emerald-900/20 p-5">
+            <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round"
                     d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z" />
             </svg>
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-emerald-300">
-              Clip recorded ({(capturedBlob!.size / 1024).toFixed(0)} KB)
+            <p className="text-base font-bold text-emerald-300">
+              Clip captured -- {(capturedBlob!.size / 1024).toFixed(0)} KB
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              Click Analyse below to run the biomechanical pipeline.
+              Click &ldquo;Run full analysis&rdquo; in the panel below to start the biomechanics pipeline.
             </p>
           </div>
         </div>
@@ -531,8 +540,8 @@ function SportPageInner() {
       {/* Trust panel (gym only) */}
       {gymResult && <TrustPanel result={gymResult} />}
 
-      {/* Live metrics + canonical report */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      {/* Live metrics + canonical report -- side by side at lg+ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[420px_1fr] gap-5 xl:gap-6 mt-6">
         <GhostMetricsPanel
           repCount={repCount}
           currentPhase={currentPhase}
