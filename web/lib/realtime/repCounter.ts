@@ -112,10 +112,11 @@ interface ExerciseRepConfig {
    * window for the rep to be counted.  Units are normalised signal
    * units (signal is always in [0, 1]).
    *
-   * For elbow_angle/hip_angle this is a fraction of 180° — 0.10 = 18°
-   * which is the smallest range a human can reliably do as a "rep".
-   * For vertical_* this is a fraction of frame height — 0.06 = 6% which
-   * is a few inches at typical webcam framing.
+   * For elbow_angle/hip_angle this is a fraction of 180° — 0.10 = 18°.
+   * For vertical_* this is a fraction of frame height.
+   *
+   * Set high enough to reject random dumbbell jiggling / casual arm
+   * movement that does not constitute a rep.
    */
   minAmplitude: number;
   /**
@@ -123,6 +124,19 @@ interface ExerciseRepConfig {
    * `SegmenterConfig.min_rep_s = 0.4` from the canonical backend.
    */
   minRepS: number;
+  /**
+   * Optional: the smoothed signal peak (for "peak" direction) or trough
+   * (for "trough" direction — uses 1 − signal_min) must reach this
+   * absolute threshold for the rep to count.
+   *
+   * Basketball: peak signal must exceed 0.60 so the wrist + elbow
+   * combination reaches a height consistent with actual shot release
+   * (wrist above shoulder, elbow near full extension).  Filters random
+   * tosses / arm waves that happen to have large amplitude but stay low.
+   *
+   * Leave undefined to skip this check.
+   */
+  minPeakValue?: number;
 }
 
 /**
@@ -183,11 +197,20 @@ const EXERCISE_CONFIGS: Record<string, ExerciseRepConfig> = {
   dumbbell_bicep_curl: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.50, minRepS: 0.5 },
   // cyclic_angle (backend rep_signal_joint = right_hip)
   romanian_deadlift: { signalKind: "hip_angle", peakDirection: "trough", minAmplitude: 0.10, minRepS: 0.7 },
-  // basketball: "rep" = one release–follow-through cycle.  Amplitude kept
-  // moderate so chest-up / phone-tripod framing still crosses the gate when
-  // legs are out of frame (signal is arm-dominant; see frameQualityVisibility).
-  basketball: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.055, minRepS: 0.45 },
-  jump_shot: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.055, minRepS: 0.45 },
+  // basketball: "rep" = one shot cycle (wind-up → release → follow-through).
+  //
+  // minAmplitude 0.13: a proper shot from chest to release = ~0.35 amplitude
+  // (wrist rises ~35% of frame + elbow extends from ~60° to ~170°).  0.13
+  // rejects random arm waves (< 0.08) while accepting chest-pass fakes and
+  // short-range leaners.
+  //
+  // minPeakValue 0.60: the blended signal (wrist height + elbow extension)
+  // must reach 60% of its [0,1] range at peak — confirms the wrist actually
+  // crossed the shoulder line and the elbow was near-extended, consistent
+  // with a real shot release.  Filters reaching / arm-swing that has large
+  // amplitude but stays below shoulder height.
+  basketball: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.13, minRepS: 0.5, minPeakValue: 0.60 },
+  jump_shot: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.13, minRepS: 0.5, minPeakValue: 0.60 },
 };
 
 /** Public: list of exercises supported by the realtime ghost counter.
@@ -560,6 +583,13 @@ function validateRep(
   if (durS < cfg.minRepS) return { ok: false, reason: "too_short" };
   if (durS > 8) return { ok: false, reason: "too_long" };
   if (amp < cfg.minAmplitude) return { ok: false, reason: "low_amplitude" };
+  // Optional absolute peak check (basketball): wrist + elbow must reach a
+  // height consistent with actual shot release, not just any large-amplitude
+  // arm movement that stays below the shoulder line.
+  if (cfg.minPeakValue !== undefined) {
+    const peakValue = cfg.peakDirection === "peak" ? rep.signal_max : (1 - rep.signal_min);
+    if (peakValue < cfg.minPeakValue) return { ok: false, reason: "peak_too_low" };
+  }
   if (rep.min_vis < visFloor) return { ok: false, reason: "low_visibility" };
   return { ok: true };
 }

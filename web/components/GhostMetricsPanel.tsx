@@ -134,19 +134,19 @@ export default function GhostMetricsPanel({
                 format={(v) => v.toFixed(2)}
               />
               <FieldRow
-                label={unitLabel === "shot" ? "Setup time" : "Lowering (eccentric)"}
+                label={unitLabel === "shot" ? "Wind-up time" : "Lowering time"}
                 wire="eccentric_duration_s"
                 f={lastRep.eccentric_duration_s}
                 format={(v) => v.toFixed(2)}
               />
               <FieldRow
-                label={unitLabel === "shot" ? "Release time" : "Lifting (concentric)"}
+                label={unitLabel === "shot" ? "Release time" : "Lifting time"}
                 wire="concentric_duration_s"
                 f={lastRep.concentric_duration_s}
                 format={(v) => v.toFixed(2)}
               />
               <FieldRow
-                label="Tempo (down ÷ up)"
+                label="Tempo (lower / lift)"
                 wire="tempo_ratio_ecc_over_con"
                 f={lastRep.tempo_ratio_ecc_over_con}
                 format={(v) => `${v.toFixed(2)}×`}
@@ -158,7 +158,7 @@ export default function GhostMetricsPanel({
                 format={(v) => v.toFixed(2)}
               />
               <FieldRow
-                label="Body visibility"
+                label="Tracking quality"
                 wire="min_visibility"
                 f={lastRep.min_visibility}
                 format={(v) => `${(v * 100).toFixed(0)}%`}

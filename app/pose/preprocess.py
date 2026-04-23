@@ -8,8 +8,6 @@ import logging
 import os
 import subprocess
 import tempfile
-from pathlib import Path
-
 logger = logging.getLogger(__name__)
 
 
@@ -21,8 +19,10 @@ def normalize_video_for_pose(video_path: str, *, timeout_sec: float = 120.0) -> 
         (path_to_use, is_temporary, ffmpeg_applied) — if is_temporary, caller must os.unlink(path) when done.
         ffmpeg_applied is True only when FFmpeg ran successfully and produced the returned path.
     """
-    suffix = Path(video_path).suffix or ".mp4"
-    tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+    # Always write to .mp4 — libx264 cannot mux into .webm (which
+    # MediaRecorder produces).  Using the input suffix was the root cause of
+    # rc=234 "Error sending frames to consumers: Invalid argument".
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
     tmp.close()
     out_path = tmp.name
 
@@ -37,8 +37,13 @@ def normalize_video_for_pose(video_path: str, *, timeout_sec: float = 120.0) -> 
         "ultrafast",
         "-crf",
         "20",
+        # format=yuv420p strips VP9 alpha (YUVA420P from MediaRecorder WebM)
+        # before the fps filter runs.  We intentionally drop the scale filter:
+        # the min(720,ih) expression requires shell quoting that breaks in
+        # subprocess list mode and is unnecessary for typical webcam resolutions.
+        # fps=30 converts VFR -> CFR so MediaPipe timestamp ordering is satisfied.
         "-vf",
-        "scale=-2:min'(720,ih)',fps=30",
+        "format=yuv420p,fps=30",
         "-an",
         "-movflags",
         "+faststart",
