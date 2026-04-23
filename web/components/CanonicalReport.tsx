@@ -8,6 +8,7 @@
  * Parity probe block is rendered in Day 8.
  */
 
+import { useEffect, useState } from "react";
 import type {
   AnalyzeResponse,
   CalibrationField,
@@ -113,8 +114,32 @@ function RepCard({ rep }: { rep: RepVector }) {
 }
 
 // ---------------------------------------------------------------------------
-// Upload progress ring
+// Upload progress indicator with elapsed time
 // ---------------------------------------------------------------------------
+
+/** Gym analysis takes ~10-20s. Elapsed counter turns "is it frozen?" into data. */
+function GymUploadingProgress() {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const stages = [
+    { at: 0,  msg: "Running MediaPipe heavy + gym pipeline…" },
+    { at: 8,  msg: "MediaPipe analysing pose landmarks…" },
+    { at: 15, msg: "Computing per-rep features…" },
+  ];
+  const current = [...stages].reverse().find((s) => elapsed >= s.at) ?? stages[0];
+  return (
+    <div className="text-center py-6">
+      <div className="inline-block w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin mb-3" />
+      <p className="text-sm text-slate-400">{current.msg}</p>
+      <p className="text-xs text-slate-600 mt-1">
+        {elapsed}s elapsed · ~10-20 s total for a 5-second clip
+      </p>
+    </div>
+  );
+}
 
 interface UploadState {
   status: "idle" | "uploading" | "done" | "error";
@@ -167,15 +192,7 @@ export default function CanonicalReport({
           </div>
         )}
 
-        {uploadState.status === "uploading" && (
-          <div className="text-center py-6">
-            <div className="inline-block w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin mb-3" />
-            <p className="text-sm text-slate-400">
-              Running MediaPipe heavy + gym pipeline…
-            </p>
-            <p className="text-xs text-slate-600 mt-1">~10-20 s for a 5-second clip</p>
-          </div>
-        )}
+        {uploadState.status === "uploading" && <GymUploadingProgress />}
 
         {uploadState.status === "error" && (
           <div className="rounded-lg border border-rose-700/50 bg-rose-900/20 px-4 py-3 text-sm text-rose-300">

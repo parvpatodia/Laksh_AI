@@ -18,7 +18,7 @@
  *     so judges can distinguish it from the deterministic biomech.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type {
   BasketballAnalyzeResponse,
   BasketballAthleteFeedback,
@@ -128,6 +128,35 @@ function ShotCountChip({ seg }: { seg: ShotSegmentation }) {
   );
 }
 
+/**
+ * Shows an animated spinner with elapsed seconds so judges don't close the
+ * browser thinking the request hung. The 25-40 s wait is normal; surfacing
+ * the elapsed time turns uncertainty into information.
+ */
+function UploadingProgress() {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const stages = [
+    { at: 0,  msg: "Running MediaPipe + Gemini scout pipeline…" },
+    { at: 10, msg: "MediaPipe analysing pose landmarks…" },
+    { at: 22, msg: "Gemini scoring your biomechanics…" },
+    { at: 35, msg: "Matching NBA player archetype…" },
+  ];
+  const current = [...stages].reverse().find((s) => elapsed >= s.at) ?? stages[0];
+  return (
+    <div className="text-center py-6">
+      <div className="inline-block w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin mb-3" />
+      <p className="text-sm text-slate-400">{current.msg}</p>
+      <p className="text-xs text-slate-600 mt-1">
+        {elapsed}s elapsed · ~25–40 s total for a 5-second clip
+      </p>
+    </div>
+  );
+}
+
 function FeedbackCard({ idx, fb }: { idx: number; fb: BasketballAthleteFeedback }) {
   const title = (fb.title as string | undefined) ?? `Coaching point ${idx + 1}`;
   const body = (fb.feedback as string | undefined) ?? "";
@@ -179,13 +208,7 @@ export default function BasketballReport({
         )}
 
         {uploadState.status === "uploading" && (
-          <div className="text-center py-6">
-            <div className="inline-block w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin mb-3" />
-            <p className="text-sm text-slate-400">
-              Running MediaPipe + Gemini scout pipeline…
-            </p>
-            <p className="text-xs text-slate-600 mt-1">~25–40 s for a 5-second clip</p>
-          </div>
+          <UploadingProgress />
         )}
 
         {uploadState.status === "error" && (
