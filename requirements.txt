@@ -27,6 +27,12 @@ nba_api
 # Production server (single worker on 1 GB Fly machine)
 gunicorn
 
+# Track B: ball-leaves-hand S3 signal (runtime gated by LAKSH_ENABLE_BALL_DETECT=1).
+# onnxruntime is CPU-only, 4 MB — far smaller than mediapipe. Included unconditionally
+# so the BallDetector class can be imported everywhere; it simply returns empty results
+# when the env var is absent (zero inference cost).
+onnxruntime>=1.16
+
 # Cloudflare R2 / S3-compatible object storage
 boto3
 

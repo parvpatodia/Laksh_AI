@@ -216,17 +216,44 @@ def _elbow_angular_velocity(angle_deg: np.ndarray, fps: float) -> np.ndarray:
 
 
 def _find_s1_candidates(
-    wrist_y: np.ndarray, fps: float, cfg: ShotSegmenterConfig
+    wrist_y: np.ndarray,
+    fps: float,
+    cfg: ShotSegmenterConfig,
+    *,
+    wrist_vis: np.ndarray | None = None,
+    vis_floor: float = 0.30,
 ) -> np.ndarray:
-    """Return frame indices of wrist-y nadirs satisfying the S1 constraints."""
-    # Fill NaNs with a neutral interior value so find_peaks doesn't crash;
-    # prominence will reject any peak that's actually noise.
-    finite = np.isfinite(wrist_y)
+    """Return frame indices of wrist-y nadirs satisfying the S1 constraints.
+
+    Edge cases
+    ----------
+    * ``wrist_vis`` is accepted as an optional (n,) visibility array.  Any
+      frame whose visibility is below *vis_floor* is treated as NaN in the
+      wrist-y signal.  This prevents phantom S1 peaks from low-confidence
+      wrist landmark positions — e.g. when only fingertips are out of frame
+      and MediaPipe falls back to a noisy wrist estimate.
+    * NaN frames (from low visibility or from the caller) are filled with the
+      signal's running median so ``find_peaks`` runs on a clean array; the
+      prominence constraint is tight enough that filled-median values (which
+      have zero local excursion) cannot pass.
+    * If ALL frames are NaN or low-vis, we return an empty array immediately
+      (no shots; caller surfaces "no_release_detected").
+    """
+    y = wrist_y.copy().astype(np.float64)
+
+    # Mask low-visibility frames (top-of-fingers occlusion, hips/knees fully
+    # out of frame are IRRELEVANT here — S1 only needs the wrist).
+    if wrist_vis is not None:
+        vis_arr = np.asarray(wrist_vis, dtype=np.float64)
+        if vis_arr.shape[0] == y.shape[0]:
+            y[vis_arr < vis_floor] = np.nan
+
+    finite = np.isfinite(y)
     if not finite.any():
         return np.empty(0, dtype=np.int64)
-    filled = wrist_y.copy()
+    filled = y.copy()
     if not finite.all():
-        filled[~finite] = float(np.nanmedian(wrist_y))
+        filled[~finite] = float(np.nanmedian(y))
     distance = max(1, int(round(cfg.min_inter_shot_s * fps)))
     peaks, _ = find_peaks(-filled, distance=distance, prominence=cfg.prominence_wrist_y)
     return peaks.astype(np.int64)
@@ -369,6 +396,16 @@ def segment_shots(
         )
 
     wrist_y = w[:, 1]
+    # Extract wrist visibility if the input array carries it as column 2.
+    # The raw_2d arrays from physics_engine are (n, 3) = [x, y, visibility].
+    # When only (n, 2) is supplied (synthetic tests), visibility is absent
+    # and we skip masking — correct behaviour since test fixtures have valid
+    # wrist positions on every frame.
+    _wrist_vis: np.ndarray | None = None
+    raw_w = np.asarray(wrist_xy)
+    if raw_w.ndim == 2 and raw_w.shape[1] >= 3:
+        _wrist_vis = raw_w[:, 2].astype(np.float64)
+
     elbow_angle = _interior_angle_series(s, e, w)
     elbow_angvel = _elbow_angular_velocity(elbow_angle, fps)
     # Clip-wide max extension velocity calibrates the S2 floor. Treat
@@ -380,7 +417,7 @@ def segment_shots(
         if not np.isfinite(clip_max_angvel) or clip_max_angvel < 0.0:
             clip_max_angvel = 0.0
 
-    s1 = _find_s1_candidates(wrist_y, fps, cfg)
+    s1 = _find_s1_candidates(wrist_y, fps, cfg, wrist_vis=_wrist_vis)
     if s1.size == 0:
         return SegmentResult(
             schema_version=SHOT_SEGMENTER_SCHEMA_VERSION,

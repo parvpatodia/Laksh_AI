@@ -452,10 +452,10 @@ def evaluate_bicep_curl_rom_gate(
         return FieldValue(None, "curl_rom_gate", "unknown", ("wrong_exercise",))
     cfg = gate_cfg or BicepCurlRomGateConfig()
 
-    a_name, b_name, c_name = _ANGLE_TRIPLETS["right_elbow"]
     # Fallback to left side if right is occluded -- match the browser
     # mirror (repCounter.ts) which picks the best-visibility side.
     def _angle_at(frame_idx: int) -> float | None:
+        """Return the elbow interior angle at exactly *frame_idx*, or None."""
         if frame_idx < 0 or frame_idx >= len(canonical_frames):
             return None
         fr = canonical_frames[frame_idx]
@@ -475,9 +475,41 @@ def evaluate_bicep_curl_rom_gate(
                 return ang
         return None
 
-    start_angle = _angle_at(rep.start_frame)
-    peak_angle = _angle_at(rep.peak_frame)
-    end_angle = _angle_at(rep.end_frame)
+    def _best_angle(frame_idx: int, *, want: str, window: int = 3) -> float | None:
+        """Return the best angle in *[frame_idx - window, frame_idx + window]*.
+
+        Edge case: wrist/fingertip leaves camera frame for 1-2 frames at the
+        top of a curl (peak of flexion) or at the fully-extended start/end
+        position.  Looking in a ±3-frame window (100 ms at 30 fps) recovers
+        the measurement from a nearby frame instead of falsely rejecting the
+        rep.
+
+        Args:
+            frame_idx: Centre frame.
+            want: ``"min"`` for peak-flexion check (curl peak), ``"max"`` for
+                extension checks (start / end of curl).
+            window: Half-width of the search window in frames.  3 frames = 100 ms
+                at 30 fps — small enough to stay within the true phase boundary,
+                large enough to bridge a 1-3 frame occlusion.
+        """
+        lo = max(0, frame_idx - window)
+        hi = min(len(canonical_frames) - 1, frame_idx + window)
+        angles: list[float] = []
+        for fi in range(lo, hi + 1):
+            a = _angle_at(fi)
+            if a is not None:
+                angles.append(a)
+        if not angles:
+            return None
+        return min(angles) if want == "min" else max(angles)
+
+    # Extension frames (start, end): want the MAXIMUM angle in the window
+    # (most-extended reading → less likely to wrongly reject).
+    # Flexion frame (peak): want the MINIMUM angle (most-flexed reading →
+    # correctly captures the peak even when the wrist briefly leaves frame).
+    start_angle = _best_angle(rep.start_frame, want="max")
+    peak_angle  = _best_angle(rep.peak_frame,  want="min")
+    end_angle   = _best_angle(rep.end_frame,   want="max")
 
     reason_codes: list[str] = []
 

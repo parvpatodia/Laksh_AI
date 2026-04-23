@@ -872,7 +872,33 @@ class KinematicAnalyzer:
             _shot_seg = None
             try:
                 from app.basketball.shot_segmenter import segment_shots as _segment_shots
-                _shot_seg = _segment_shots(w2d_raw, e2d_raw, s2d_raw, fps=fps)
+
+                # Track B (S3 ball detector): only runs when LAKSH_ENABLE_BALL_DETECT=1
+                # AND the onnxruntime + model are available.  Failure is fully
+                # contained — S1+S2 result is used unchanged if S3 errors.
+                _ball_release_frames: list[int] | None = None
+                if os.environ.get("LAKSH_ENABLE_BALL_DETECT") == "1" and norm_path:
+                    try:
+                        from app.detection.ball_detector import get_detector as _get_detector
+                        _detector = _get_detector()
+                        # Pass raw wrist_xy (col 0,1 = x,y in normalized image space).
+                        _ball_release_frames = _detector.detect_release_frames(
+                            norm_path, list(range(n_frames)), w2d_raw, fps
+                        )
+                        if _ball_release_frames:
+                            logger.info(
+                                "S3 ball detector found %d release frame(s): %s",
+                                len(_ball_release_frames),
+                                _ball_release_frames,
+                            )
+                    except Exception:
+                        logger.warning("S3 ball detector failed; using S1+S2 only", exc_info=True)
+
+                _shot_seg = _segment_shots(
+                    w2d_raw, e2d_raw, s2d_raw,
+                    fps=fps,
+                    ball_release_frames=_ball_release_frames,
+                )
             except Exception:
                 logger.warning(
                     "segment_shots failed; continuing with single-shot detection",
