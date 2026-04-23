@@ -241,18 +241,24 @@ def _fast_video_precheck(path: str) -> tuple[bool, str, dict]:
         if not cap.isOpened():
             return False, "video_unreadable", {}
         fps = cap.get(_cv2.CAP_PROP_FPS) or 0.0
-        total = cap.get(_cv2.CAP_PROP_FRAME_COUNT) or 0.0
+        total = cap.get(_cv2.CAP_PROP_FRAME_COUNT)  # may be -1 or 0 for WebM VP9
         # Read at least one frame to confirm the bitstream is valid.
         ok_read, _ = cap.read()
         cap.release()
         if not ok_read:
             return False, "video_no_frames", {}
-        duration_s = (total / fps) if fps > 0 else 0.0
         if fps < 10.0:
             return False, "preflight_fps_failed", {"fps_observed": round(fps, 1), "fps_floor": 10.0}
-        if duration_s < 1.0:
-            return False, "preflight_too_short", {"duration_s": round(duration_s, 2), "min_duration_s": 1.0}
-        return True, "", {"fps_observed": round(fps, 1), "duration_s": round(duration_s, 1)}
+        # Duration check: skip when CAP_PROP_FRAME_COUNT returns 0/-1 (WebM VP9
+        # containers from MediaRecorder do NOT embed frame-count metadata).
+        # Falsely rejecting a valid clip as "too short" is worse than letting
+        # the full pipeline handle it — the pipeline checks n_frames >= 3 itself.
+        if fps > 0 and total > 0:
+            duration_s = total / fps
+            if duration_s < 1.0:
+                return False, "preflight_too_short", {"duration_s": round(duration_s, 2), "min_duration_s": 1.0}
+        duration_s = (total / fps) if (fps > 0 and total > 0) else None
+        return True, "", {"fps_observed": round(fps, 1), "duration_s": round(duration_s, 1) if duration_s else "unknown"}
     except Exception as exc:
         logger.warning("Fast video pre-check failed: %s", exc)
         return True, "", {}  # On unexpected error: allow through; full analysis handles it

@@ -112,7 +112,10 @@ const PREFLIGHT_CORE_UPPER = [11, 12, 13, 14, 15, 16] as const;
 const PREFLIGHT_CORE_FULL  = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26] as const;
 
 const PREFLIGHT_RING_SIZE = 90;  // ~3 s at 30 fps
-const PREFLIGHT_VIS_MIN   = 0.50; // MediaPipe "confident" band lower bound
+// LITE model visibility is poorly calibrated at 0.5 — it returns 0.05–0.25
+// for clearly-visible joints. 0.25 matches the LITE model's effective
+// operating range (the HEAVY model used server-side operates at 0.5).
+const PREFLIGHT_VIS_MIN   = 0.25;
 const PREFLIGHT_IFR_MIN   = 0.80; // 80% of frames must have key joints in frame
 const PREFLIGHT_MARGIN    = 0.05; // 5% border exclusion zone (matches quality_gate.py)
 
@@ -411,9 +414,9 @@ function SportPageInner() {
             <span className="font-medium text-slate-200">Setup:</span>{" "}
             {sport === "gym"
               ? exerciseMeta?.tip ?? "Side view, full body in frame, ~2 m from camera"
-              : "Arms + shoulders visible (chest-up / selfie angle is fine). Side view is optional. Rep = one release cycle."}
+              : "Side view preferred. Keep arms + shoulders in frame for the full shooting motion. Records up to 15 s for multiple shots."}
             <span className="text-xs text-slate-500 ml-2">
-              · Counter waits ~0.5 s for you to settle before counting.
+              · The live Pose % badge shows how well your joints are tracked.
             </span>
           </div>
         </div>
@@ -446,6 +449,9 @@ function SportPageInner() {
           onLandmarks={handleLandmarks}
           onCaptureComplete={handleCaptureComplete}
           onError={setCameraError}
+          // Basketball needs room for 3-5 shots (~15 s); gym curls are
+          // captured in 6 s (3-5 reps), keeping the clip small and fast.
+          maxDurationS={sport === "basketball" ? 15 : 6}
         />
       ) : !haveCanonicalResult ? (
         <div className="w-full aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/10] max-h-[80vh]

@@ -26,7 +26,7 @@ import {
 
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { loadPoseLandmarker } from "@/lib/pose/landmarkerLoader";
-import { drawSkeleton } from "@/lib/pose/skeletonDraw";
+import { drawSkeleton, coreDetectionFraction } from "@/lib/pose/skeletonDraw";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,6 +78,8 @@ export default function PoseCamera({
   const [fps, setFps] = useState<number>(0);
   // Seconds elapsed since recording started (drives the countdown badge).
   const [recordingElapsed, setRecordingElapsed] = useState(0);
+  // 0.0–1.0: fraction of core joints detected in the last frame.
+  const [detectionQuality, setDetectionQuality] = useState<number | null>(null);
 
   // FPS counter (rolling average over 30 frames).
   const fpsBuffer = useRef<number[]>([]);
@@ -105,10 +107,37 @@ export default function PoseCamera({
   const startCamera = useCallback(async () => {
     setCameraState("requesting");
     try {
+      // Request 720p — many webcams capture a wider FOV at this resolution
+      // than at 1080p (which uses a centre crop on some models). facingMode
+      // "user" selects the front-facing camera on laptops and phones.
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
         audio: false,
       });
+
+      // Attempt to set minimum zoom on cameras that support the constraint.
+      // Most laptop webcams don't expose zoom, so this is a no-op in practice.
+      try {
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          const caps = track.getCapabilities() as MediaTrackCapabilities & {
+            zoom?: { min: number; max: number; step: number };
+          };
+          if (caps.zoom) {
+            // Set to minimum zoom = widest possible field of view.
+            await track.applyConstraints({
+              advanced: [{ zoom: caps.zoom.min } as MediaTrackConstraintSet],
+            });
+          }
+        }
+      } catch {
+        // Zoom not supported or constraint rejected — proceed normally.
+      }
+
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -186,9 +215,16 @@ export default function PoseCamera({
       const pose = result.landmarks?.[0];
       if (!pose) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        setDetectionQuality(0);
       } else {
         drawSkeleton(ctx, pose, canvas.width, canvas.height);
         onLandmarks?.(pose, now);
+        // Update detection quality every 10 frames (cheap, avoids flooding React).
+        setDetectionQuality((prev) => {
+          const q = coreDetectionFraction(pose);
+          // Smooth with a simple EMA so the badge doesn't flicker.
+          return prev === null ? q : prev * 0.8 + q * 0.2;
+        });
       }
 
       rafRef.current = requestAnimationFrame(loop);
@@ -330,10 +366,28 @@ export default function PoseCamera({
           </div>
         )}
 
-        {/* FPS badge */}
+        {/* FPS + detection quality badge */}
         {cameraState === "ready" && landmarkerLoaded && (
-          <div className="absolute top-3 left-3 bg-black/50 text-slate-400 text-xs px-2 py-1 rounded font-mono">
-            {fps} fps
+          <div className="absolute top-3 left-3 flex items-center gap-1.5">
+            <div className="bg-black/60 text-slate-400 text-xs px-2 py-1 rounded font-mono">
+              {fps} fps
+            </div>
+            {detectionQuality !== null && (
+              <div className={`text-xs px-2 py-1 rounded font-mono flex items-center gap-1
+                              ${detectionQuality >= 0.8
+                                ? "bg-emerald-900/70 text-emerald-300"
+                                : detectionQuality >= 0.5
+                                  ? "bg-amber-900/70 text-amber-300"
+                                  : "bg-rose-900/70 text-rose-300"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full
+                                  ${detectionQuality >= 0.8 ? "bg-emerald-400"
+                                    : detectionQuality >= 0.5 ? "bg-amber-400"
+                                    : "bg-rose-400"}`} />
+                {detectionQuality === 0
+                  ? "No pose"
+                  : `Pose ${Math.round(detectionQuality * 100)}%`}
+              </div>
+            )}
           </div>
         )}
 
