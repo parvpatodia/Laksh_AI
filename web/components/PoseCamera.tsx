@@ -41,6 +41,12 @@ export interface PoseCameraProps {
   onCaptureComplete?: (blob: Blob, mimeType: string) => void;
   /** Called when camera permission is denied or an unrecoverable error occurs. */
   onError?: (message: string) => void;
+  /**
+   * Auto-stop recording after this many seconds. Defaults to 6.
+   * Shorter clips = less MediaPipe work = faster analysis (~40s vs 3+ min).
+   * A 6s clip at 30 fps gives ~180 frames — enough for 3-5 clean reps.
+   */
+  maxDurationS?: number;
 }
 
 type CameraState = "idle" | "requesting" | "ready" | "error";
@@ -54,6 +60,7 @@ export default function PoseCamera({
   onLandmarks,
   onCaptureComplete,
   onError,
+  maxDurationS = 6,
 }: PoseCameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,11 +68,16 @@ export default function PoseCamera({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const rafRef = useRef<number>(0);
   const landmarkerReadyRef = useRef(false);
+  // Auto-stop timer and elapsed counter for the recording countdown.
+  const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [isRecording, setIsRecording] = useState(false);
   const [landmarkerLoaded, setLandmarkerLoaded] = useState(false);
   const [fps, setFps] = useState<number>(0);
+  // Seconds elapsed since recording started (drives the countdown badge).
+  const [recordingElapsed, setRecordingElapsed] = useState(0);
 
   // FPS counter (rolling average over 30 frames).
   const fpsBuffer = useRef<number[]>([]);
@@ -192,6 +204,21 @@ export default function PoseCamera({
   // ---------------------------------------------------------------------------
   // MediaRecorder
   // ---------------------------------------------------------------------------
+  const stopCapture = useCallback(() => {
+    // Clear auto-stop timer and elapsed counter before stopping.
+    if (autoStopTimerRef.current !== null) {
+      clearTimeout(autoStopTimerRef.current);
+      autoStopTimerRef.current = null;
+    }
+    if (recordingIntervalRef.current !== null) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+    recorderRef.current?.stop();
+    recorderRef.current = null;
+    setRecordingElapsed(0);
+  }, []);
+
   const startCapture = useCallback(() => {
     if (!streamRef.current || isRecording) return;
 
@@ -209,17 +236,29 @@ export default function PoseCamera({
       const blob = new Blob(chunks, { type: mimeType });
       onCaptureComplete?.(blob, mimeType);
       setIsRecording(false);
+      setRecordingElapsed(0);
     };
 
     recorder.start(100); // 100ms timeslices for low-latency chunks
     recorderRef.current = recorder;
     setIsRecording(true);
-  }, [isRecording, onCaptureComplete]);
+    setRecordingElapsed(0);
 
-  const stopCapture = useCallback(() => {
-    recorderRef.current?.stop();
-    recorderRef.current = null;
-  }, []);
+    // Elapsed counter — updates every second for the countdown badge.
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingElapsed((prev) => prev + 1);
+    }, 1000);
+
+    // Auto-stop after maxDurationS to keep clips short and analysis fast.
+    autoStopTimerRef.current = setTimeout(() => {
+      recorderRef.current?.stop();
+      recorderRef.current = null;
+      if (recordingIntervalRef.current !== null) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }, maxDurationS * 1000);
+  }, [isRecording, maxDurationS, onCaptureComplete]);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -298,11 +337,11 @@ export default function PoseCamera({
           </div>
         )}
 
-        {/* Recording badge */}
+        {/* Recording badge — shows live countdown to auto-stop */}
         {isRecording && (
           <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-rose-900/80 text-rose-300 text-xs px-2 py-1 rounded">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse-slow" />
-            REC
+            REC · {Math.max(0, maxDurationS - recordingElapsed)}s
           </div>
         )}
       </div>
@@ -349,9 +388,9 @@ export default function PoseCamera({
         {cameraState === "ready" && (
           <span className="text-xs text-slate-600 ml-auto">
             {isRecording
-              ? "Recording — click Stop & Analyse when done"
+              ? `Recording — auto-stops in ${Math.max(0, maxDurationS - recordingElapsed)}s`
               : landmarkerLoaded
-                ? "Pose tracking active"
+                ? `Pose tracking active · will record up to ${maxDurationS}s`
                 : "Loading pose model (~3 MB)…"}
           </span>
         )}
