@@ -231,6 +231,13 @@ export default function BasketballReport({
     (result.matched_pro?.name as string | undefined) ??
     (typeof result.matched_pro === "object" ? null : null);
   const feedback = result.athlete_feedback ?? [];
+
+  // Detect when biomech pipeline produced no measurements (clip too short / occlusion / VFR)
+  const biomechFailed =
+    result.release_velocity_mps == null &&
+    result.shot_arc_deg == null &&
+    result.knee_angle == null &&
+    result.elbow_angle == null;
   const reliabilityCls =
     conf === null ? "text-slate-300"
       : conf >= 70 ? "text-emerald-300"
@@ -348,6 +355,17 @@ export default function BasketballReport({
             : conf >= 40 ? " interpret biomech numbers with care."
               : " biomech numbers are likely unreliable; re-record with clearer framing."}
         </p>
+      )}
+
+      {/* Measurement failed banner */}
+      {biomechFailed && (
+        <div className="rounded-lg border border-amber-600/50 bg-amber-900/15 px-4 py-3 mb-4">
+          <p className="text-sm font-medium text-amber-200 mb-1">Biomechanics not measured</p>
+          <p className="text-xs text-amber-300/80 leading-relaxed">
+            The clip was too short, joints were occluded, or lighting was too poor for MediaPipe to
+            extract reliable landmarks. Re-record: full body visible, good lighting, 5+ seconds of motion.
+          </p>
+        </div>
       )}
 
       {/* Oracle caveat (if backend marked the pro match degraded) */}

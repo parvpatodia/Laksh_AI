@@ -136,8 +136,9 @@ function apiBase(): string {
   return env || PRODUCTION_API_DEFAULT;
 }
 
-/** Browser → Fly round-trip can exceed 60s (MediaPipe + Gemini). */
-const ANALYZE_VIDEO_TIMEOUT_MS = 180_000;
+/** Browser → Fly round-trip. MediaPipe + Gemini upload run in parallel on backend (~105s).
+ *  250s gives comfortable headroom under gunicorn's 300s worker timeout. */
+const ANALYZE_VIDEO_TIMEOUT_MS = 250_000;
 
 async function fetchVideoAnalyze(
   url: string,

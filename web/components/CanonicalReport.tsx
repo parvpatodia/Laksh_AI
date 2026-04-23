@@ -57,12 +57,12 @@ const FIELD_DISPLAY: Record<
   { label: string; format?: (v: number, unit: string) => string }
 > = {
   rep_duration_s: { label: "Rep duration", format: (v) => `${v.toFixed(2)} s` },
-  eccentric_duration_s: { label: "Lowering (eccentric)", format: (v) => `${v.toFixed(2)} s` },
-  concentric_duration_s: { label: "Lifting (concentric)", format: (v) => `${v.toFixed(2)} s` },
-  tempo_ratio_ecc_over_con: { label: "Tempo (down ÷ up)", format: (v) => `${v.toFixed(2)}×` },
+  eccentric_duration_s: { label: "Lowering time", format: (v) => `${v.toFixed(2)} s` },
+  concentric_duration_s: { label: "Lifting time", format: (v) => `${v.toFixed(2)} s` },
+  tempo_ratio_ecc_over_con: { label: "Tempo (lower / lift)", format: (v) => `${v.toFixed(2)}×` },
   signal_amplitude: { label: "Range of motion", format: (v, u) => `${v.toFixed(1)}${u === "deg" ? "°" : ""}` },
-  primary_joints_min_visibility: { label: "Joint visibility", format: (v) => `${(v * 100).toFixed(0)}%` },
-  primary_joints_missing_frac: { label: "Frames missing joints", format: (v) => `${(v * 100).toFixed(0)}%` },
+  primary_joints_min_visibility: { label: "Tracking quality", format: (v) => `${(v * 100).toFixed(0)}%` },
+  primary_joints_missing_frac: { label: "Frames untracked", format: (v) => `${(v * 100).toFixed(0)}%` },
 };
 
 function FieldRow({ label, f }: { label: string; f: FieldValue }) {

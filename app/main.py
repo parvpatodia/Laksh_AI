@@ -1,3 +1,5 @@
+import asyncio
+import concurrent.futures
 import os
 import json
 import re
@@ -652,6 +654,49 @@ def _oracle_gemini_models() -> list[str]:
     return deduped if deduped else ["gemini-2.5-flash", "gemini-2.0-flash"]
 
 
+def _gemini_upload_pipeline(src_path: str, fallback_mime: str) -> tuple[object | None, list[str]]:
+    """Transcode src_path → MP4, upload to Gemini Files, wait for ACTIVE.
+
+    Designed to run in a ThreadPoolExecutor in parallel with the MediaPipe
+    analysis step so the two longest operations overlap rather than serialize.
+
+    Returns:
+        (video_file_ref | None, cleanup_paths) — caller must delete cleanup_paths.
+    """
+    cleanup: list[str] = []
+    upload_path = src_path
+    upload_mime = fallback_mime
+
+    td = _transcode_for_gemini_upload(src_path)
+    if td:
+        upload_path, upload_mime = td
+        cleanup.append(upload_path)
+
+    try:
+        ref = client.files.upload(
+            file=upload_path,
+            config=types.UploadFileConfig(mime_type=upload_mime),
+        )
+        deadline = time.time() + 120
+        while ref is not None and time.time() < deadline:
+            st = getattr(ref, "state", None)
+            if getattr(st, "name", None) == "ACTIVE":
+                break
+            time.sleep(2)
+            ref = client.files.get(name=ref.name)
+        st = getattr(ref, "state", None)
+        if getattr(st, "name", None) != "ACTIVE":
+            logger.warning("Gemini file not ACTIVE after wait (state=%s); using text-only oracle", getattr(st, "name", st))
+            return None, cleanup
+        return ref, cleanup
+    except APIError as upload_err:
+        logger.warning("Gemini files.upload failed; using text-only oracle. message=%s", getattr(upload_err, "message", None))
+        return None, cleanup
+    except Exception as exc:
+        logger.warning("Gemini upload pipeline error: %s", exc)
+        return None, cleanup
+
+
 def _transcode_for_gemini_upload(src_path: str) -> tuple[str, str] | None:
     """Remux/transcode to H.264 MP4 — Gemini uploads are flaky on arbitrary WebM codecs/containers."""
     dst = os.path.join(tempfile.gettempdir(), f"laksh_gemini_{uuid.uuid4().hex}.mp4")
@@ -864,7 +909,41 @@ async def analyze_video(
                 end_val = float(end_sec)
             except (TypeError, ValueError):
                 pass
-        biomech = KinematicAnalyzer(safe_name).analyze(start_sec=start_val, end_sec=end_val)
+        # Run MediaPipe analysis and Gemini upload pipeline in parallel —
+        # both are blocking/CPU-bound and completely independent of each other.
+        # Sequential execution was the root cause of the 180s client timeout:
+        # MediaPipe(~60s) + Gemini_upload(~60s) + generate_content(~45s) = 165s.
+        # Parallel: max(60, 60) + 45 = ~105s, well within budget.
+        loop = asyncio.get_event_loop()
+        _start_sec = start_val
+        _end_sec = end_val
+        _safe_name = safe_name
+        _gemini_mime = gemini_mime
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _pool:
+            biomech_fut = loop.run_in_executor(
+                _pool,
+                lambda: KinematicAnalyzer(_safe_name).analyze(start_sec=_start_sec, end_sec=_end_sec),
+            )
+            gemini_fut = loop.run_in_executor(
+                _pool,
+                lambda: _gemini_upload_pipeline(_safe_name, _gemini_mime),
+            )
+            _biomech_result, _gemini_result = await asyncio.gather(
+                biomech_fut, gemini_fut, return_exceptions=True
+            )
+
+        # Handle biomech failures gracefully instead of crashing the endpoint.
+        if isinstance(_biomech_result, Exception):
+            logger.error("KinematicAnalyzer failed: %s", _biomech_result)
+            biomech = {}
+        else:
+            biomech = _biomech_result
+
+        video_file_ref, _gemini_cleanup = (
+            _gemini_result if not isinstance(_gemini_result, Exception) else (None, [])
+        )
+        extra_cleanup.extend(_gemini_cleanup)
 
         # --- A4: Post-analysis quality check -----------------------------------------
         # If MediaPipe found too few landmarks to run analysis, surface actionable hints
@@ -1002,7 +1081,28 @@ async def analyze_video(
                 deltas = {"error": "Delta calc failed"}
 
         athlete_label = (athlete_name or "").strip() or "the athlete"
-        prompt = f"""
+        stats_available = any(v is not None for v in user_stats.values())
+
+        if not stats_available:
+            # Biomech pipeline failed (short clip, occlusion, VFR fallback, etc.).
+            # Do NOT send null stats — Gemini will hallucinate "Coaching point N" placeholders.
+            # Instead request honest general coaching without quantitative references.
+            prompt = f"""
+Act as an elite NBA Biomechanics Director.
+
+The video clip for {athlete_label} did not yield measurable biomechanics (clip too short, joint occlusion, or poor lighting).
+
+Write a `scout_report` (1-2 sentences) that honestly acknowledges no quantitative measurements were captured and recommends re-recording with better framing (full body visible, good lighting, 5+ seconds of motion).
+
+Write `athlete_feedback` with exactly 3 universally applicable basketball shooting technique tips — focus on shot arc (target 45-55°), knee drive for vertical power, and wrist snap at release. Do NOT reference any specific numbers from this athlete.
+
+Write `witty_catchphrase` — a short (max 8 words) motivational line.
+
+Respond ONLY with valid JSON, no markdown fences:
+{{"scout_report": "...", "athlete_feedback": [{{"title": "...", "feedback": "...", "drill": "..."}}, {{"title": "...", "feedback": "...", "drill": "..."}}, {{"title": "...", "feedback": "...", "drill": "..."}}], "witty_catchphrase": "..."}}
+"""
+        else:
+            prompt = f"""
 Act as an elite NBA Biomechanics Director with PhD-level expertise. Authoritative tone. Focus ruthlessly on causality (how input distortions affect output numbers).
 
 Athlete: {athlete_label}
@@ -1020,6 +1120,9 @@ Write the `scout_report` (technical overview) and `athlete_feedback`.
 CRITICAL: The `athlete_feedback` array MUST contain exactly 3 items. They must strictly focus on closing the mathematical gaps in KINEMATIC DELTAS. Explain HOW each biomechanical difference causes outcome differences. Give tangible drills. Do not invent stats.
 
 REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specific or basketball-trendy line based on the matched player. Examples: "Splash zone unlocked" or "Step-back energy, Trae-style."
+
+Respond ONLY with valid JSON, no markdown fences:
+{{"scout_report": "...", "athlete_feedback": [{{"title": "...", "feedback": "...", "drill": "..."}}, {{"title": "...", "feedback": "...", "drill": "..."}}, {{"title": "...", "feedback": "...", "drill": "..."}}], "witty_catchphrase": "..."}}
 """
 
         gemini_upload_path = safe_name
@@ -1174,6 +1277,10 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         out["confidence"] = confidence_score
         out["analysis_reliability_score"] = round(float(confidence_score), 1)
         out["detection_metadata"] = det
+        # Append a clear warning when biomech produced no measurements so the
+        # UI can surface an honest "measurement failed" banner.
+        if not stats_available:
+            vw = list(vw) + ["Biomechanics not measured: clip too short, joint occlusion, or VFR decode failure."]
         out["validation_warnings"] = vw
         # Phase 2: video quality, confidence factors for transparent attribution
         tel = biomech.get("telemetry") or {}

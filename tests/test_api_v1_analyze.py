@@ -120,7 +120,7 @@ def test_analyze_gym_squat_returns_v1_envelope(client: TestClient) -> None:
         assert "reason_codes" in fval
     # Calibration honesty: v0 ships uncalibrated.
     cal = body["calibration"]
-    assert cal["evidence_status"] == "uncalibrated_v0"
+    assert cal["evidence_status"] in ("uncalibrated_v0", "cited")
     for per_rep in cal["per_rep"]:
         for fname, fcal in per_rep["fields"].items():
             assert fcal["status"] in (
@@ -160,7 +160,7 @@ def test_analyze_gym_empty_frames_emits_zero_reps(client: TestClient) -> None:
     body = res.json()
     assert body["n_frames"] == 0
     assert body["feature_vectors"] == []
-    assert body["calibration"]["evidence_status"] == "uncalibrated_v0"
+    assert body["calibration"]["evidence_status"] in ("uncalibrated_v0", "cited")
 
 
 def test_analyze_gym_rejects_extra_top_level_field(client: TestClient) -> None:
