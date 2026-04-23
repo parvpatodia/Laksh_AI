@@ -1639,7 +1639,8 @@ class KinematicAnalyzer:
         if _use_estimates:
             # Population medians: amateur shooter, standing jump shot, flat camera angle.
             # Literature sources cited in evaluation/calibration_evidence_v0/basketball_literature_v0.md
-            _est_status = lambda: self._status("estimated", _EST_CONF, "population_median_fallback")
+            def _est_status() -> dict:  # noqa: E306
+                return self._status("estimated", _EST_CONF, "population_median_fallback")
             metric_status = {k: _est_status() for k in METRIC_KEYS}
             vel = 7.0      # m/s  — Okazaki 2013: amateur range 6.5–8.5
             arc = 45.0     # deg  — optimal for standard basket distance; Miller 1996

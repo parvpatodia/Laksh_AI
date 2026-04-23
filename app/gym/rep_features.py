@@ -585,19 +585,21 @@ def evaluate_bicep_curl_rom_gate(
         )
 
     # Consensus status.
+    # FieldStatus contract (schema.py L30) only allows "valid" | "degraded" | "unknown".
+    # Partial rom quality -> "degraded"; twitch / dropped -> "unknown" (unmeasurable).
     if c1_full_pass and c2_pass:
         status = "valid"
         reason_codes = []  # clean: no failures to surface
     elif (c1_full_pass and not c2_pass) or (c2_pass and not c1_full_pass):
-        status = "partial"
+        status = "degraded"  # single-signal: measurable but uncertain
         reason_codes.append("single_signal_rom")
     elif c1_peak_partial:
         # Partial regime: peak reached <=90 deg but failed the strict
         # three-gate cycle and C2 also failed.
-        status = "partial"
+        status = "degraded"  # partial rom: some motion detected, below threshold
         reason_codes.append("partial_rom")
     else:
-        status = "dropped"
+        status = "unknown"  # twitch: insufficient ROM to classify
         reason_codes.append("twitch")
 
     return FieldValue(None, "curl_rom_gate", status, tuple(reason_codes))

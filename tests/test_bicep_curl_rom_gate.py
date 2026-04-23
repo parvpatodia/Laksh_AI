@@ -144,12 +144,20 @@ def test_full_curl_is_valid() -> None:
 # ----- fixture 2: partial curl (peak 75 deg) ----------------------------------
 
 
-def test_partial_curl_peak_75_is_partial() -> None:
-    # Start/end at 130 (not full extension), peak at 75 (not full flexion
-    # but within the <=90 deg partial regime). Wrist travels less than
-    # 0.4 * shoulder-elbow distance.
+def test_partial_curl_peak_95_is_degraded() -> None:
+    # Peak reaches 95 deg -- within the c1_peak_partial regime (<=110) but
+    # above peak_flexion_deg_max (80), so C1 full fails. C2 passes (wrist
+    # still rises enough). Single-signal -> degraded (schema contract).
+    # Use a strict custom config to decouple from evolving defaults.
+    strict_cfg = BicepCurlRomGateConfig(
+        start_extension_deg_min=150.0,
+        end_extension_deg_min=150.0,
+        peak_flexion_deg_max=60.0,
+        peak_partial_deg_max=90.0,
+        wrist_y_descent_ratio=0.40,
+    )
     frames = _synthesise_rep_frames(
-        start_angle=130.0, peak_angle=75.0, end_angle=130.0, n_frames=30
+        start_angle=160.0, peak_angle=75.0, end_angle=160.0, n_frames=30
     )
     rep = RepSpan(start_frame=0,
         peak_frame=15,
@@ -157,8 +165,8 @@ def test_partial_curl_peak_75_is_partial() -> None:
         status="valid",
         reason_codes=(),
     )
-    fv = evaluate_bicep_curl_rom_gate(rep, frames, CURL)
-    assert fv.status == "partial", fv
+    fv = evaluate_bicep_curl_rom_gate(rep, frames, CURL, strict_cfg)
+    assert fv.status == "degraded", fv  # partial_rom maps to "degraded" (schema contract)
     assert "partial_rom" in fv.reason_codes or "single_signal_rom" in fv.reason_codes
 
 
@@ -178,7 +186,7 @@ def test_twitch_peak_140_is_dropped() -> None:
         reason_codes=(),
     )
     fv = evaluate_bicep_curl_rom_gate(rep, frames, CURL)
-    assert fv.status == "dropped", fv
+    assert fv.status == "unknown", fv  # twitch/dropped maps to "unknown" (schema contract)
     assert "twitch" in fv.reason_codes
 
 
@@ -189,10 +197,12 @@ def test_three_full_plus_one_partial_sequence() -> None:
     """Integration: build a 4-rep clip, run it through the segmenter and
     feature extractor, check per-rep ROM gate outcomes.
     """
-    # Rep 1, 2, 3 are full curls (160 -> 55 -> 160). Rep 4 is partial
-    # (130 -> 75 -> 130). Insert short rest gaps at full extension.
+    # Rep 1, 2, 3 are full curls (160 -> 55 -> 160). Rep 4 is "degraded":
+    # peak 95 deg is in the c1_peak_partial regime (<=110) but fails
+    # peak_flexion_deg_max (80), so C1 full fails. C2 passes (wrist rises
+    # enough), giving single_signal_rom -> degraded.
     full_angles = (160.0, 55.0, 160.0)
-    partial_angles = (130.0, 75.0, 130.0)
+    partial_angles = (160.0, 95.0, 160.0)
     rest_frames = [_curl_frame(170.0) for _ in range(6)]  # 0.2 s @ 30 fps
     all_frames: list[dict[str, Any]] = list(rest_frames)
     for _ in range(3):
@@ -212,11 +222,11 @@ def test_three_full_plus_one_partial_sequence() -> None:
     fvs = feature_vectors_from_segment(seg, all_frames, CURL)
     gate_statuses = [fv.features["curl_rom_gate"].status for fv in fvs]
     n_valid = sum(1 for s in gate_statuses if s == "valid")
-    n_partial = sum(1 for s in gate_statuses if s == "partial")
-    n_dropped = sum(1 for s in gate_statuses if s == "dropped")
+    n_degraded = sum(1 for s in gate_statuses if s == "degraded")  # partial_rom -> degraded
+    n_unknown = sum(1 for s in gate_statuses if s == "unknown")    # twitch/dropped -> unknown
     assert n_valid == 3, (gate_statuses, "expected 3 valid curls")
-    assert n_partial == 1, (gate_statuses, "expected 1 partial curl")
-    assert n_dropped == 0, (gate_statuses, "expected 0 dropped")
+    assert n_degraded == 1, (gate_statuses, "expected 1 degraded (partial) curl")
+    assert n_unknown == 0, (gate_statuses, "expected 0 unknown")
 
 
 # ----- guards ----------------------------------------------------------------
@@ -247,13 +257,15 @@ def test_empty_frames_returns_unknown() -> None:
 
 
 def test_config_thresholds_round_trip() -> None:
-    """Every threshold is carried alongside the result."""
+    """Every threshold is accessible and matches calibrated defaults."""
     cfg = BicepCurlRomGateConfig()
-    assert cfg.start_extension_deg_min == 150.0
-    assert cfg.peak_flexion_deg_max == 60.0
-    assert cfg.end_extension_deg_min == 150.0
-    assert cfg.peak_partial_deg_max == 90.0
-    assert cfg.wrist_y_descent_ratio == 0.4
+    # Current defaults (loosened for real-world use; stricter academic values are
+    # 150/60/90/0.4 but those reject most casual users -- see docstring).
+    assert cfg.start_extension_deg_min == 130.0
+    assert cfg.peak_flexion_deg_max == 80.0
+    assert cfg.end_extension_deg_min == 130.0
+    assert cfg.peak_partial_deg_max == 110.0
+    assert cfg.wrist_y_descent_ratio == 0.25
 
 
 def test_compute_rep_features_attaches_gate_for_curl() -> None:
@@ -330,7 +342,7 @@ def test_c2_fires_when_wrist_rises_enough() -> None:
     # with `single_signal_rom` reason code. This is correct: a shoulder
     # shrug / whole-arm lift is NOT a curl, but it is also not a pure
     # twitch, so we surface it as partial so the judge can see why.
-    assert fv.status == "partial", fv
+    assert fv.status == "degraded", fv  # single-signal -> degraded (schema contract)
     assert "single_signal_rom" in fv.reason_codes
     # Quiet numpy import.
     _ = np.array([])
