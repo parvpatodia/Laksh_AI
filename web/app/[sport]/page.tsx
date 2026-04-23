@@ -91,10 +91,29 @@ type UploadStatus = "idle" | "uploading" | "done" | "error";
 // every render). Mirror of evaluation/preflight_thresholds.json and
 // app/preflight/quality_gate.py. Both sides must agree exactly.
 // ---------------------------------------------------------------------------
-const PREFLIGHT_CORE_IDX = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26] as const;
+//
+// Upper-body exercises only need shoulders / elbows / wrists (11-16).
+// Requiring hips+knees for a bicep curl would falsely reject valid setups
+// where the lower body is legitimately out of frame.
+//
+const UPPER_BODY_EXERCISE_IDS = new Set([
+  "dumbbell_bicep_curl",
+  "bench_press",
+  "overhead_press",
+  "barbell_row",
+  "push_up",
+  "pull_up",
+  "plank",
+]);
+// Landmark indices: 11=left_shoulder, 12=right_shoulder, 13=left_elbow,
+// 14=right_elbow, 15=left_wrist, 16=right_wrist,
+// 23=left_hip, 24=right_hip, 25=left_knee, 26=right_knee.
+const PREFLIGHT_CORE_UPPER = [11, 12, 13, 14, 15, 16] as const;
+const PREFLIGHT_CORE_FULL  = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26] as const;
+
 const PREFLIGHT_RING_SIZE = 90;  // ~3 s at 30 fps
 const PREFLIGHT_VIS_MIN   = 0.50; // MediaPipe "confident" band lower bound
-const PREFLIGHT_IFR_MIN   = 0.80; // 80% of frames must have full body in frame
+const PREFLIGHT_IFR_MIN   = 0.80; // 80% of frames must have key joints in frame
 const PREFLIGHT_MARGIN    = 0.05; // 5% border exclusion zone (matches quality_gate.py)
 
 function SportPageInner() {
@@ -160,7 +179,11 @@ function SportPageInner() {
       if (completed) setLastRep(completed);
 
       // ---- A4: update ring buffer and re-evaluate quality ----
-      const core = PREFLIGHT_CORE_IDX.map((i) => landmarks[i]).filter(Boolean);
+      // Use upper-body landmarks only for exercises where lower body is not required.
+      const coreIdx = exerciseId && UPPER_BODY_EXERCISE_IDS.has(exerciseId)
+        ? PREFLIGHT_CORE_UPPER
+        : PREFLIGHT_CORE_FULL;
+      const core = (coreIdx as readonly number[]).map((i) => landmarks[i]).filter(Boolean);
       if (core.length === 0) return; // no landmarks this frame
 
       const meanVis = core.reduce((sum, lm) => sum + (lm.visibility ?? 0), 0) / core.length;
@@ -184,12 +207,14 @@ function SportPageInner() {
         const ok = visOk && ifrOk;
         setPreflightOk(ok);
         if (!ok) {
+          const isUpperBody = exerciseId && UPPER_BODY_EXERCISE_IDS.has(exerciseId);
+          const bodyLabel = isUpperBody ? "upper body" : "full body";
           if (!visOk && !ifrOk) {
-            setPreflightHint("Move into better light and step back so your full body is in frame.");
+            setPreflightHint(`Move into better light and make sure your ${bodyLabel} is fully in frame.`);
           } else if (!visOk) {
             setPreflightHint(`Pose confidence low (${(avgVis * 100).toFixed(0)}% vs 50% needed). Try better lighting.`);
           } else {
-            setPreflightHint(`Only ${(ifr * 100).toFixed(0)}% of frames have your full body in frame (need 80%). Step back.`);
+            setPreflightHint(`Only ${(ifr * 100).toFixed(0)}% of frames have your ${bodyLabel} in frame (need 80%). Adjust camera.`);
           }
         } else {
           setPreflightHint(null);
