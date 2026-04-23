@@ -61,12 +61,20 @@ def build_mediapipe_pose_provenance(
     multipass: bool,
     pose_usable_gate_applied: dict[str, float | int] | None = None,
     calibration_record: dict[str, Any] | None = None,
+    **extra_fields: Any,
 ) -> dict[str, Any]:
-    """
-    Serializable dict merged into PoseBaselineResult.provenance and JSONL.
+    """Serializable provenance dict merged into PoseBaselineResult and JSONL.
 
-    Includes model fingerprint (SHA-256 of on-disk .task up to 64 MiB), package version,
-    and explicit landmarker hyperparameters for audit trails.
+    Includes model fingerprint (SHA-256 of on-disk .task up to 64 MiB),
+    package version, and explicit landmarker hyperparameters for audit trails.
+
+    Parameters
+    ----------
+    extra_fields:
+        A6 extension: caller-supplied fields merged last (e.g. signals_used,
+        n_shots_detected, n_shots_valid, git_commit_sha, analysis_mode).
+        Extra keys must not overlap with built-in keys; if they do the built-in
+        value wins (no silent override of the SHA-pinned provenance record).
     """
     out: dict[str, Any] = {
         "pose_baseline_schema_version": POSE_BASELINE_SCHEMA_VERSION,
@@ -107,6 +115,11 @@ def build_mediapipe_pose_provenance(
         out["pose_usable_gate_applied"] = pose_usable_gate_applied
     if calibration_record is not None:
         out["calibration"] = calibration_record
+
+    # A6: merge caller-supplied fields without overriding built-ins.
+    for k, v in extra_fields.items():
+        if k not in out:
+            out[k] = v
 
     return out
 

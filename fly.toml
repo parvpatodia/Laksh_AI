@@ -21,6 +21,11 @@ primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"
+  # A6: Pass git SHA at deploy time for provenance.
+  # Usage: fly deploy --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD)
+  # The [build.args] table is NOT used here because the SHA must be dynamic
+  # (evaluated at deploy time, not baked into fly.toml).  A Makefile target
+  # in the repo root handles this automatically (see `make deploy`).
 
 [env]
   # Non-secret runtime config. Secrets (R2_*, API keys) set via `fly secrets set`.

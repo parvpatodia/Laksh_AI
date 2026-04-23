@@ -9,10 +9,10 @@ PYTHON ?= python3
 vercel-prod:
 	cd web && vercel deploy --prod --archive=tgz
 
-# Fly.io API: fly.toml + Dockerfile live at repo root. Running `fly deploy` from web/
-# fails with "missing an app name" — always deploy from the repository root.
+# Fly.io: fly.toml + Dockerfile live at repo root. A6: SHA baked in for provenance.
+# Always deploy from the repository root (not web/) — fly CLI needs fly.toml.
 fly-deploy:
-	fly deploy
+	fly deploy --build-arg GIT_COMMIT_SHA=$(shell git rev-parse HEAD)
 
 test:
 	pytest tests/ -q
@@ -128,6 +128,12 @@ print-calibration-v0:
 #   make analyze-gym-clip VIDEO=evaluation/gym_clips/squat_001.mp4 EXERCISE=back_squat
 # Offline / test (pre-extracted frames JSON):
 #   make analyze-gym-clip FRAMES=evaluation/fixtures/squat_frames.json EXERCISE=back_squat
+# A6: Deploy to Fly.io with git SHA baked in for provenance.
+# Usage: make deploy
+# Requires: fly CLI authenticated, git working tree clean.
+deploy:
+	fly deploy --build-arg GIT_COMMIT_SHA=$(shell git rev-parse HEAD)
+
 analyze-gym-clip:
 ifdef VIDEO
 	$(PYTHON) scripts/analyze_gym_clip.py --exercise-id $(EXERCISE) --video $(VIDEO) --pretty

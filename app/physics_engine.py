@@ -861,6 +861,23 @@ class KinematicAnalyzer:
             w2d, e2d, s2d, h2d = f_2d[f"{side}_wrist"], f_2d[f"{side}_elbow"], f_2d[f"{side}_shoulder"], f_2d[f"{side}_hip"]
             w3d, e3d, s3d = f_3d[f"{side}_wrist"], f_3d[f"{side}_elbow"], f_3d[f"{side}_shoulder"]
             h3d, k3d, a3d = f_3d[f"{side}_hip"], f_3d[f"{side}_knee"], f_3d[f"{side}_ankle"]
+
+            # A5: Multi-shot consensus segmentation.
+            # CRITICAL: pass raw (unfiltered) arrays, not f_2d.  segment_shots()
+            # applies its own Savitzky-Golay pass; passing f_2d (already smoothed)
+            # would double-smooth and destroy the elbow angular-velocity signal (S2).
+            w2d_raw = raw_2d.get(f"{side}_wrist", w2d)
+            e2d_raw = raw_2d.get(f"{side}_elbow", e2d)
+            s2d_raw = raw_2d.get(f"{side}_shoulder", s2d)
+            _shot_seg = None
+            try:
+                from app.basketball.shot_segmenter import segment_shots as _segment_shots
+                _shot_seg = _segment_shots(w2d_raw, e2d_raw, s2d_raw, fps=fps)
+            except Exception:
+                logger.warning(
+                    "segment_shots failed; continuing with single-shot detection",
+                    exc_info=True,
+                )
             
             # Trajectory phases: jump shot (dip → release window) vs set shot / FT (small excursion)
             wrist_y = w2d[:, 1]
@@ -1256,6 +1273,11 @@ class KinematicAnalyzer:
                 "fluidity_score": fluidity,
                 "telemetry": telemetry,
             }
+            # A5: Attach multi-shot segmentation result when available.
+            # Biomech metrics above remain the single-detection values (honest: not claiming
+            # multi-shot median). UI labels this "biomech from dominant shot | N shots detected".
+            if _shot_seg is not None:
+                result["shot_segmentation"] = _shot_seg.to_dict()
             if os.environ.get("LAKSH_INCLUDE_DEBUG_SUMMARY", "").strip().lower() in ("1", "true", "yes"):
                 result["debug_summary"] = _build_debug_summary(
                     analysis_mode=analysis_mode,

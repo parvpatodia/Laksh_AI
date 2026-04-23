@@ -86,6 +86,17 @@ const GYM_EXERCISES: { id: string; label: string; tip: string; dumbbell?: boolea
 
 type UploadStatus = "idle" | "uploading" | "done" | "error";
 
+// ---------------------------------------------------------------------------
+// A4: Pre-flight quality constants (module-level to avoid re-creation on
+// every render). Mirror of evaluation/preflight_thresholds.json and
+// app/preflight/quality_gate.py. Both sides must agree exactly.
+// ---------------------------------------------------------------------------
+const PREFLIGHT_CORE_IDX = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26] as const;
+const PREFLIGHT_RING_SIZE = 90;  // ~3 s at 30 fps
+const PREFLIGHT_VIS_MIN   = 0.50; // MediaPipe "confident" band lower bound
+const PREFLIGHT_IFR_MIN   = 0.80; // 80% of frames must have full body in frame
+const PREFLIGHT_MARGIN    = 0.05; // 5% border exclusion zone (matches quality_gate.py)
+
 function SportPageInner() {
   const params = useParams<{ sport: string }>();
   const searchParams = useSearchParams();
@@ -125,6 +136,14 @@ function SportPageInner() {
   const [currentSignal, setCurrentSignal] = useState<number | null>(null);
   const [lastRep, setLastRep] = useState<GhostRepMetrics | null>(null);
 
+  // ---- A4: Client-side pre-flight quality ring buffer --------------------
+  // Ring buffer stored in a ref so mutations don't trigger re-renders.
+  // Each slot: [mean_core_visibility, is_all_in_frame (0|1)].
+  const preflightRingRef = useRef<Array<[number, number]>>([]);
+  // Expose quality state to upload gate (true = OK to upload).
+  const [preflightOk, setPreflightOk] = useState<boolean | null>(null);
+  const [preflightHint, setPreflightHint] = useState<string | null>(null);
+
   // IMPORTANT: do NOT include `repCount` in the deps. Including it would
   // recreate this callback on every rep, which propagates into PoseCamera's
   // detection-loop useEffect (onLandmarks is in its deps), tearing down and
@@ -139,8 +158,45 @@ function SportPageInner() {
       setCurrentPhase(s.currentPhase);
       setRepCount(s.repCount);
       if (completed) setLastRep(completed);
+
+      // ---- A4: update ring buffer and re-evaluate quality ----
+      const core = PREFLIGHT_CORE_IDX.map((i) => landmarks[i]).filter(Boolean);
+      if (core.length === 0) return; // no landmarks this frame
+
+      const meanVis = core.reduce((sum, lm) => sum + (lm.visibility ?? 0), 0) / core.length;
+      const allInFrame = core.every(
+        (lm) =>
+          lm.x >= PREFLIGHT_MARGIN && lm.x <= 1 - PREFLIGHT_MARGIN &&
+          lm.y >= PREFLIGHT_MARGIN && lm.y <= 1 - PREFLIGHT_MARGIN,
+      );
+      const ring = preflightRingRef.current;
+      ring.push([meanVis, allInFrame ? 1 : 0]);
+      if (ring.length > PREFLIGHT_RING_SIZE) ring.shift();
+
+      // Only re-evaluate (and potentially setState) every 15 frames to
+      // avoid flooding the React scheduler. The boolean flip is the
+      // expensive part; the ring mutation above is free.
+      if (ring.length % 15 === 0 || ring.length === PREFLIGHT_RING_SIZE) {
+        const avgVis = ring.reduce((s, [v]) => s + v, 0) / ring.length;
+        const ifr = ring.reduce((s, [, f]) => s + f, 0) / ring.length;
+        const visOk = avgVis >= PREFLIGHT_VIS_MIN;
+        const ifrOk = ifr >= PREFLIGHT_IFR_MIN;
+        const ok = visOk && ifrOk;
+        setPreflightOk(ok);
+        if (!ok) {
+          if (!visOk && !ifrOk) {
+            setPreflightHint("Move into better light and step back so your full body is in frame.");
+          } else if (!visOk) {
+            setPreflightHint(`Pose confidence low (${(avgVis * 100).toFixed(0)}% vs 50% needed). Try better lighting.`);
+          } else {
+            setPreflightHint(`Only ${(ifr * 100).toFixed(0)}% of frames have your full body in frame (need 80%). Step back.`);
+          }
+        } else {
+          setPreflightHint(null);
+        }
+      }
     },
-    [exerciseId],
+    [exerciseId], // PREFLIGHT_* are module-level constants — not in deps
   );
 
   const handleCaptureComplete = useCallback((blob: Blob, mime: string) => {
@@ -191,6 +247,12 @@ function SportPageInner() {
     setCurrentSignal(null);
     setLastRep(null);
     setCameraActive(false);
+    // A4: clear stale preflight quality state so the amber hint from a prior
+    // session does not bleed into the next one. The ring is a ref (not state)
+    // so we mutate it directly; setPreflightOk/Hint trigger one re-render.
+    preflightRingRef.current = [];
+    setPreflightOk(null);
+    setPreflightHint(null);
   }, []);
 
   // Camera tip for the contextual hint card (gym only — basketball
@@ -335,6 +397,20 @@ function SportPageInner() {
       {cameraError && (
         <div className="mb-4 rounded-lg border border-rose-700/50 bg-rose-900/20 px-4 py-3 text-sm text-rose-300">
           {cameraError}
+        </div>
+      )}
+
+      {/* A4: Pre-flight quality hint — shown while camera is active and quality is poor.
+          Disappears automatically once quality improves (ring buffer self-heals).
+          Uses an amber warning (not red error) — the user can still record; we just tell
+          them the upload will likely fail so they can reposition first. */}
+      {cameraActive && preflightOk === false && preflightHint && (
+        <div className="mb-4 rounded-lg border border-amber-600/50 bg-amber-900/15 px-4 py-3 flex items-start gap-3">
+          <span className="text-amber-400 text-base mt-0.5" aria-hidden>⚠</span>
+          <div>
+            <p className="text-sm font-medium text-amber-200">Pose quality low — recording may not analyse reliably</p>
+            <p className="text-xs text-amber-300/80 leading-relaxed mt-0.5">{preflightHint}</p>
+          </div>
         </div>
       )}
 

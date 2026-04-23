@@ -32,6 +32,11 @@ from app.logging_config import configure_logging
 from app.physics_engine import KinematicAnalyzer
 from app.correction_engine import generate_correction_video
 
+# A6: Git SHA read from environment variable set at Docker build time.
+# Do NOT use subprocess.run(["git", ...]) — git may not be installed in the
+# production container and the .git directory is not mounted in Fly.io images.
+_GIT_COMMIT_SHA: str = os.environ.get("GIT_COMMIT_SHA", "unknown")
+
 # Google Cloud TTS (Studio Voices) — optional; falls back to gTTS if credentials unavailable
 try:
     from google.cloud import texttospeech
@@ -1011,7 +1016,26 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
         out["video_quality_score"] = vq.get("video_quality_score")
         out["video_quality_label"] = vq.get("video_quality_label")
         out["confidence_factors"] = tel.get("confidence_factors") or []
+        # A5: Multi-shot segmentation result (None when segment_shots failed or
+        # the physics_engine is in fallback mode). Surfaced as-is; the UI chip
+        # reads n_shots_detected/valid/degraded. Biomech metrics remain from
+        # the single dominant-shot detection (honest: not claiming per-shot median).
+        out["shot_segmentation"] = biomech.get("shot_segmentation")
         out["api_schema_version"] = API_SCHEMA_VERSION
+
+        # A6: Provenance block for reproducibility and judge auditability.
+        # mediapipe_model_sha is not embedded in the runtime analysis dict;
+        # it is SHA-pinned at build time. The GIT_COMMIT_SHA env var (set at
+        # Docker build time) is the primary audit anchor.
+        seg_info = biomech.get("shot_segmentation") or {}
+        out["provenance"] = {
+            "git_commit_sha": _GIT_COMMIT_SHA,
+            "analysis_mode": "canonical_backend",
+            "signals_used": ["wrist_y_nadir", "elbow_velocity_peak"],
+            "n_shots_detected": seg_info.get("n_shots_detected"),
+            "n_shots_valid": seg_info.get("n_shots_valid"),
+            "n_shots_degraded": seg_info.get("n_shots_degraded"),
+        }
         return out
     finally:
         for path in {safe_name, *extra_cleanup}:

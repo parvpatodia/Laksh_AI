@@ -21,6 +21,7 @@
 import type {
   BasketballAnalyzeResponse,
   BasketballAthleteFeedback,
+  ShotSegmentation,
 } from "@/lib/api";
 
 interface UploadState {
@@ -45,6 +46,38 @@ function MetricCell({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg bg-surface-900/60 px-3 py-2">
       <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
       <p className="text-base font-mono tabular-nums text-slate-100">{value}</p>
+    </div>
+  );
+}
+
+/**
+ * A5: Shot-count chip from multi-signal consensus segmentation.
+ *
+ * Honesty contract: shows raw counts from the segmenter.  Does NOT claim
+ * biomech metrics are per-shot medians — the top-line numbers come from
+ * the single dominant-shot detection and are labelled accordingly.
+ */
+function ShotCountChip({ seg }: { seg: ShotSegmentation }) {
+  const { n_shots_detected, n_shots_valid, n_shots_degraded } = seg;
+  if (n_shots_detected === 0) return null;
+  // Guard against inconsistent counts (dropped can't be negative).
+  const dropped = Math.max(0, n_shots_detected - n_shots_valid - n_shots_degraded);
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-[11px] text-slate-500 uppercase tracking-wider">Shots detected</span>
+      <span className="chip-valid text-[11px] px-1.5 py-0.5 rounded font-mono">
+        {n_shots_valid} valid
+      </span>
+      {n_shots_degraded > 0 && (
+        <span className="chip-preview text-[11px] px-1.5 py-0.5 rounded font-mono">
+          {n_shots_degraded} degraded
+        </span>
+      )}
+      {dropped > 0 && (
+        <span className="bg-rose-900/40 text-rose-300 text-[11px] px-1.5 py-0.5 rounded font-mono">
+          {dropped} dropped
+        </span>
+      )}
     </div>
   );
 }
@@ -149,19 +182,37 @@ export default function BasketballReport({
         )}
       </h2>
 
-      {/* Top-line numbers */}
+      {/* A5: Multi-shot consensus chip — honest label, no invented median */}
+      {result.shot_segmentation && (
+        <ShotCountChip seg={result.shot_segmentation as ShotSegmentation} />
+      )}
+
+      {/* Top-line numbers — from dominant shot detection (honest: not a per-shot median) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         <MetricCell label="Reliability" value={conf !== null ? `${conf.toFixed(0)}%` : "—"} />
         <MetricCell label="Release vel." value={fmtNum(result.release_velocity_mps, 2, " m/s")} />
         <MetricCell label="Shot arc" value={fmtNum(result.shot_arc_deg, 1, "°")} />
         <MetricCell label="Elbow angle" value={fmtNum(result.elbow_angle, 1, "°")} />
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-        <MetricCell label="Knee angle" value={fmtNum(result.knee_angle, 1, "°")} />
-        <MetricCell label="Hip rotation" value={fmtNum(result.hip_rotation_deg, 2, "°")} />
-        <MetricCell label="Kinetic sync" value={fmtNum(result.kinetic_sync_ms, 0, " ms")} />
-        <MetricCell label="Balance idx" value={fmtNum(result.balance_index, 0, "")} />
-      </div>
+      {(() => {
+        const seg = result.shot_segmentation as ShotSegmentation | null | undefined;
+        const multiShot = seg && seg.n_shots_detected > 1;
+        return (
+          <>
+            <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${multiShot ? "mb-1" : "mb-5"}`}>
+              <MetricCell label="Knee angle" value={fmtNum(result.knee_angle, 1, "°")} />
+              <MetricCell label="Hip rotation" value={fmtNum(result.hip_rotation_deg, 2, "°")} />
+              <MetricCell label="Kinetic sync" value={fmtNum(result.kinetic_sync_ms, 0, " ms")} />
+              <MetricCell label="Balance idx" value={fmtNum(result.balance_index, 0, "")} />
+            </div>
+            {multiShot && (
+              <p className="text-[10px] text-slate-600 mb-4 leading-relaxed">
+                Biomech metrics from dominant shot. Per-shot breakdown is post-showcase roadmap.
+              </p>
+            )}
+          </>
+        );
+      })()}
 
       {/* Reliability annotation */}
       {conf !== null && (

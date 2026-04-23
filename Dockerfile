@@ -38,6 +38,13 @@ RUN python scripts/download_pose_model.py
 # chroma_db is baked into the image so startup is instant and error-free.
 RUN python -c "import os, chromadb; from app.db_seeder import seed_database; os.makedirs('/app/chroma_db', exist_ok=True); seed_database(chromadb.PersistentClient(path='/app/chroma_db'))"
 
+# A6: Git commit SHA for provenance. Passed at build time:
+#   docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) .
+#   fly deploy --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD)
+# Falls back to "unknown" when not provided (local dev, old CI configs).
+ARG GIT_COMMIT_SHA=unknown
+ENV GIT_COMMIT_SHA=${GIT_COMMIT_SHA}
+
 EXPOSE 8000
 
 # Single gunicorn worker with uvicorn kernel.

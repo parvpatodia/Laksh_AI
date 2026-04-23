@@ -176,10 +176,11 @@ const EXERCISE_CONFIGS: Record<string, ExerciseRepConfig> = {
   barbell_row: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.10, minRepS: 0.5 },
   pull_up: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.20, minRepS: 0.7 },
   push_up: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.15, minRepS: 0.6 },
-  // Demo-driven addition v0.2.0: single-DB elbow flexion. Same triplet as
-  // bench/OHP. Slightly lower amplitude floor so bodyweight / empty-hand
-  // curls still register when ROM is good but smaller than a heavy DB curl.
-  dumbbell_bicep_curl: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.12, minRepS: 0.5 },
+  // A3 (2026-04-23): minAmplitude raised to 0.50 to mirror backend C1 ROM gate.
+  // 0.50 * 180° = 90° = Norkin & White functional full-curl minimum (start>=150°,
+  // peak<=60° → 90° swing). Upstream had 0.12 (22°) which accepted twitches the
+  // backend drops. minRepS kept at 0.5 s (Nyquist margin below 0.8 s min cadence).
+  dumbbell_bicep_curl: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.50, minRepS: 0.5 },
   // cyclic_angle (backend rep_signal_joint = right_hip)
   romanian_deadlift: { signalKind: "hip_angle", peakDirection: "trough", minAmplitude: 0.10, minRepS: 0.7 },
   // basketball: "rep" = one release–follow-through cycle.  Amplitude kept

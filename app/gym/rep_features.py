@@ -81,6 +81,54 @@ class RepFeaturesConfig:
 
 
 @dataclass(frozen=True)
+class BicepCurlRomGateConfig:
+    """Physiologically-grounded ROM gate for dumbbell bicep curl.
+
+    Thresholds come from Norkin & White, *Measurement of Joint Motion:
+    A Guide to Goniometry*, 5th ed., Ch. 4 (elbow flexion-extension), and
+    published EMG-bicep-curl studies. They are **not** hidden: this config
+    rides with the per-rep feature so any coaching or eval downstream can
+    attribute every pass/fail decision.
+
+    C1 (three-gate angle cycle) -- interior elbow angle over the rep:
+        * ``start_extension_deg_min``: 150 deg at rep start
+          (functional extension; anatomical full extension ~180 is not
+          required on a weighted curl -- Norkin & White call 150-180 the
+          functional-extension band).
+        * ``peak_flexion_deg_max``: 60 deg at rep peak
+          (published EMG studies use 60 not 45 because dumbbell load
+          prevents most trainees from clinical full flexion of 45).
+        * ``end_extension_deg_min``: 150 deg at rep end
+          (return-to-extension gate; symmetric with start).
+
+    C1 partial regime (flagged, surfaced gray, NOT counted):
+        * ``peak_partial_deg_max``: 90 deg -- a half-curl whose peak
+          reached 90 but failed the strict three-gate cycle.
+
+    C2 (secondary wrist-y descent) -- scale-invariant:
+        * ``wrist_y_descent_ratio``: 0.4 -- the wrist's rest-to-trough
+          vertical travel must be at least 40% of the rep's mean
+          shoulder-to-elbow pixel distance. Normalising by a body-scale
+          measurement removes height / framing dependence.
+
+    Consensus rule:
+        * ``valid`` = C1 full AND C2 pass.
+        * ``partial`` = exactly one of {C1 full, C2} passes, OR C1 reaches
+          only the partial regime (peak <= 90 but not <= 60).
+        * ``dropped`` = neither passes.
+
+    Partial reps are surfaced but NOT counted in the headline rep count.
+    Dropped reps are NOT surfaced (no phantom reps).
+    """
+
+    start_extension_deg_min: float = 150.0
+    end_extension_deg_min: float = 150.0
+    peak_flexion_deg_max: float = 60.0
+    peak_partial_deg_max: float = 90.0
+    wrist_y_descent_ratio: float = 0.4
+
+
+@dataclass(frozen=True)
 class FieldValue:
     """One measured field in a :class:`RepFeatureVector`."""
 
@@ -374,6 +422,146 @@ def _visibility_and_missing_features(
     return vis_field, miss_field
 
 
+def evaluate_bicep_curl_rom_gate(
+    rep: RepSpan,
+    canonical_frames: Sequence[Mapping[Any, Any] | None],
+    exercise: ExerciseV0,
+    gate_cfg: BicepCurlRomGateConfig | None = None,
+) -> FieldValue:
+    """Evaluate Norkin & White-cited ROM gate for one bicep-curl rep.
+
+    Pure function. Returns a :class:`FieldValue` whose ``status`` is one of:
+
+    * ``"valid"``   -- C1 full AND C2 pass (full curl by both signals).
+    * ``"partial"`` -- exactly one of {C1 full, C2} passes, OR C1 reaches
+      the partial regime (peak 60 < angle <= 90).
+    * ``"dropped"`` -- neither C1 nor C2 passes.
+    * ``"unknown"`` -- landmarks too sparse to evaluate (no frames, no
+      angle samples at start/peak/end, or wrist/shoulder-elbow missing
+      from the whole window).
+
+    ``reason_codes`` name every gate that failed so the caller can surface
+    them in the UI (e.g. ``("start_not_extended", "wrist_amplitude_low")``).
+
+    The returned ``value`` carries no physical meaning on its own --
+    consumers read ``status`` + ``reason_codes``. We store ``None`` for
+    ``value`` to avoid tempting a downstream user to plot it as a scalar.
+    """
+    if exercise.exercise_id != "dumbbell_bicep_curl":
+        # Defensive: caller should not invoke this for other exercises.
+        return FieldValue(None, "curl_rom_gate", "unknown", ("wrong_exercise",))
+    cfg = gate_cfg or BicepCurlRomGateConfig()
+
+    a_name, b_name, c_name = _ANGLE_TRIPLETS["right_elbow"]
+    # Fallback to left side if right is occluded -- match the browser
+    # mirror (repCounter.ts) which picks the best-visibility side.
+    def _angle_at(frame_idx: int) -> float | None:
+        if frame_idx < 0 or frame_idx >= len(canonical_frames):
+            return None
+        fr = canonical_frames[frame_idx]
+        for triplet in (
+            _ANGLE_TRIPLETS["right_elbow"],
+            _ANGLE_TRIPLETS["left_elbow"],
+        ):
+            a = _get_joint(fr, triplet[0])
+            b = _get_joint(fr, triplet[1])
+            c = _get_joint(fr, triplet[2])
+            if a is None or b is None or c is None:
+                continue
+            ang = _interior_angle_deg(
+                (a[0], a[1]), (b[0], b[1]), (c[0], c[1])
+            )
+            if ang is not None:
+                return ang
+        return None
+
+    start_angle = _angle_at(rep.start_frame)
+    peak_angle = _angle_at(rep.peak_frame)
+    end_angle = _angle_at(rep.end_frame)
+
+    reason_codes: list[str] = []
+
+    # C1 -- three-gate angle cycle.
+    c1_start_ok = start_angle is not None and start_angle >= cfg.start_extension_deg_min
+    c1_peak_full = peak_angle is not None and peak_angle <= cfg.peak_flexion_deg_max
+    c1_peak_partial = peak_angle is not None and peak_angle <= cfg.peak_partial_deg_max
+    c1_end_ok = end_angle is not None and end_angle >= cfg.end_extension_deg_min
+    c1_full_pass = c1_start_ok and c1_peak_full and c1_end_ok
+
+    if not c1_start_ok:
+        reason_codes.append("start_not_extended")
+    if not c1_peak_full:
+        reason_codes.append("peak_not_flexed")
+    if not c1_end_ok:
+        reason_codes.append("end_not_extended")
+
+    # C2 -- wrist-y descent normalised by shoulder-elbow pixel length.
+    # Pixel-y grows downward; the wrist goes UP during a curl, so pixel-y
+    # DECREASES. The relevant amplitude is rest_y - min_y over the rep
+    # window, normalised by the rep's mean shoulder-to-elbow length.
+    wrist_ys: list[float] = []
+    se_lengths: list[float] = []
+    start = max(0, rep.start_frame)
+    end = min(len(canonical_frames) - 1, rep.end_frame)
+    for i in range(start, end + 1):
+        fr = canonical_frames[i]
+        # Try right side first, fall back to left.
+        for side in ("right", "left"):
+            sh = _get_joint(fr, f"{side}_shoulder")
+            el = _get_joint(fr, f"{side}_elbow")
+            wr = _get_joint(fr, f"{side}_wrist")
+            if sh is not None and el is not None and wr is not None:
+                wrist_ys.append(wr[1])
+                se_lengths.append(
+                    math.hypot(sh[0] - el[0], sh[1] - el[1])
+                )
+                break
+
+    c2_pass = False
+    wrist_amplitude: float | None = None
+    if wrist_ys and se_lengths:
+        mean_se = float(np.mean(se_lengths))
+        if mean_se >= 1e-6:
+            # "Descent" = rest-wrist-y minus min-wrist-y (positive when the
+            # wrist rises in world coords). Use the rep's FIRST sample as the
+            # rest reference since the rep starts at an extension boundary.
+            rest_y = wrist_ys[0]
+            min_y = float(np.min(wrist_ys))
+            descent = rest_y - min_y
+            wrist_amplitude = descent / mean_se
+            c2_pass = wrist_amplitude >= cfg.wrist_y_descent_ratio
+
+    if not c2_pass:
+        reason_codes.append("wrist_amplitude_low")
+
+    # Unknown state: we could not evaluate either gate at all.
+    angles_unknown = (
+        start_angle is None and peak_angle is None and end_angle is None
+    )
+    if angles_unknown and wrist_amplitude is None:
+        return FieldValue(
+            None, "curl_rom_gate", "unknown", ("no_joint_observations",)
+        )
+
+    # Consensus status.
+    if c1_full_pass and c2_pass:
+        status = "valid"
+        reason_codes = []  # clean: no failures to surface
+    elif (c1_full_pass and not c2_pass) or (c2_pass and not c1_full_pass):
+        status = "partial"
+        reason_codes.append("single_signal_rom")
+    elif c1_peak_partial:
+        # Partial regime: peak reached <=90 deg but failed the strict
+        # three-gate cycle and C2 also failed.
+        status = "partial"
+        reason_codes.append("partial_rom")
+    else:
+        status = "dropped"
+        reason_codes.append("twitch")
+
+    return FieldValue(None, "curl_rom_gate", status, tuple(reason_codes))
+
+
 def compute_rep_features(
     rep: RepSpan,
     rep_index: int,
@@ -381,8 +569,15 @@ def compute_rep_features(
     exercise: ExerciseV0,
     fps: float,
     config: RepFeaturesConfig | None = None,
+    curl_rom_config: BicepCurlRomGateConfig | None = None,
 ) -> RepFeatureVector:
-    """Compute per-rep feature vector for ``rep``. Pure function."""
+    """Compute per-rep feature vector for ``rep``. Pure function.
+
+    For ``dumbbell_bicep_curl`` the result additionally carries a
+    ``curl_rom_gate`` field whose status is the Norkin & White-cited
+    consensus of C1 (three-gate angle cycle) and C2 (normalised wrist-y
+    descent). See :func:`evaluate_bicep_curl_rom_gate`.
+    """
     if fps <= 0:
         raise ValueError(f"fps must be > 0, got {fps}")
     if rep.start_frame < 0 or rep.end_frame < rep.start_frame:
@@ -394,6 +589,10 @@ def compute_rep_features(
     vis, missing = _visibility_and_missing_features(canonical_frames, rep, exercise, cfg)
     features["primary_joints_min_visibility"] = vis
     features["primary_joints_missing_frac"] = missing
+    if exercise.exercise_id == "dumbbell_bicep_curl":
+        features["curl_rom_gate"] = evaluate_bicep_curl_rom_gate(
+            rep, canonical_frames, exercise, curl_rom_config
+        )
     return RepFeatureVector(
         schema_version=REP_FEATURES_SCHEMA_VERSION,
         exercise_id=exercise.exercise_id,

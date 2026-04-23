@@ -277,6 +277,25 @@ export interface BasketballAthleteFeedback {
   [k: string]: unknown;
 }
 
+/** One detected shot from the multi-signal consensus segmenter (A1/A5). */
+export interface ShotSpanInfo {
+  release_frame: number;
+  start_frame: number;
+  end_frame: number;
+  status: "valid" | "degraded" | "dropped";
+  signals_fired: string[];
+  reason_codes: string[];
+}
+
+/** Shot segmentation summary attached to the analyze-video response (A5). */
+export interface ShotSegmentation {
+  n_shots_detected: number;
+  n_shots_valid: number;
+  n_shots_degraded: number;
+  shots: ShotSpanInfo[];
+  reason_codes: string[];
+}
+
 export interface BasketballAnalyzeResponse {
   athlete_name?: string;
   sport?: string;
@@ -302,6 +321,8 @@ export interface BasketballAnalyzeResponse {
   video_quality_label?: string;
   video_quality_score?: number;
   api_schema_version?: string;
+  /** A5: multi-shot consensus result. Null when segment_shots failed. */
+  shot_segmentation?: ShotSegmentation | null;
   [k: string]: unknown;
 }
 
