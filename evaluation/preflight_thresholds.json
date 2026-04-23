@@ -1,0 +1,11 @@
+{
+  "_comment": "Single source of truth for pre-flight quality thresholds shared between the Python server (app/preflight/quality_gate.py) and the TypeScript client (web/app/[sport]/page.tsx). Update both sides when changing any value.",
+  "_provenance": {
+    "visibility_core": "MediaPipe Pose Landmarker documentation: 0.5 is the lower bound of the confident detection band (2024).",
+    "in_frame_ratio": "80% tolerates brief occlusions (arm swings out of frame during a curl top) while rejecting clips where the subject is persistently cut off.",
+    "fps_floor": "Nyquist argument: 25 fps / (1 / 0.6 s inter-rep minimum) = 15x oversampling ratio; tolerates 17% VFR jitter below the 30 fps target."
+  },
+  "visibility_core": 0.50,
+  "in_frame_ratio": 0.80,
+  "fps_floor": 25.0
+}
