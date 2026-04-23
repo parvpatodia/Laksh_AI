@@ -439,25 +439,35 @@ def _normalize_analysis(
     telemetry = biomech.get("telemetry") or {}
     vq = telemetry.get("video_quality") or {}
     metric_status = biomech.get("metric_status") or {}
+    # Biomech scalar fields — emitted BOTH at the top level (for the
+    # BasketballAnalyzeResponse TypeScript interface which reads them directly)
+    # and inside the nested "stats" dict (for ChromaDB delta calculations and
+    # backward compatibility). The top-level keys are the authoritative source.
+    _biomech_scalars = {
+        "release_velocity_mps": biomech.get("release_velocity_mps"),
+        "shot_arc_deg": biomech.get("shot_arc_deg"),
+        "knee_angle": biomech.get("knee_angle"),
+        "elbow_angle": biomech.get("elbow_angle"),
+        "knee_angle_uncertainty": biomech.get("knee_angle_uncertainty"),
+        "elbow_angle_uncertainty": biomech.get("elbow_angle_uncertainty"),
+        "kinetic_sync_ms": biomech.get("kinetic_sync_ms"),
+        "hip_rotation_deg": biomech.get("hip_rotation_deg"),
+        "balance_index": biomech.get("balance_index"),
+        "fluidity_score": biomech.get("fluidity_score"),
+    }
     out = {
         **data,
+        # Top-level scalars: these are what BasketballReport.tsx reads via
+        # result.release_velocity_mps etc. (BasketballAnalyzeResponse interface).
+        **_biomech_scalars,
         "analysis_mode": biomech.get("analysis_mode") or "full",
         "fallback_reason_codes": biomech.get("fallback_reason_codes") or [],
         "metric_status": metric_status,
         "athlete_action": data.get("athlete_action") or "—",
         "witty_catchphrase": data.get("witty_catchphrase") or "",
         "stats": {
-            "release_velocity_mps": biomech.get("release_velocity_mps"),
-            "shot_arc_deg": biomech.get("shot_arc_deg"),
-            "knee_angle": biomech.get("knee_angle"),
-            "elbow_angle": biomech.get("elbow_angle"),
-            "knee_angle_uncertainty": biomech.get("knee_angle_uncertainty"),
-            "elbow_angle_uncertainty": biomech.get("elbow_angle_uncertainty"),
-            "kinetic_sync_ms": biomech.get("kinetic_sync_ms"),
-            "hip_rotation_deg": biomech.get("hip_rotation_deg"),
-            "balance_index": biomech.get("balance_index"),
+            **_biomech_scalars,
             "market_index": market_index,
-            "fluidity_score": biomech.get("fluidity_score"),
         },
         "scout_report": data.get("scout_report") or "—",
         "athlete_feedback": feedback,
