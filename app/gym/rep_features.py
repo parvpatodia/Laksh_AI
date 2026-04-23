@@ -121,11 +121,20 @@ class BicepCurlRomGateConfig:
     Dropped reps are NOT surfaced (no phantom reps).
     """
 
-    start_extension_deg_min: float = 150.0
-    end_extension_deg_min: float = 150.0
-    peak_flexion_deg_max: float = 60.0
-    peak_partial_deg_max: float = 90.0
-    wrist_y_descent_ratio: float = 0.4
+    # Loosened from 150 -> 130: many users don't fully lock out at the start
+    # and end of a curl, especially under load. 130 still requires substantial
+    # extension and rejects half-rep "pump" motions.
+    start_extension_deg_min: float = 130.0
+    end_extension_deg_min: float = 130.0
+    # Loosened from 60 -> 80: requires the elbow to pass 80 degrees of flexion.
+    # 60 was calibrated for competitive athletes; 80 matches what a casual user
+    # achieves with a moderate dumbbell and is still a meaningful full curl.
+    peak_flexion_deg_max: float = 80.0
+    # Partial regime: 80 < angle <= 110 is flagged as partial (not dropped).
+    peak_partial_deg_max: float = 110.0
+    # Loosened from 0.4 -> 0.25: the wrist must travel at least 25% of the
+    # shoulder-to-elbow distance upward. Normalised so it works for any user height.
+    wrist_y_descent_ratio: float = 0.25
 
 
 @dataclass(frozen=True)
