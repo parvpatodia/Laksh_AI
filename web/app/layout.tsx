@@ -17,11 +17,14 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Laksh.ai — Sports Biomechanics Analysis",
   description:
-    "Real-time pose analysis and per-rep feature vectors for basketball and gym compound lifts. " +
-    "Browser-side ghost metrics + canonical backend audit with explicit parity probe.",
+    "Frame-by-frame biomechanical analysis for basketball and strength training. " +
+    "33 skeletal landmarks, real-time pose overlay, and a verified per-rep report — " +
+    "measured from your own body, not estimated from population averages.",
   openGraph: {
-    title: "Laksh.ai",
-    description: "Sports biomechanics analysis — realtime + canonical dual-path.",
+    title: "Laksh.ai — Sports Biomechanics Analysis",
+    description:
+      "Real-time skeleton overlay and a verified biomechanical breakdown for every " +
+      "shot or rep — grounded in pose measurement, not population averages.",
     type: "website",
   },
 };
