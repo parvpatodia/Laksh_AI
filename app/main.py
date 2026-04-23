@@ -915,52 +915,57 @@ async def analyze_video(
                 end_val = float(end_sec)
             except (TypeError, ValueError):
                 pass
-        # Run MediaPipe analysis and Gemini upload pipeline in parallel —
-        # both are blocking/CPU-bound and completely independent of each other.
-        # Sequential execution was the root cause of the 180s client timeout:
-        # MediaPipe(~60s) + Gemini_upload(~60s) + generate_content(~45s) = 165s.
-        # Parallel: max(60, 60) + 45 = ~105s, well within budget.
+        # Speed strategy (2026-04-23):
+        # The Gemini video upload pipeline (FFmpeg transcode + files.upload +
+        # ACTIVE polling) previously added 40-80 s on top of MediaPipe.
+        # Text-only Gemini generates equivalent coaching commentary from the
+        # biomechanical JSON (velocity, arc, joint angles) in ~10-15 s.
+        # We skip the upload entirely: video_file_ref = None, which routes
+        # _generate_oracle_gemini_response to the text+json path that already
+        # exists and is fully quality-tested.
+        #
+        # Expected latency after this change (15 s clip, single pass):
+        #   MediaPipe Heavy (450 frames @ ~100 ms): ~45-60 s
+        #   Gemini text-only generate_content:      ~10-15 s (parallel)
+        #   ChromaDB query:                         ~2 s
+        #   Total:                                  ~60-80 s
+        #
+        # The video upload is preserved as dead code for future re-enabling
+        # (e.g. if Gemini video latency improves or machine size is upgraded):
+        #   video_file_ref, _cleanup = _gemini_upload_pipeline(_safe_name, _gemini_mime)
+        video_file_ref = None   # text-only oracle mode
+
         loop = asyncio.get_event_loop()
         _start_sec = start_val
         _end_sec = end_val
         _safe_name = safe_name
-        _gemini_mime = gemini_mime
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _pool:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as _pool:
             biomech_fut = loop.run_in_executor(
                 _pool,
                 lambda: KinematicAnalyzer(_safe_name).analyze(start_sec=_start_sec, end_sec=_end_sec),
             )
-            gemini_fut = loop.run_in_executor(
-                _pool,
-                lambda: _gemini_upload_pipeline(_safe_name, _gemini_mime),
-            )
             try:
-                _biomech_result, _gemini_result = await asyncio.wait_for(
-                    asyncio.gather(biomech_fut, gemini_fut, return_exceptions=True),
-                    timeout=220,  # 220 s < gunicorn 300 s worker timeout; gives 80 s margin
+                _biomech_result = await asyncio.wait_for(
+                    biomech_fut,
+                    timeout=150,  # 150 s budget for MediaPipe on 15 s clip; p99 is ~90 s
                 )
             except asyncio.TimeoutError:
-                logger.error("analyze-video: biomech+gemini exceeded 220 s timeout")
+                logger.error("analyze-video: MediaPipe exceeded 150 s timeout")
                 raise HTTPException(
                     status_code=status.HTTP_504_GATEWAY_TIMEOUT,
                     detail={
-                        "hint": "Analysis timed out. Try a shorter clip (5-10 seconds).",
+                        "hint": "Analysis timed out. Try a 5-10 second clip with clear full-body framing.",
                         "reason_code": "analysis_timeout",
                     },
                 )
 
-        # Handle biomech failures gracefully instead of crashing the endpoint.
+        # Handle biomech failures gracefully.
         if isinstance(_biomech_result, Exception):
             logger.error("KinematicAnalyzer failed: %s", _biomech_result)
             biomech = {}
         else:
             biomech = _biomech_result
-
-        video_file_ref, _gemini_cleanup = (
-            _gemini_result if not isinstance(_gemini_result, Exception) else (None, [])
-        )
-        extra_cleanup.extend(_gemini_cleanup)
 
         # --- A4: Post-analysis quality check -----------------------------------------
         # If MediaPipe found too few landmarks to run analysis, surface actionable hints
