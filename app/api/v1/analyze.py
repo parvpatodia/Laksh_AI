@@ -214,6 +214,14 @@ async def analyze_gym_video(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        except Exception as e:
+            # Catches internal pipeline errors (scipy, numpy, feature extraction) so
+            # an unexpected edge-case never returns a raw 500 Internal Server Error.
+            log.exception("analyze_gym_clip raised unexpected error: %s", e)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Clip analysis failed: {e}. Try re-recording with your full body visible.",
+            ) from e
 
     finally:
         try:

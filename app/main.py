@@ -942,7 +942,13 @@ async def analyze_video(
             )
 
         player_id = meta.get("id") or meta.get("player_id")
-        matched_pro = _build_matched_pro(match_name, player_id, meta) if match_name != "—" else None
+        try:
+            matched_pro = _build_matched_pro(match_name, player_id, meta) if match_name != "—" else None
+        except Exception as _pro_err:
+            # Malformed ChromaDB metadata (non-numeric v0-v7) — degrade gracefully.
+            logger.warning("_build_matched_pro failed: %s", _pro_err)
+            matched_pro = None
+            match_name = "—"
         market_index = calculate_market_index(query_vector, match_distance)
 
         # Build pro_stats from meta (v0-v7) for delta calculation.
@@ -1074,7 +1080,10 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
                 )
                 _oracle_error_msg = "Oracle commentary could not be parsed — biomechanical data is complete."
         except APIError as e:
-            err_code = int(getattr(e, "code", 503) or 503)
+            try:
+                err_code = int(getattr(e, "code", 503) or 503)
+            except (TypeError, ValueError):
+                err_code = 503  # code attr is a non-int string (e.g. "RESOURCE_EXHAUSTED")
             logger.error(
                 "Gemini APIError after retries: code=%s message=%s details=%s",
                 err_code,
