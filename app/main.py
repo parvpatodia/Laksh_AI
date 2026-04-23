@@ -935,9 +935,20 @@ async def analyze_video(
                 _pool,
                 lambda: _gemini_upload_pipeline(_safe_name, _gemini_mime),
             )
-            _biomech_result, _gemini_result = await asyncio.gather(
-                biomech_fut, gemini_fut, return_exceptions=True
-            )
+            try:
+                _biomech_result, _gemini_result = await asyncio.wait_for(
+                    asyncio.gather(biomech_fut, gemini_fut, return_exceptions=True),
+                    timeout=220,  # 220 s < gunicorn 300 s worker timeout; gives 80 s margin
+                )
+            except asyncio.TimeoutError:
+                logger.error("analyze-video: biomech+gemini exceeded 220 s timeout")
+                raise HTTPException(
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    detail={
+                        "hint": "Analysis timed out. Try a shorter clip (5-10 seconds).",
+                        "reason_code": "analysis_timeout",
+                    },
+                )
 
         # Handle biomech failures gracefully instead of crashing the endpoint.
         if isinstance(_biomech_result, Exception):
