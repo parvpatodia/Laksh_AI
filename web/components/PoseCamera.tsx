@@ -4,14 +4,12 @@
  * PoseCamera: webcam feed + MediaPipe LIVE_STREAM skeleton overlay.
  *
  * Responsibilities
- * ----------------
  * 1. Request camera access (getUserMedia).
  * 2. Feed frames into PoseLandmarker (LIVE_STREAM, lite model).
  * 3. Draw skeleton on a canvas overlay at ~30 FPS via requestAnimationFrame.
- * 4. Call onLandmarks on every detected frame so parent can run ghost metrics.
+ * 4. Call onLandmarks on every detected frame so the parent can run ghost metrics.
  * 5. Expose startCapture / stopCapture for MediaRecorder clip recording.
- *    - Records the raw camera stream (no overlay burned in).
- *    - Returns a Blob to onCaptureComplete so the parent can POST it.
+ *    Returns a Blob to onCaptureComplete so the parent can POST it.
  *
  * The landmarker is a process-wide singleton (landmarkerLoader.ts) so
  * navigating between sports does not reload the 3 MB model.
@@ -42,9 +40,8 @@ export interface PoseCameraProps {
   /** Called when camera permission is denied or an unrecoverable error occurs. */
   onError?: (message: string) => void;
   /**
-   * Auto-stop recording after this many seconds. Defaults to 6.
-   * Shorter clips = less MediaPipe work = faster analysis (~40s vs 3+ min).
-   * A 6s clip at 30 fps gives ~180 frames — enough for 3-5 clean reps.
+   * Auto-stop recording after this many seconds. Defaults to 15.
+   * A 15 s clip at 30 fps gives ~450 frames - enough for multiple reps or shots.
    */
   maxDurationS?: number;
 }
@@ -60,7 +57,7 @@ export default function PoseCamera({
   onLandmarks,
   onCaptureComplete,
   onError,
-  maxDurationS = 6,
+  maxDurationS = 15,
 }: PoseCameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -68,7 +65,6 @@ export default function PoseCamera({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const rafRef = useRef<number>(0);
   const landmarkerReadyRef = useRef(false);
-  // Auto-stop timer and elapsed counter for the recording countdown.
   const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -76,17 +72,19 @@ export default function PoseCamera({
   const [isRecording, setIsRecording] = useState(false);
   const [landmarkerLoaded, setLandmarkerLoaded] = useState(false);
   const [fps, setFps] = useState<number>(0);
-  // Seconds elapsed since recording started (drives the countdown badge).
   const [recordingElapsed, setRecordingElapsed] = useState(0);
-  // 0.0–1.0: fraction of core joints detected in the last frame.
+  // Detection quality: 0.0-1.0 (fraction of core joints confident).
+  // null = camera not yet ready. 0 = camera ready but no person in frame.
   const [detectionQuality, setDetectionQuality] = useState<number | null>(null);
+  // How many consecutive frames had zero detection (drives "no person" warning).
+  const noPoseFramesRef = useRef(0);
+  const [showNoPoseWarning, setShowNoPoseWarning] = useState(false);
 
-  // FPS counter (rolling average over 30 frames).
   const fpsBuffer = useRef<number[]>([]);
   const lastFrameTs = useRef<number>(0);
 
   // ---------------------------------------------------------------------------
-  // Landmarker init (singleton, fires once per page lifetime)
+  // Landmarker init
   // ---------------------------------------------------------------------------
   useEffect(() => {
     loadPoseLandmarker()
@@ -96,9 +94,8 @@ export default function PoseCamera({
       })
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
-        onError?.(`MediaPipe load failed: ${msg}`);
+        onError?.(`Pose model failed to load: ${msg}`);
       });
-    // No cleanup: singleton lives for the page lifetime.
   }, [onError]);
 
   // ---------------------------------------------------------------------------
@@ -107,9 +104,6 @@ export default function PoseCamera({
   const startCamera = useCallback(async () => {
     setCameraState("requesting");
     try {
-      // Request 720p — many webcams capture a wider FOV at this resolution
-      // than at 1080p (which uses a centre crop on some models). facingMode
-      // "user" selects the front-facing camera on laptops and phones.
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -119,8 +113,7 @@ export default function PoseCamera({
         audio: false,
       });
 
-      // Attempt to set minimum zoom on cameras that support the constraint.
-      // Most laptop webcams don't expose zoom, so this is a no-op in practice.
+      // Request minimum zoom (widest FOV) if the device supports it.
       try {
         const track = stream.getVideoTracks()[0];
         if (track) {
@@ -128,14 +121,13 @@ export default function PoseCamera({
             zoom?: { min: number; max: number; step: number };
           };
           if (caps.zoom) {
-            // Set to minimum zoom = widest possible field of view.
             await track.applyConstraints({
               advanced: [{ zoom: caps.zoom.min } as MediaTrackConstraintSet],
             });
           }
         }
       } catch {
-        // Zoom not supported or constraint rejected — proceed normally.
+        // Zoom unsupported - proceed normally.
       }
 
       streamRef.current = stream;
@@ -155,11 +147,12 @@ export default function PoseCamera({
     cancelAnimationFrame(rafRef.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
+    if (videoRef.current) videoRef.current.srcObject = null;
     setCameraState("idle");
     setIsRecording(false);
+    setDetectionQuality(null);
+    setShowNoPoseWarning(false);
+    noPoseFramesRef.current = 0;
   }, []);
 
   useEffect(() => {
@@ -172,7 +165,7 @@ export default function PoseCamera({
   }, [active, startCamera, stopCamera]);
 
   // ---------------------------------------------------------------------------
-  // Detection loop (requestAnimationFrame)
+  // Detection loop
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (cameraState !== "ready" || !landmarkerReadyRef.current) return;
@@ -192,7 +185,6 @@ export default function PoseCamera({
         return;
       }
 
-      // Sync canvas size to video intrinsic dimensions.
       if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
         canvas.width = video.videoWidth || 1280;
         canvas.height = video.videoHeight || 720;
@@ -200,7 +192,7 @@ export default function PoseCamera({
 
       const now = performance.now();
 
-      // FPS
+      // FPS counter
       if (lastFrameTs.current > 0) {
         fpsBuffer.current.push(1000 / (now - lastFrameTs.current));
         if (fpsBuffer.current.length > 30) fpsBuffer.current.shift();
@@ -209,20 +201,24 @@ export default function PoseCamera({
       }
       lastFrameTs.current = now;
 
-      // VIDEO mode: detectForVideo returns synchronously.
       const landmarker = await loadPoseLandmarker();
       const result = landmarker.detectForVideo(video, now);
       const pose = result.landmarks?.[0];
+
       if (!pose) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         setDetectionQuality(0);
+        // Show "no person" warning after 20 consecutive empty frames (~0.7 s).
+        // This avoids flashing the warning for a single dropped frame.
+        noPoseFramesRef.current += 1;
+        if (noPoseFramesRef.current >= 20) setShowNoPoseWarning(true);
       } else {
+        noPoseFramesRef.current = 0;
+        setShowNoPoseWarning(false);
         drawSkeleton(ctx, pose, canvas.width, canvas.height);
         onLandmarks?.(pose, now);
-        // Update detection quality every 10 frames (cheap, avoids flooding React).
         setDetectionQuality((prev) => {
           const q = coreDetectionFraction(pose);
-          // Smooth with a simple EMA so the badge doesn't flicker.
           return prev === null ? q : prev * 0.8 + q * 0.2;
         });
       }
@@ -241,7 +237,6 @@ export default function PoseCamera({
   // MediaRecorder
   // ---------------------------------------------------------------------------
   const stopCapture = useCallback(() => {
-    // Clear auto-stop timer and elapsed counter before stopping.
     if (autoStopTimerRef.current !== null) {
       clearTimeout(autoStopTimerRef.current);
       autoStopTimerRef.current = null;
@@ -275,17 +270,15 @@ export default function PoseCamera({
       setRecordingElapsed(0);
     };
 
-    recorder.start(100); // 100ms timeslices for low-latency chunks
+    recorder.start(100);
     recorderRef.current = recorder;
     setIsRecording(true);
     setRecordingElapsed(0);
 
-    // Elapsed counter — updates every second for the countdown badge.
     recordingIntervalRef.current = setInterval(() => {
       setRecordingElapsed((prev) => prev + 1);
     }, 1000);
 
-    // Auto-stop after maxDurationS to keep clips short and analysis fast.
     autoStopTimerRef.current = setTimeout(() => {
       recorderRef.current?.stop();
       recorderRef.current = null;
@@ -299,103 +292,111 @@ export default function PoseCamera({
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
+  const timeLeft = Math.max(0, maxDurationS - recordingElapsed);
+  const pct = detectionQuality !== null ? Math.round(detectionQuality * 100) : null;
+
+  const qualityColor = pct === null ? "" :
+    pct === 0   ? "bg-rose-900/70 text-rose-300 border border-rose-700/40" :
+    pct >= 80   ? "bg-emerald-900/60 text-emerald-300 border border-emerald-700/40" :
+    pct >= 50   ? "bg-amber-900/60 text-amber-300 border border-amber-700/40" :
+                  "bg-rose-900/60 text-rose-300 border border-rose-700/40";
+
+  const qualityDot = pct === null ? "" :
+    pct === 0   ? "bg-rose-400" :
+    pct >= 80   ? "bg-emerald-400" :
+    pct >= 50   ? "bg-amber-400" :
+                  "bg-rose-400";
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Camera viewport.
-          aspect-[3/4] (portrait-ish) instead of 16:9 so a standing full body
-          fits without cropping. object-contain (not cover) so the entire
-          camera frame is visible -- judges can see exactly what the model
-          sees, including their feet.
-          On large screens we let the box grow up to ~80vh so a full standing
-          shot is comfortably visible from across a research-showcase booth. */}
+    <div className="flex flex-col gap-3">
+      {/* Camera viewport */}
       <div className="relative w-full mx-auto aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/10]
                       max-h-[80vh] rounded-2xl overflow-hidden border border-surface-700 bg-black">
-        {/* Video */}
+        {/* Video feed */}
         <video
           ref={videoRef}
           className="w-full h-full object-contain"
           playsInline
           muted
-          style={{ transform: "scaleX(-1)" }} // mirror for natural selfie view
+          style={{ transform: "scaleX(-1)" }}
         />
 
-        {/* Skeleton overlay (object-contain on the video means the canvas
-            must letterbox the same way; we still draw in video-pixel space
-            inside the canvas, so just match container size). */}
+        {/* Skeleton overlay */}
         <canvas
           ref={canvasRef}
           className="pose-overlay object-contain"
           style={{ transform: "scaleX(-1)" }}
         />
 
-        {/* Framing tip overlay (only while idle; disappears once camera ready) */}
+        {/* Idle state */}
         {cameraState === "idle" && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2
-                          bg-black/60 text-slate-300 text-xs px-3 py-1.5 rounded-full
-                          border border-surface-600 whitespace-nowrap">
-            Stand 6&#8211;10 ft back, full body in frame, ball or dumbbell in hand
-          </div>
-        )}
-
-        {/* Status overlays */}
-        {cameraState === "idle" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface-900/80">
-            <div className="text-center text-slate-400">
-              <p className="text-4xl mb-2">📷</p>
-              <p className="text-sm">Click Start to begin</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-900/90 gap-3">
+            <div className="rounded-full border border-surface-600 bg-surface-800 p-5">
+              <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z" />
+              </svg>
             </div>
+            <p className="text-sm text-slate-500">Press Start to activate camera</p>
           </div>
         )}
 
+        {/* Requesting */}
         {cameraState === "requesting" && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface-900/80">
-            <p className="text-sm text-slate-400 animate-pulse">Requesting camera…</p>
+            <p className="text-sm text-slate-400 animate-pulse">Requesting camera access...</p>
           </div>
         )}
 
+        {/* Error */}
         {cameraState === "error" && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface-900/90">
             <p className="text-sm text-rose-400">Camera unavailable</p>
           </div>
         )}
 
-        {/* Loading badge */}
+        {/* Loading pose model */}
         {cameraState === "ready" && !landmarkerLoaded && (
-          <div className="absolute top-3 left-3 chip-preview text-xs px-2 py-1 rounded">
-            Loading pose model…
+          <div className="absolute top-3 left-3 text-xs px-2.5 py-1 rounded bg-surface-800/80 text-slate-400 border border-surface-600">
+            Loading pose model...
+          </div>
+        )}
+
+        {/* No person detected warning - overlaid in the centre of the frame */}
+        {cameraState === "ready" && landmarkerLoaded && showNoPoseWarning && (
+          <div className="absolute inset-0 flex items-end justify-center pb-16 pointer-events-none">
+            <div className="flex items-center gap-2 bg-rose-950/90 border border-rose-700/60
+                            text-rose-300 text-sm px-4 py-2.5 rounded-xl backdrop-blur-sm">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              No person detected - step into frame
+            </div>
           </div>
         )}
 
         {/* FPS + detection quality badge */}
         {cameraState === "ready" && landmarkerLoaded && (
           <div className="absolute top-3 left-3 flex items-center gap-1.5">
-            <div className="bg-black/60 text-slate-400 text-xs px-2 py-1 rounded font-mono">
+            <div className="bg-black/60 text-slate-400 text-xs px-2 py-1 rounded font-mono border border-white/5">
               {fps} fps
             </div>
-            {detectionQuality !== null && (
-              <div className={`text-xs px-2 py-1 rounded font-mono flex items-center gap-1
-                              ${detectionQuality >= 0.8
-                                ? "bg-emerald-900/70 text-emerald-300"
-                                : detectionQuality >= 0.5
-                                  ? "bg-amber-900/70 text-amber-300"
-                                  : "bg-rose-900/70 text-rose-300"}`}>
-                <span className={`w-1.5 h-1.5 rounded-full
-                                  ${detectionQuality >= 0.8 ? "bg-emerald-400"
-                                    : detectionQuality >= 0.5 ? "bg-amber-400"
-                                    : "bg-rose-400"}`} />
-                {detectionQuality === 0
-                  ? "No pose"
-                  : `Pose ${Math.round(detectionQuality * 100)}%`}
+            {pct !== null && (
+              <div className={`text-xs px-2 py-1 rounded font-mono flex items-center gap-1.5 ${qualityColor}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${qualityDot} ${pct > 0 && pct < 50 ? "animate-pulse" : ""}`} />
+                Pose {pct}%
               </div>
             )}
           </div>
         )}
 
-        {/* Recording badge — shows live countdown to auto-stop */}
+        {/* Recording badge */}
         {isRecording && (
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-rose-900/80 text-rose-300 text-xs px-2 py-1 rounded">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse-slow" />
-            REC · {Math.max(0, maxDurationS - recordingElapsed)}s
+          <div className="absolute top-3 right-3 flex items-center gap-1.5
+                          bg-rose-950/90 border border-rose-700/50 text-rose-300 text-xs px-2.5 py-1 rounded-lg">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+            REC {timeLeft}s
           </div>
         )}
       </div>
@@ -415,25 +416,24 @@ export default function PoseCamera({
             onClick={startCapture}
             disabled={!landmarkerLoaded}
             className="px-5 py-2.5 rounded-lg bg-rose-600 text-white text-sm font-medium
-                       hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                       hover:bg-rose-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Record
           </button>
         ) : isRecording ? (
           <button
             onClick={stopCapture}
-            className="px-5 py-2.5 rounded-lg bg-surface-700 text-slate-200 text-sm font-medium
-                       hover:bg-surface-600 transition-colors border border-rose-700"
+            className="px-5 py-2.5 rounded-lg border border-rose-700/60 bg-surface-700
+                       text-slate-200 text-sm font-medium hover:bg-surface-600 transition-colors"
           >
-            Stop & Analyse
+            Stop and Analyse
           </button>
         ) : null}
 
         {cameraState === "ready" && (
           <button
             onClick={stopCamera}
-            className="px-4 py-2.5 rounded-lg text-slate-400 text-sm hover:text-slate-200
-                       transition-colors"
+            className="px-4 py-2.5 rounded-lg text-slate-400 text-sm hover:text-slate-200 transition-colors"
           >
             Stop camera
           </button>
@@ -442,10 +442,10 @@ export default function PoseCamera({
         {cameraState === "ready" && (
           <span className="text-xs text-slate-600 ml-auto">
             {isRecording
-              ? `Recording — auto-stops in ${Math.max(0, maxDurationS - recordingElapsed)}s`
+              ? `Recording - stops in ${timeLeft}s`
               : landmarkerLoaded
-                ? `Pose tracking active · will record up to ${maxDurationS}s`
-                : "Loading pose model (~3 MB)…"}
+                ? `Tracking active - records up to ${maxDurationS}s`
+                : "Loading pose model (3 MB)..."}
           </span>
         )}
       </div>

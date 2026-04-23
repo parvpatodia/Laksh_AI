@@ -190,11 +190,37 @@ const EXERCISE_CONFIGS: Record<string, ExerciseRepConfig> = {
   barbell_row: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.10, minRepS: 0.5 },
   pull_up: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.20, minRepS: 0.7 },
   push_up: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.15, minRepS: 0.6 },
-  // A3 (2026-04-23): minAmplitude raised to 0.50 to mirror backend C1 ROM gate.
-  // 0.50 * 180° = 90° = Norkin & White functional full-curl minimum (start>=150°,
-  // peak<=60° → 90° swing). Upstream had 0.12 (22°) which accepted twitches the
-  // backend drops. minRepS kept at 0.5 s (Nyquist margin below 0.8 s min cadence).
-  dumbbell_bicep_curl: { signalKind: "elbow_angle", peakDirection: "trough", minAmplitude: 0.50, minRepS: 0.5 },
+  // Bicep curl calibration (2026-04-23, revised):
+  //
+  // Signal: interiorAngleDeg(shoulder-elbow-wrist) / 180, normalized 0..1.
+  //   At full extension (arm at side, ~160°):  signal ≈ 0.89
+  //   At full flexion  (peak curl, ~60–80°):   signal ≈ 0.33–0.44
+  //   Real curl amplitude: 0.89 - 0.38 ≈ 0.51 → accepted by minAmplitude 0.45
+  //
+  // minAmplitude 0.45: requires ~81° of elbow travel. Accepts full curls (>90°)
+  //   and decent-depth curls (80–90°). Rejects overhead press motions (<60°
+  //   amplitude) and casual arm settling (<30° amplitude).
+  //
+  // minRepS 1.0: a full controlled bicep curl (lower + curl + lower) takes 1.5–3s.
+  //   1.0s rejects picking-up-the-dumbbell motions (0.3–0.7s) and
+  //   settling/fidget movements that caused the "3 reps for 1 actual rep" bug.
+  //   Was 0.5s — every arm movement of 0.5s+ was eligible.
+  //
+  // minPeakValue 0.55: for trough direction, this checks (1 - signal_min) >= 0.55
+  //   i.e. signal_min <= 0.45 i.e. elbow angle <= 81°.
+  //   Requires the elbow to actually pass 81° of flexion during the rep.
+  //   Rejects "half-curl" motions that don't flex past 90° (signal_min > 0.50).
+  //
+  // Together: a valid count needs >1s duration AND >81° of travel AND the elbow
+  //   must actually reach the <81° zone. All three conditions fail for setup
+  //   movements and only pass for deliberate full or near-full curls.
+  dumbbell_bicep_curl: {
+    signalKind: "elbow_angle",
+    peakDirection: "trough",
+    minAmplitude: 0.45,
+    minRepS: 1.0,
+    minPeakValue: 0.55,
+  },
   // cyclic_angle (backend rep_signal_joint = right_hip)
   romanian_deadlift: { signalKind: "hip_angle", peakDirection: "trough", minAmplitude: 0.10, minRepS: 0.7 },
   // basketball: "rep" = one shot cycle (wind-up → release → follow-through).
