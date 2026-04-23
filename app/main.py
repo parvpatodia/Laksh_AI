@@ -206,7 +206,16 @@ app.add_middleware(
 app.include_router(v1_router)
 
 # Fly often sets GOOGLE_API_KEY; local dev may use GEMINI_API_KEY — GenAI client needs one.
+# Both spellings are checked so neither key naming convention breaks.
 _genai_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+if not _genai_key:
+    # This is a hard error that will cause 401 on every request; log loudly so it
+    # is the FIRST thing visible in fly logs / docker logs rather than buried in traces.
+    logger.error(
+        "CRITICAL: No Gemini API key found. Set GEMINI_API_KEY or GOOGLE_API_KEY "
+        "via `fly secrets set -a laksh-api 'GEMINI_API_KEY=...'`. "
+        "All /analyze-video calls will fail with 401 until this is set."
+    )
 client = genai.Client(api_key=_genai_key)
 
 _DASHBOARD = _REPO_ROOT / "static" / "dashboard.html"
@@ -506,10 +515,11 @@ def _temp_video_path_and_gemini_mime(upload: UploadFile, raw: bytes) -> tuple[st
 
 # Common misconfiguration: ``gemini-2.5`` is not a valid API id (must be e.g. ``gemini-2.5-flash``).
 _GEMINI_MODEL_ALIASES: dict[str, str] = {
-    "gemini-2.5": "gemini-2.5-flash",
+    "gemini-2.5": "gemini-2.5-pro",
     "gemini-2.0": "gemini-2.0-flash",
-    "gemini-1.5": "gemini-1.5-flash",
-    "gemini-flash": "gemini-2.0-flash",
+    "gemini-1.5": "gemini-1.5-pro",
+    "gemini-flash": "gemini-2.5-flash",
+    "gemini-pro": "gemini-2.5-pro",
 }
 
 
@@ -531,13 +541,17 @@ def _normalize_gemini_model_id(raw: str) -> str | None:
 
 
 def _oracle_gemini_models() -> list[str]:
-    """Models to try in order. AI Studio keys often allow 2.0 before 2.5.
+    """Models to try in order — best quality first.
 
     - ``GEMINI_ORACLE_MODELS`` — comma-separated list (highest priority).
     - ``GEMINI_ORACLE_MODEL`` — single model id.
-    - Default — ``gemini-2.0-flash`` then ``gemini-2.5-flash`` then ``gemini-1.5-flash``.
+    - Default — ``gemini-2.5-pro`` (best multimodal) then ``gemini-2.5-flash``
+      (fast fallback) then ``gemini-2.0-flash`` (stable fallback).
 
-    **Shell:** quote values — ``fly secrets set -a APP 'GEMINI_ORACLE_MODEL=gemini-2.0-flash'``.
+    User is paying for quality: Pro is tried first. If the key does not have
+    access to Pro (AI Studio free tier), it will 403/404 and we drop to Flash.
+
+    **Shell:** quote values — ``fly secrets set -a APP 'GEMINI_ORACLE_MODEL=gemini-2.5-pro'``.
     A trailing ``;`` starts a new shell command and can corrupt secrets.
     """
     raw_m = (os.environ.get("GEMINI_ORACLE_MODELS") or "").strip()
@@ -548,7 +562,7 @@ def _oracle_gemini_models() -> list[str]:
     elif raw_1:
         pieces.append(raw_1)
     else:
-        pieces = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+        pieces = ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"]
 
     out: list[str] = []
     for p in pieces:
@@ -562,7 +576,7 @@ def _oracle_gemini_models() -> list[str]:
         if m not in seen:
             seen.add(m)
             deduped.append(m)
-    return deduped if deduped else ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    return deduped if deduped else ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"]
 
 
 def _transcode_for_gemini_upload(src_path: str) -> tuple[str, str] | None:
@@ -646,16 +660,21 @@ def _extract_json_object_from_text(text: str) -> dict:
 
 
 def _generate_oracle_gemini_response(video_part, prompt: str) -> tuple[object, str]:
-    """Call Gemini with a compatibility-first attempt order.
+    """Call Gemini with a quality-first attempt order.
 
-    Structured output (``response_mime_type`` + schema) often returns **400** on some keys;
-    **plain text** + prompt-level JSON instructions succeeds more often. Video attempts
-    are last (upload + multimodal cost).
+    When a video file is available, video-grounded attempts are tried FIRST
+    (best quality — the model actually watches the clip). Text-only attempts
+    are the fallback if the video upload failed or if all video attempts fail.
+
+    Within each mode, JSON-schema output is tried before plain-text because
+    it avoids a second parse step; both are always tried so a 400 on schema
+    does not block the result.
 
     *video_part* may be ``None`` if ``files.upload`` failed.
     """
     schema = ORACLE_SCHEMA_GENAI
-    text_fallback = (
+    # Prompt variant that works without video (plain-text instruction-following)
+    text_prompt = (
         f"{prompt}\n\n"
         "Return one JSON object only (no markdown). "
         "Include keys: athlete_action, stats, scout_report, athlete_feedback "
@@ -664,46 +683,53 @@ def _generate_oracle_gemini_response(video_part, prompt: str) -> tuple[object, s
     last_err: APIError | None = None
 
     for model in _oracle_gemini_models():
-        # Order matters: plain text first (most compatible), structured modes last.
-        attempts: list[tuple[str, list, types.GenerateContentConfig]] = [
-            (
-                "text+plain",
-                [text_fallback],
-                types.GenerateContentConfig(temperature=0.2),
-            ),
-            (
-                "text+json",
-                [text_fallback],
-                types.GenerateContentConfig(response_mime_type="application/json"),
-            ),
+        attempts: list[tuple[str, list, types.GenerateContentConfig]] = []
+
+        # --- Video-grounded attempts (best quality; skipped if upload failed) ---
+        if video_part is not None:
+            contents_v = [video_part, prompt]
+            attempts.extend([
+                (
+                    "video+schema",
+                    contents_v,
+                    types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=schema,
+                    ),
+                ),
+                (
+                    "video+json",
+                    contents_v,
+                    types.GenerateContentConfig(response_mime_type="application/json"),
+                ),
+                (
+                    "video+plain",
+                    contents_v,
+                    types.GenerateContentConfig(temperature=0.2),
+                ),
+            ])
+
+        # --- Text-only fallbacks (no video; always included) ---
+        attempts.extend([
             (
                 "text+schema",
-                [text_fallback],
+                [text_prompt],
                 types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
                 ),
             ),
-        ]
-        if video_part is not None:
-            contents_v = [video_part, prompt]
-            attempts.extend(
-                [
-                    (
-                        "video+json",
-                        contents_v,
-                        types.GenerateContentConfig(response_mime_type="application/json"),
-                    ),
-                    (
-                        "video+schema",
-                        contents_v,
-                        types.GenerateContentConfig(
-                            response_mime_type="application/json",
-                            response_schema=schema,
-                        ),
-                    ),
-                ]
-            )
+            (
+                "text+json",
+                [text_prompt],
+                types.GenerateContentConfig(response_mime_type="application/json"),
+            ),
+            (
+                "text+plain",
+                [text_prompt],
+                types.GenerateContentConfig(temperature=0.2),
+            ),
+        ])
 
         for tag, contents, cfg in attempts:
             try:
@@ -912,40 +938,51 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
                 getattr(upload_err, "message", None),
             )
 
+        # Oracle generation: always return biomech data even when Gemini fails.
+        # A Gemini error is logged loudly but does NOT propagate as HTTPException —
+        # the frontend receives biomechanical metrics and stub oracle fields instead
+        # of an empty 503.  This is the "canonical results never show empty" contract.
+        _oracle_error_msg: str | None = None
+        data: dict = {}
         try:
             response, oracle_mode = _generate_oracle_gemini_response(video_file_ref, prompt)
             logger.info("Gemini oracle succeeded mode=%s", oracle_mode)
+            try:
+                data = _extract_json_object_from_text(response.text or "")
+            except (json.JSONDecodeError, ValueError) as je:
+                logger.error(
+                    "Gemini JSON parse failed: %s text=%s", je, (response.text or "")[:2000]
+                )
+                _oracle_error_msg = "Oracle commentary could not be parsed — biomechanical data is complete."
         except APIError as e:
+            err_code = int(getattr(e, "code", 503) or 503)
             logger.error(
                 "Gemini APIError after retries: code=%s message=%s details=%s",
-                getattr(e, "code", None),
+                err_code,
                 getattr(e, "message", None),
                 getattr(e, "details", None),
             )
-            status = int(getattr(e, "code", 503) or 503)
-            msg = "Analysis service temporarily unavailable. Please try again in a moment."
-            if status == 429:
-                msg = "Rate limit exceeded. Please try again later."
-            elif status in (400, 404):
-                msg = (
-                    "Gemini request failed (400). Check: (1) use full model ids like "
-                    "gemini-2.0-flash not gemini-2.5; (2) quote secrets: "
-                    "fly secrets set -a laksh-api 'GEMINI_ORACLE_MODEL=gemini-2.0-flash'; "
-                    "(3) see fly logs for details=."
-                )
-            raise HTTPException(status_code=min(status, 503), detail=msg)
+            if err_code == 401:
+                _oracle_error_msg = "Oracle unavailable: API key missing or invalid. Set GEMINI_API_KEY on the server."
+            elif err_code == 429:
+                _oracle_error_msg = "Oracle unavailable: rate limit reached. Biomechanical data shown below."
+            else:
+                _oracle_error_msg = "Oracle commentary temporarily unavailable. Biomechanical data is complete."
         except Exception as exc:
-            logger.exception("Gemini file upload or generate_content failed: %s", exc)
-            raise HTTPException(status_code=503, detail="Analysis service error. Please try again.")
+            logger.exception("Gemini generate_content failed: %s", exc)
+            _oracle_error_msg = "Oracle commentary temporarily unavailable. Biomechanical data is complete."
 
-        try:
-            data = _extract_json_object_from_text(response.text or "")
-        except (json.JSONDecodeError, ValueError) as je:
-            logger.error("Gemini JSON parse failed: %s text=%s", je, (response.text or "")[:2000])
-            raise HTTPException(status_code=502, detail="Model returned invalid JSON. Please try again.")
         data["kinematic_deltas"] = deltas
 
         out = _normalize_analysis(data, biomech, market_index, match_name, matched_pro)
+        if _oracle_error_msg:
+            # Surface a friendly degraded-oracle notice in the scout_report field
+            # so the frontend always has something to show (not an empty card).
+            out["scout_report"] = (
+                out.get("scout_report")
+                or f"[Oracle commentary unavailable] {_oracle_error_msg}"
+            )
+            out["oracle_error"] = _oracle_error_msg
         out["athlete_name"] = (athlete_name or "").strip() or "Athlete"
         out["sport"] = sport or "basketball"
         analysis_mode = biomech.get("analysis_mode") or "full"
