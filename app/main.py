@@ -905,20 +905,22 @@ async def analyze_video(
         ]
         query_vector = [v * w for v, w in zip(raw_vector, FEATURE_WEIGHTS)]
 
-        collection = _get_collection()
-        results = collection.query(
-            query_embeddings=[query_vector],
-            n_results=1,
-            include=["documents", "metadatas", "distances"],
-        )
-
         match_name = "—"
         meta = {}
         match_distance = 999.0
         confidence_score = 88.5
 
-        # ChromaDB returns [[]] for empty collections — check inner list before indexing
+        # ChromaDB query + result parsing — fully wrapped so a DB failure never
+        # crashes the request.  On any exception we degrade to no pro-match
+        # (match_name="—") and keep the biomech metrics intact.
         try:
+            collection = _get_collection()
+            results = collection.query(
+                query_embeddings=[query_vector],
+                n_results=1,
+                include=["documents", "metadatas", "distances"],
+            )
+            # ChromaDB returns [[]] for empty collections — check inner list.
             dists = results.get("distances") if results else []
             docs = results.get("documents") if results else []
             metas = results.get("metadatas") if results else []
@@ -932,8 +934,12 @@ async def analyze_video(
                 match_name = str(docs[0][0])
             if metas and len(metas) > 0 and len(metas[0]) > 0 and metas[0][0]:
                 meta = dict(metas[0][0])
-        except (IndexError, TypeError, KeyError) as e:
-            logger.warning("ChromaDB parsing error: %s", e)
+        except Exception as chroma_err:
+            # DB down, not initialized, or corrupt result — log loudly but
+            # do NOT raise.  Biomech data and Gemini oracle still return.
+            logger.error(
+                "ChromaDB query/init failed — pro match degraded: %s", chroma_err
+            )
 
         player_id = meta.get("id") or meta.get("player_id")
         matched_pro = _build_matched_pro(match_name, player_id, meta) if match_name != "—" else None

@@ -359,6 +359,21 @@ export async function analyzeBasketballVideo(
   const url = `${apiBase()}/analyze-video`;
   const res = await fetchVideoAnalyze(url, form, "Basketball analyze");
   if (!res.ok) {
+    // For 422 (preflight failed), extract the actionable hint from the JSON body
+    // so the frontend error state shows something useful ("Video too short: record ≥1s")
+    // rather than a raw HTTP status line.
+    if (res.status === 422) {
+      try {
+        const body = await res.json() as { detail?: { hint?: string; reason_code?: string } };
+        const hint = body?.detail?.hint ?? "Video quality check failed. Please re-record.";
+        throw new Error(hint);
+      } catch (parseErr) {
+        if (parseErr instanceof Error && parseErr.message !== "Video quality check failed. Please re-record.") {
+          throw parseErr; // re-throw the hint error
+        }
+        // JSON parse failed — fall through to generic error
+      }
+    }
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`API ${formatFailedApiBody(res.status, "/analyze-video", text)}`);
   }
