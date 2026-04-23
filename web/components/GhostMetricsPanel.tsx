@@ -7,6 +7,7 @@
  */
 
 import type { GhostRepMetrics, GhostField, Phase } from "@/lib/realtime/repCounter";
+import { LIVE_COUNTER_DISCLAIMER } from "@/lib/realtime/repCounter";
 
 interface Props {
   repCount: number;
@@ -87,7 +88,7 @@ export default function GhostMetricsPanel({
       ) : (
         <>
           {/* Live counters */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-1">
             <div className="rounded-lg bg-surface-900/60 px-3 py-2">
               <p className="text-xs text-slate-500 mb-0.5">{counterLabel}</p>
               <p className="text-2xl font-bold text-slate-100 font-mono tabular-nums">
@@ -101,6 +102,8 @@ export default function GhostMetricsPanel({
               </p>
             </div>
           </div>
+          {/* A3: Honest disclaimer — live counter is a real-time preview, not the final report count */}
+          <p className="text-[10px] text-slate-600 mb-3 leading-tight">{LIVE_COUNTER_DISCLAIMER}</p>
 
           {/* Signal bar */}
           {currentSignal !== null && (

@@ -309,6 +309,12 @@ export interface BasketballAnalyzeResponse {
   fluidity_score?: number | null;
   hip_rotation_deg?: number | null;
   balance_index?: number | null;
+  // Per-metric uncertainty (±N in same units as the metric)
+  knee_angle_uncertainty?: number | null;
+  elbow_angle_uncertainty?: number | null;
+  balance_index_uncertainty?: number | null;
+  fluidity_score_uncertainty?: number | null;
+  hip_rotation_uncertainty?: number | null;
   scout_report?: string;
   athlete_feedback?: BasketballAthleteFeedback[];
   witty_catchphrase?: string;
@@ -317,6 +323,12 @@ export interface BasketballAnalyzeResponse {
   oracle_match_degraded?: boolean;
   kinematic_deltas?: Record<string, number | string>;
   metric_status?: Record<string, BasketballMetricStatus>;
+  /** A4: per-metric camera/framing hints (only when source quality < predicted). */
+  metric_hints?: Record<string, string>;
+  /** A4: "pose_detection_failed" when fallback mode; null/absent otherwise. */
+  preflight_status?: string | null;
+  /** A4: actionable user hints when preflight_status is set. */
+  preflight_hints?: string[];
   validation_warnings?: string[];
   video_quality_label?: string;
   video_quality_score?: number;

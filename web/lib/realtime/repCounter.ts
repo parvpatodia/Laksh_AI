@@ -196,6 +196,18 @@ export function isRealtimeSupported(exerciseId: string): boolean {
   return exerciseId in EXERCISE_CONFIGS;
 }
 
+/**
+ * Honesty notice shown near the live counter in the UI.
+ *
+ * The report uses a stricter multi-pass MediaPipe pipeline with
+ * Savitzky-Golay smoothing on the full clip.  The live counter runs
+ * frame-by-frame with EMA smoothing and no post-hoc correction —
+ * so it may count fewer reps than the report.  Under-counting is the
+ * intentional design (P1: never over-count).
+ */
+export const LIVE_COUNTER_DISCLAIMER =
+  "Live count is a real-time estimate. The final report may count more reps using stricter smoothing on the full clip.";
+
 // ---------------------------------------------------------------------------
 // Signal extraction
 // ---------------------------------------------------------------------------

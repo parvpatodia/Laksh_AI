@@ -221,6 +221,56 @@ client = genai.Client(api_key=_genai_key)
 _DASHBOARD = _REPO_ROOT / "static" / "dashboard.html"
 
 
+def _fast_video_precheck(path: str) -> tuple[bool, str, dict]:
+    """Cheap OpenCV-only pre-validation before committing to MediaPipe.
+
+    Returns (ok, reason_code, actuals).  Uses only cv2 — no MediaPipe init.
+    Rejects obviously bad inputs in < 0.3 s so the 25-40 s analysis budget is
+    not burned on unreadable or pathologically short clips.
+
+    Thresholds are deliberately lenient: the purpose is to catch corrupted files
+    and clips where no biomechanics could possibly be computed (< 1 s, < 10 fps).
+    We do NOT mirror the full A4 visibility/in-frame thresholds here because those
+    require landmark data that only MediaPipe can produce.
+    """
+    import cv2 as _cv2
+    try:
+        cap = _cv2.VideoCapture(path)
+        if not cap.isOpened():
+            return False, "video_unreadable", {}
+        fps = cap.get(_cv2.CAP_PROP_FPS) or 0.0
+        total = cap.get(_cv2.CAP_PROP_FRAME_COUNT) or 0.0
+        # Read at least one frame to confirm the bitstream is valid.
+        ok_read, _ = cap.read()
+        cap.release()
+        if not ok_read:
+            return False, "video_no_frames", {}
+        duration_s = (total / fps) if fps > 0 else 0.0
+        if fps < 10.0:
+            return False, "preflight_fps_failed", {"fps_observed": round(fps, 1), "fps_floor": 10.0}
+        if duration_s < 1.0:
+            return False, "preflight_too_short", {"duration_s": round(duration_s, 2), "min_duration_s": 1.0}
+        return True, "", {"fps_observed": round(fps, 1), "duration_s": round(duration_s, 1)}
+    except Exception as exc:
+        logger.warning("Fast video pre-check failed: %s", exc)
+        return True, "", {}  # On unexpected error: allow through; full analysis handles it
+
+
+# Human-readable hints for each preflight/fallback failure code.
+_PREFLIGHT_HINTS: dict[str, str] = {
+    "video_unreadable": "The video file could not be decoded. Try re-recording or using a different format (MP4/H.264).",
+    "video_no_frames": "No valid frames found in the video. Try re-recording.",
+    "preflight_fps_failed": "Video frame rate is too low for reliable biomechanics. Record at 30 fps (most phone cameras default to this).",
+    "preflight_too_short": "Clip is too short. Record at least 2-3 seconds of your shooting motion.",
+    "low_detections": "Very few body landmarks were detected. Ensure your full upper body is visible and well-lit.",
+    "low_visibility": "Landmark visibility was low throughout the clip. Move to a well-lit area and ensure your body is not obscured.",
+    "short_clip": "Clip is too short for a complete shot-cycle analysis. Record a full jump-shot motion.",
+    "decode_error": "Video decode failed. Try re-recording or converting to MP4.",
+    "pose_init_failed": "Pose engine failed to initialize. This is a server issue — please retry.",
+    "analysis_exception": "An unexpected analysis error occurred. Please retry; if the problem persists, try a different clip.",
+}
+
+
 def _warm_pose_landmarker() -> None:
     """Pre-load the MediaPipe pose model file into OS disk cache.
 
@@ -450,6 +500,9 @@ def _normalize_analysis(
         "elbow_angle": biomech.get("elbow_angle"),
         "knee_angle_uncertainty": biomech.get("knee_angle_uncertainty"),
         "elbow_angle_uncertainty": biomech.get("elbow_angle_uncertainty"),
+        "balance_index_uncertainty": biomech.get("balance_index_uncertainty"),
+        "fluidity_score_uncertainty": biomech.get("fluidity_score_uncertainty"),
+        "hip_rotation_uncertainty": biomech.get("hip_rotation_uncertainty"),
         "kinetic_sync_ms": biomech.get("kinetic_sync_ms"),
         "hip_rotation_deg": biomech.get("hip_rotation_deg"),
         "balance_index": biomech.get("balance_index"),
@@ -463,6 +516,12 @@ def _normalize_analysis(
         "analysis_mode": biomech.get("analysis_mode") or "full",
         "fallback_reason_codes": biomech.get("fallback_reason_codes") or [],
         "metric_status": metric_status,
+        # A4: actionable per-metric hints (only populated when source quality is
+        # below "predicted" — tells the user exactly how to improve framing).
+        "metric_hints": biomech.get("metric_hints") or {},
+        # A4: pose detection quality status from post-analysis check.
+        "preflight_status": biomech.get("preflight_status"),
+        "preflight_hints": biomech.get("preflight_hints") or [],
         "athlete_action": data.get("athlete_action") or "—",
         "witty_catchphrase": data.get("witty_catchphrase") or "",
         "stats": {
@@ -778,6 +837,21 @@ async def analyze_video(
     with open(safe_name, "wb") as b:
         b.write(raw)
     try:
+        # --- A4: Fast pre-check (< 0.3 s, OpenCV only) --------------------------------
+        # Catches corrupted/too-short/low-fps inputs before burning 25-40 s of MediaPipe.
+        _pre_ok, _pre_code, _pre_actuals = _fast_video_precheck(safe_name)
+        if not _pre_ok:
+            hint = _PREFLIGHT_HINTS.get(_pre_code, "Please re-record and try again.")
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "preflight_failed",
+                    "reason_code": _pre_code,
+                    "hint": hint,
+                    "actuals": _pre_actuals,
+                },
+            )
+
         start_val = None
         end_val = None
         if start_sec is not None and str(start_sec).strip():
@@ -791,6 +865,22 @@ async def analyze_video(
             except (TypeError, ValueError):
                 pass
         biomech = KinematicAnalyzer(safe_name).analyze(start_sec=start_val, end_sec=end_val)
+
+        # --- A4: Post-analysis quality check -----------------------------------------
+        # If MediaPipe found too few landmarks to run analysis, surface actionable hints
+        # in the response rather than returning bare null/fallback fields.
+        # We return 200 (not 422) so the frontend shows a warning state, not an error.
+        _analysis_mode = biomech.get("analysis_mode", "full")
+        _fallback_codes = biomech.get("fallback_reason_codes") or []
+        if _analysis_mode == "fallback" and _fallback_codes:
+            # Build hints from the reason codes so the user knows exactly what to fix.
+            _pose_hints = [
+                _PREFLIGHT_HINTS[c] for c in _fallback_codes if c in _PREFLIGHT_HINTS
+            ]
+            biomech["preflight_status"] = "pose_detection_failed"
+            biomech["preflight_hints"] = _pose_hints or [
+                "Ensure your full body is visible, well-lit, and you perform a clear shooting or curl motion."
+            ]
 
         # Query ChromaDB BEFORE Gemini so we can compute deltas for the prompt.
         # Weights must mirror db_seeder.FEATURE_WEIGHTS exactly so query and index

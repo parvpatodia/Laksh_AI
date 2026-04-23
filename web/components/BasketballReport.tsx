@@ -18,6 +18,7 @@
  *     so judges can distinguish it from the deterministic biomech.
  */
 
+import React from "react";
 import type {
   BasketballAnalyzeResponse,
   BasketballAthleteFeedback,
@@ -41,11 +42,56 @@ function fmtNum(n: number | null | undefined, digits = 1, suffix = ""): string {
   return `${n.toFixed(digits)}${suffix}`;
 }
 
-function MetricCell({ label, value }: { label: string; value: string }) {
+/**
+ * Source quality tier -> colour.
+ * measured/predicted = green; interpolated = amber; estimated/constant = orange.
+ * Judges can hover to read the full label.
+ */
+function srcDot(src: string | undefined): React.ReactNode {
+  if (!src) return null;
+  const cls =
+    src === "measured"   ? "bg-emerald-400 title-measured"
+    : src === "predicted"  ? "bg-sky-400 title-predicted"
+    : src === "interpolated" ? "bg-amber-400"
+    : "bg-orange-400"; // estimated | constant
   return (
-    <div className="rounded-lg bg-surface-900/60 px-3 py-2">
-      <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
+    <span
+      className={`inline-block w-1.5 h-1.5 rounded-full ml-1 flex-shrink-0 ${cls}`}
+      title={`Source: ${src}`}
+    />
+  );
+}
+
+function MetricCell({
+  label,
+  value,
+  sourceSrc,
+  uncertainty,
+  uncertaintyUnit = "",
+  hint,
+}: {
+  label: string;
+  value: string;
+  sourceSrc?: string;
+  uncertainty?: number | null;
+  uncertaintyUnit?: string;
+  hint?: string;
+}) {
+  return (
+    <div className={`rounded-lg bg-surface-900/60 px-3 py-2 ${hint ? "border border-amber-700/30" : ""}`} title={hint}>
+      <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-0.5 flex items-center gap-0.5">
+        {label}
+        {srcDot(sourceSrc)}
+      </p>
       <p className="text-base font-mono tabular-nums text-slate-100">{value}</p>
+      {uncertainty != null && uncertainty > 0 && (
+        <p className="text-[10px] text-slate-600 mt-0.5 font-mono">
+          ±{uncertainty.toFixed(uncertainty < 5 ? 1 : 0)}{uncertaintyUnit}
+        </p>
+      )}
+      {hint && (
+        <p className="text-[10px] text-amber-400/80 mt-0.5 leading-tight line-clamp-2">{hint}</p>
+      )}
     </div>
   );
 }
@@ -167,6 +213,10 @@ export default function BasketballReport({
       : conf >= 70 ? "text-emerald-300"
         : conf >= 40 ? "text-amber-300"
           : "text-rose-300";
+  // Helper: extract source label from metric_status for a given metric key.
+  const ms = result.metric_status ?? {};
+  const src = (key: string) => (ms[key] as { source?: string } | undefined)?.source;
+  const hints = result.metric_hints ?? {};
 
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
@@ -182,17 +232,46 @@ export default function BasketballReport({
         )}
       </h2>
 
+      {/* A4: Preflight warning — pose detection failed, give actionable hints */}
+      {result.preflight_status === "pose_detection_failed" && (result.preflight_hints ?? []).length > 0 && (
+        <div className="rounded-lg border border-yellow-600/50 bg-yellow-900/15 px-3 py-2 mb-4">
+          <p className="text-xs font-medium text-yellow-300 mb-1">Pose detection was limited — metrics are estimates</p>
+          <ul className="list-disc list-inside space-y-0.5">
+            {(result.preflight_hints ?? []).map((h, i) => (
+              <li key={i} className="text-[11px] text-yellow-200/80">{h}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* A5: Multi-shot consensus chip — honest label, no invented median */}
       {result.shot_segmentation && (
         <ShotCountChip seg={result.shot_segmentation as ShotSegmentation} />
       )}
 
-      {/* Top-line numbers — from dominant shot detection (honest: not a per-shot median) */}
+      {/* Top-line numbers — from dominant shot detection.
+          Coloured dot = source quality: green=measured, blue=predicted, amber=interpolated, orange=estimated/constant.
+          ±uncertainty shown below each value when source < measured. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         <MetricCell label="Reliability" value={conf !== null ? `${conf.toFixed(0)}%` : "—"} />
-        <MetricCell label="Release vel." value={fmtNum(result.release_velocity_mps, 2, " m/s")} />
-        <MetricCell label="Shot arc" value={fmtNum(result.shot_arc_deg, 1, "°")} />
-        <MetricCell label="Elbow angle" value={fmtNum(result.elbow_angle, 1, "°")} />
+        <MetricCell
+          label="Release vel."
+          value={fmtNum(result.release_velocity_mps, 2, " m/s")}
+          sourceSrc={src("release_velocity_mps")}
+        />
+        <MetricCell
+          label="Shot arc"
+          value={fmtNum(result.shot_arc_deg, 1, "°")}
+          sourceSrc={src("shot_arc_deg")}
+        />
+        <MetricCell
+          label="Elbow angle"
+          value={fmtNum(result.elbow_angle, 1, "°")}
+          sourceSrc={src("elbow_angle")}
+          uncertainty={result.elbow_angle_uncertainty}
+          uncertaintyUnit="°"
+          hint={hints["elbow_angle"]}
+        />
       </div>
       {(() => {
         const seg = result.shot_segmentation as ShotSegmentation | null | undefined;
@@ -200,14 +279,38 @@ export default function BasketballReport({
         return (
           <>
             <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${multiShot ? "mb-1" : "mb-5"}`}>
-              <MetricCell label="Knee angle" value={fmtNum(result.knee_angle, 1, "°")} />
-              <MetricCell label="Hip rotation" value={fmtNum(result.hip_rotation_deg, 2, "°")} />
-              <MetricCell label="Kinetic sync" value={fmtNum(result.kinetic_sync_ms, 0, " ms")} />
-              <MetricCell label="Balance idx" value={fmtNum(result.balance_index, 0, "")} />
+              <MetricCell
+                label="Knee angle"
+                value={fmtNum(result.knee_angle, 1, "°")}
+                sourceSrc={src("knee_angle")}
+                uncertainty={result.knee_angle_uncertainty}
+                uncertaintyUnit="°"
+                hint={hints["knee_angle"]}
+              />
+              <MetricCell
+                label="Hip rotation"
+                value={fmtNum(result.hip_rotation_deg, 2, "°")}
+                sourceSrc={src("hip_rotation_deg")}
+                uncertainty={result.hip_rotation_uncertainty}
+                uncertaintyUnit="°"
+                hint={hints["hip_rotation_deg"]}
+              />
+              <MetricCell
+                label="Kinetic sync"
+                value={fmtNum(result.kinetic_sync_ms, 0, " ms")}
+                sourceSrc={src("kinetic_sync_ms")}
+              />
+              <MetricCell
+                label="Balance idx"
+                value={fmtNum(result.balance_index, 0, "")}
+                sourceSrc={src("balance_index")}
+                uncertainty={result.balance_index_uncertainty}
+                hint={hints["balance_index"]}
+              />
             </div>
             {multiShot && (
               <p className="text-[10px] text-slate-600 mb-4 leading-relaxed">
-                Biomech metrics from dominant shot. Per-shot breakdown is post-showcase roadmap.
+                Metrics from best shot of {seg!.n_shots_detected} detected. Per-shot breakdown is post-showcase roadmap.
               </p>
             )}
           </>
