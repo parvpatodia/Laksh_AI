@@ -660,8 +660,8 @@ class TestBicepCurlNanAtPeak:
             exercise=_DummyExercise(),
         )
         # The windowed search finds the nearby frame with angle=45° → C1 passes
-        assert result.status in ("valid", "partial"), (
-            f"Expected valid/partial with NaN at peak, got {result.status}: {result.reason_codes}"
+        assert result.status in ("valid", "degraded"), (
+            f"Expected valid/degraded with NaN at peak, got {result.status}: {result.reason_codes}"
         )
         if result.status == "valid":
             assert "peak_not_flexed" not in (result.reason_codes or ())
