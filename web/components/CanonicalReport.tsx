@@ -283,30 +283,39 @@ export default function CanonicalReport({
         </div>
 
         {uploadState.status === "idle" && capturedBlob && exerciseId && (
-          <div className="py-2">
-            <div className="rounded-xl border border-surface-700/60 bg-surface-900/40 px-4 py-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shrink-0">
-                  <svg className="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="2" y="3" width="20" height="14" rx="2" />
-                    <path d="M8 21h8M12 17v4" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-200">Clip ready</p>
-                  <p className="text-xs text-slate-500">
-                    {(capturedBlob.size / 1024).toFixed(0)} KB -- MediaPipe + biomechanics pipeline
-                  </p>
-                </div>
+          <div className="py-2 space-y-3">
+            <div className="rounded-xl border border-perf-500/20 bg-perf-500/5 px-4 py-3
+                            flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-perf-500/15 border border-perf-500/30
+                              flex items-center justify-center shrink-0">
+                <svg className="w-4 h-4 text-perf-400" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-perf-300">Clip captured</p>
+                <p className="text-xs text-slate-500">
+                  {(capturedBlob.size / 1024).toFixed(0)} KB -- MediaPipe Heavy biomechanics pipeline
+                </p>
               </div>
             </div>
             <button
               onClick={onUpload}
-              className="w-full px-6 py-3 rounded-xl bg-brand-500 text-white text-sm font-semibold
-                         hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/20"
+              className="w-full px-6 py-4 rounded-xl bg-perf-500 text-white text-sm font-bold
+                         hover:bg-perf-400 transition-all duration-200
+                         shadow-lg shadow-perf-500/25 hover:shadow-perf-500/40
+                         flex items-center justify-center gap-2.5"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
               Analyse my form
             </button>
+            <p className="text-[10px] text-slate-600 text-center">
+              Per-rep biomechanics -- takes 30-60 s for a 15 s clip
+            </p>
           </div>
         )}
 
@@ -337,20 +346,26 @@ export default function CanonicalReport({
   const droppedReps = repCount - validReps - degradedReps;
 
   return (
-    <div className="rounded-2xl border border-surface-700 bg-surface-800/80 p-6 space-y-5">
+    <div className="rounded-2xl border border-surface-700 bg-surface-800/80 overflow-hidden">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-base font-semibold text-slate-200">Form Analysis</h2>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/30
-                           text-emerald-400 border border-emerald-700/40 text-[10px] px-2 py-0.5 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            Verified
-          </span>
+      {/* Gradient header */}
+      <div className="relative px-6 pt-5 pb-5 border-b border-surface-700/50 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-perf-500/10 via-perf-500/3 to-transparent pointer-events-none" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-base font-bold text-slate-200">Form Analysis</h2>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/30
+                             text-emerald-400 border border-emerald-700/40 text-[10px] px-2 py-0.5 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Verified
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-600 font-mono">{result.fps.toFixed(1)} fps</span>
         </div>
-        <span className="text-[10px] text-slate-600 font-mono">{result.fps.toFixed(1)} fps</span>
       </div>
+
+      {/* Body: score card + rep list + footnotes */}
+      <div className="p-6 space-y-5">
 
       {/* Score card -- three stat boxes */}
       <div className="grid grid-cols-3 gap-2">
@@ -441,6 +456,8 @@ export default function CanonicalReport({
           </div>
         </div>
       </details>
+
+      </div>{/* /body */}
     </div>
   );
 }

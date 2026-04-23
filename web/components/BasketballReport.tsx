@@ -240,28 +240,41 @@ export default function BasketballReport({
         </div>
 
         {uploadState.status === "idle" && capturedBlob && (
-          <div className="py-2">
-            <div className="rounded-xl border border-surface-700/60 bg-surface-900/40 px-4 py-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shrink-0">
-                  <svg className="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 10l4.55-2.55A1 1 0 0121 8.39V15.6a1 1 0 01-1.45.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-200">Clip ready</p>
-                  <p className="text-xs text-slate-500">
-                    {(capturedBlob.size / 1024).toFixed(0)} KB -- MediaPipe Heavy + Gemini biomechanics pipeline
-                  </p>
-                </div>
+          <div className="py-2 space-y-3">
+            {/* Clip info card */}
+            <div className="rounded-xl border border-brand-500/20 bg-brand-500/5 px-4 py-3
+                            flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-brand-500/15 border border-brand-500/30
+                              flex items-center justify-center shrink-0">
+                <svg className="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-brand-300">Clip captured</p>
+                <p className="text-xs text-slate-500">
+                  {(capturedBlob.size / 1024).toFixed(0)} KB -- MediaPipe Heavy + Gemini coaching
+                </p>
               </div>
             </div>
+            {/* CTA */}
             <button
               onClick={onUpload}
-              className="w-full px-6 py-3 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/20"
+              className="w-full px-6 py-4 rounded-xl bg-brand-500 text-white text-sm font-bold
+                         hover:bg-brand-400 transition-all duration-200
+                         shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50
+                         flex items-center justify-center gap-2.5"
             >
-              Run full analysis
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
+              Run full biomechanics analysis
             </button>
+            <p className="text-[10px] text-slate-600 text-center">
+              33-landmark pose detection -- takes 60-80 s for a 15 s clip
+            </p>
           </div>
         )}
 
@@ -303,20 +316,25 @@ export default function BasketballReport({
   };
 
   return (
-    <div className="rounded-2xl border border-surface-700 bg-surface-800 p-5 space-y-5">
+    <div className="rounded-2xl border border-surface-700 bg-surface-800 overflow-hidden">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-base font-semibold text-slate-200">Shot Analysis</h2>
-          <span className="text-[10px] px-2 py-0.5 rounded-full border border-brand-500/40 bg-brand-500/10 text-brand-400 font-medium">
-            Full Analysis
-          </span>
+      {/* Gradient header */}
+      <div className="relative px-5 pt-5 pb-4 border-b border-surface-700/50 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-500/10 via-brand-500/3 to-transparent pointer-events-none" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-base font-bold text-slate-200">Shot Analysis</h2>
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-brand-500/40 bg-brand-500/10 text-brand-400 font-bold">
+              Full Analysis
+            </span>
+          </div>
+          {result.video_quality_label && (
+            <span className="text-[10px] text-slate-600 font-mono">{result.video_quality_label}</span>
+          )}
         </div>
-        {result.video_quality_label && (
-          <span className="text-[10px] text-slate-600 font-mono">{result.video_quality_label}</span>
-        )}
       </div>
+
+      <div className="p-5 space-y-5">
 
       {/* Preflight warning */}
       {result.preflight_status === "pose_detection_failed" && (result.preflight_hints ?? []).length > 0 && (
@@ -522,6 +540,8 @@ export default function BasketballReport({
           </ul>
         </details>
       )}
+
+      </div>{/* /body */}
     </div>
   );
 }
