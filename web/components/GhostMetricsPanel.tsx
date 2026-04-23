@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * GhostMetricsPanel — live realtime_preview ghost metrics with
- * user-facing labels.  The wire-format field names are kept in a
- * <details> block so technical reviewers can still see them.
+ * GhostMetricsPanel - live realtime_preview ghost metrics.
+ *
+ * Scoreboard aesthetic: giant rep counter, phase indicator with colour,
+ * animated signal bar, and per-rep breakdown.
  */
 
 import type { GhostRepMetrics, GhostField, Phase } from "@/lib/realtime/repCounter";
@@ -15,21 +16,13 @@ interface Props {
   currentSignal: number | null;
   lastRep: GhostRepMetrics | null;
   active: boolean;
-  /** "rep" for gym, "shot" for basketball — labels the counter accurately. */
+  /** "rep" for gym, "shot" for basketball -- labels the counter accurately. */
   unitLabel?: "rep" | "shot";
 }
 
-function StatusChip({ status }: { status: GhostField["status"] }) {
-  const cls =
-    status === "valid" ? "chip-valid"
-      : status === "degraded" ? "chip-degraded"
-        : "chip-unknown";
-  return (
-    <span className={`${cls} text-xs px-1.5 py-0.5 rounded font-mono`}>
-      {status}
-    </span>
-  );
-}
+// ---------------------------------------------------------------------------
+// FieldRow: compact key/value row with status dot
+// ---------------------------------------------------------------------------
 
 function FieldRow({
   label,
@@ -48,17 +41,27 @@ function FieldRow({
       ? format
         ? `${format(f.value)} ${!UNITLESS.has(f.unit) ? f.unit : ""}`.trim()
         : `${f.value} ${f.unit}`
-      : "—";
+      : "--";
+
+  const statusDot =
+    f.status === "valid"    ? "bg-emerald-400"
+    : f.status === "degraded" ? "bg-amber-400"
+    : "bg-slate-600";
+
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-surface-700/50 last:border-0 gap-2">
-      <span className="text-xs text-slate-300" title={wire}>{label}</span>
-      <div className="flex items-center gap-2 shrink-0">
-        <span className="text-sm text-slate-200 font-mono tabular-nums">{display}</span>
-        <StatusChip status={f.status} />
+    <div className="flex items-center justify-between py-2 border-b border-surface-700/30 last:border-0">
+      <div className="flex items-center gap-2">
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot}`} />
+        <span className="text-xs text-slate-400" title={wire}>{label}</span>
       </div>
+      <span className="text-sm text-slate-200 font-mono tabular-nums">{display}</span>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export default function GhostMetricsPanel({
   repCount,
@@ -68,92 +71,102 @@ export default function GhostMetricsPanel({
   active,
   unitLabel = "rep",
 }: Props) {
-  const phaseColor =
-    currentPhase === "eccentric" ? "text-amber-400"
-      : currentPhase === "concentric" ? "text-emerald-400"
-        : "text-slate-500";
-
-  const counterLabel = unitLabel === "shot" ? "Shots" : "Reps";
+  type PhaseConfig = { label: string; color: string; dot: string };
+  const phaseConfig: Record<Phase, PhaseConfig> = {
+    eccentric:  { label: "Lowering", color: "text-amber-400",   dot: "bg-amber-400" },
+    concentric: { label: "Lifting",  color: "text-emerald-400", dot: "bg-emerald-400" },
+    rest:       { label: "Ready",    color: "text-slate-500",   dot: "bg-slate-600" },
+  };
+  const phaseInfo = phaseConfig[currentPhase] ?? phaseConfig.rest;
+  const counterLabel = unitLabel === "shot" ? "SHOTS" : "REPS";
 
   return (
-    <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-      <h2 className="text-base font-semibold text-slate-200 mb-1 flex items-center gap-2">
-        Live Tracking
-        <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/15
-                         text-brand-400 border border-brand-500/30 text-[10px] px-2 py-0.5 font-medium">
-          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
-          Real-time
-        </span>
-      </h2>
-      <p className="text-xs text-slate-500 mb-4">Live estimates — final report uses stricter video analysis</p>
+    <div className="rounded-2xl border border-surface-700 bg-surface-800 p-5">
+
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <h2 className="text-base font-semibold text-slate-200">Live Tracking</h2>
+        {active && (
+          <span className="inline-flex items-center gap-1.5 text-[10px] text-brand-400 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 rounded-full font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
+            Live
+          </span>
+        )}
+      </div>
 
       {!active ? (
-        <p className="text-xs text-slate-600">Start camera to see live metrics.</p>
+        <p className="text-xs text-slate-600 py-4">Start camera to see live metrics.</p>
       ) : (
         <>
-          {/* Live counters */}
-          <div className="grid grid-cols-2 gap-3 mb-1">
-            <div className="rounded-lg bg-surface-900/60 px-3 py-2">
-              <p className="text-xs text-slate-500 mb-0.5">{counterLabel}</p>
-              <p className="text-2xl font-bold text-slate-100 font-mono tabular-nums">
+          {/* Scoreboard: counter + phase side by side */}
+          <div className="rounded-xl bg-surface-900/70 border border-surface-700/50 px-4 py-4 mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-medium mb-1.5">
+                {counterLabel}
+              </p>
+              <p className="text-5xl font-black font-mono tabular-nums text-slate-100 leading-none">
                 {repCount}
               </p>
             </div>
-            <div className="rounded-lg bg-surface-900/60 px-3 py-2">
-              <p className="text-xs text-slate-500 mb-0.5">Phase</p>
-              <p className={`text-lg font-semibold font-mono ${phaseColor}`}>
-                {currentPhase}
+            <div className="text-right">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-medium mb-1.5">
+                Phase
               </p>
+              <div className="flex items-center gap-1.5 justify-end">
+                <span className={`w-2 h-2 rounded-full ${phaseInfo.dot}`} />
+                <p className={`text-lg font-bold ${phaseInfo.color}`}>{phaseInfo.label}</p>
+              </div>
             </div>
           </div>
-          {/* A3: Honest disclaimer — live counter is a real-time preview, not the final report count */}
-          <p className="text-[10px] text-slate-600 mb-3 leading-tight">{LIVE_COUNTER_DISCLAIMER}</p>
 
-          {/* Signal bar */}
+          {/* Signal strength bar */}
           {currentSignal !== null && (
             <div className="mb-4">
-              <div className="flex justify-between text-xs text-slate-600 mb-1">
-                <span>signal</span>
-                <span className="font-mono">{currentSignal.toFixed(2)}</span>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] text-slate-600 uppercase tracking-widest">Signal</span>
+                <span className="text-xs font-mono text-slate-400">{currentSignal.toFixed(2)}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-surface-700 overflow-hidden">
+              <div className="h-2 rounded-full bg-surface-700 overflow-hidden">
                 <div
-                  className="h-full bg-brand-500 rounded-full transition-all duration-75"
+                  className="h-full rounded-full bg-brand-500 transition-all duration-75"
                   style={{ width: `${Math.max(2, currentSignal * 100)}%` }}
                 />
               </div>
             </div>
           )}
 
-          {/* Last rep features */}
+          {/* Disclaimer */}
+          <p className="text-[10px] text-slate-600 mb-3 leading-snug">{LIVE_COUNTER_DISCLAIMER}</p>
+
+          {/* Last rep breakdown */}
           {lastRep ? (
             <div>
-              <p className="text-xs text-slate-500 mb-2">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-2">
                 {unitLabel === "shot" ? "Shot" : "Rep"} {lastRep.rep_index + 1} breakdown
               </p>
               <FieldRow
-                label="Rep duration"
+                label="Duration"
                 wire="rep_duration_s"
                 f={lastRep.rep_duration_s}
-                format={(v) => v.toFixed(2)}
+                format={(v) => `${v.toFixed(2)}s`}
               />
               <FieldRow
-                label={unitLabel === "shot" ? "Wind-up time" : "Lowering time"}
+                label={unitLabel === "shot" ? "Wind-up" : "Lowering"}
                 wire="eccentric_duration_s"
                 f={lastRep.eccentric_duration_s}
-                format={(v) => v.toFixed(2)}
+                format={(v) => `${v.toFixed(2)}s`}
               />
               <FieldRow
-                label={unitLabel === "shot" ? "Release time" : "Lifting time"}
+                label={unitLabel === "shot" ? "Release" : "Lifting"}
                 wire="concentric_duration_s"
                 f={lastRep.concentric_duration_s}
-                format={(v) => v.toFixed(2)}
+                format={(v) => `${v.toFixed(2)}s`}
               />
               <FieldRow
-                label="Tempo (lower / lift)"
+                label="Tempo ratio"
                 wire="tempo_ratio_ecc_over_con"
                 f={lastRep.tempo_ratio_ecc_over_con}
-                format={(v) => `${v.toFixed(2)}×`}
+                format={(v) => `${v.toFixed(2)}x`}
               />
               <FieldRow
                 label="Range of motion"
@@ -162,7 +175,7 @@ export default function GhostMetricsPanel({
                 format={(v) => v.toFixed(2)}
               />
               <FieldRow
-                label="Joints tracked"
+                label="Pose confidence"
                 wire="min_visibility"
                 f={lastRep.min_visibility}
                 format={(v) => `${(v * 100).toFixed(0)}%`}
@@ -172,15 +185,9 @@ export default function GhostMetricsPanel({
             <p className="text-xs text-slate-600">
               {repCount === 0
                 ? `Perform a ${unitLabel} to see the breakdown.`
-                : `Waiting for next ${unitLabel}…`}
+                : `Waiting for next ${unitLabel}...`}
             </p>
           )}
-
-          <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
-            Counts only after a 0.5 s warm-up and only if each {unitLabel} clears
-            duration, range-of-motion, and visibility gates. Under-counting by 1
-            is possible; over-counting from camera noise is not.
-          </p>
         </>
       )}
     </div>
