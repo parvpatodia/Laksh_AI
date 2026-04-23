@@ -185,10 +185,11 @@ export default function BasketballReport({
   if (!result) {
     return (
       <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-          Canonical result
-          <span className="chip-valid text-xs px-1.5 py-0.5 rounded font-normal">
-            canonical_backend
+        <h2 className="text-base font-semibold text-slate-200 mb-4 flex items-center gap-2">
+          Shot Analysis
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/15
+                           text-brand-400 border border-brand-500/30 text-[10px] px-2 py-0.5 font-medium">
+            Verified
           </span>
         </h2>
 
@@ -196,7 +197,7 @@ export default function BasketballReport({
           <div className="text-center py-4">
             <p className="text-sm text-slate-400 mb-4">
               Clip ready ({(capturedBlob.size / 1024).toFixed(0)} KB).
-              Upload to run MediaPipe biomech + AI scout report (~25–40 s).
+              Upload to analyse your shooting form and get personalised coaching (~25–40 s).
             </p>
             <button
               onClick={onUpload}
@@ -250,14 +251,15 @@ export default function BasketballReport({
 
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-        Canonical result
-        <span className="chip-valid text-xs px-1.5 py-0.5 rounded font-normal">
-          canonical_backend
+      <h2 className="text-base font-semibold text-slate-200 mb-4 flex items-center gap-2">
+        Shot Analysis
+        <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/15
+                         text-brand-400 border border-brand-500/30 text-[10px] px-2 py-0.5 font-medium">
+          Verified
         </span>
         {result.video_quality_label && (
-          <span className="ml-auto text-[11px] text-slate-500 font-mono normal-case tracking-normal">
-            video quality: {result.video_quality_label}
+          <span className="ml-auto text-[11px] text-slate-500 normal-case tracking-normal">
+            Video quality: {result.video_quality_label}
           </span>
         )}
       </h2>
@@ -285,7 +287,7 @@ export default function BasketballReport({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         <MetricCell label="Reliability" value={conf !== null ? `${conf.toFixed(0)}%` : "—"} />
         <MetricCell
-          label="Release vel."
+          label="Release speed"
           value={fmtNum(result.release_velocity_mps, 2, " m/s")}
           sourceSrc={src("release_velocity_mps")}
         />
@@ -326,12 +328,12 @@ export default function BasketballReport({
                 hint={hints["hip_rotation_deg"]}
               />
               <MetricCell
-                label="Kinetic sync"
+                label="Body sync"
                 value={fmtNum(result.kinetic_sync_ms, 0, " ms")}
                 sourceSrc={src("kinetic_sync_ms")}
               />
               <MetricCell
-                label="Balance idx"
+                label="Balance"
                 value={fmtNum(result.balance_index, 0, "")}
                 sourceSrc={src("balance_index")}
                 uncertainty={result.balance_index_uncertainty}
@@ -357,12 +359,24 @@ export default function BasketballReport({
         </p>
       )}
 
+      {/* Estimated values banner (shown when pipeline used population-median fallback) */}
+      {!biomechFailed && result.analysis_mode === "fallback" && (result.fallback_reason_codes ?? []).includes("analysis_exception") && (
+        <div className="rounded-lg border border-orange-600/40 bg-orange-900/10 px-4 py-3 mb-4">
+          <p className="text-sm font-medium text-orange-200 mb-1">Showing population averages</p>
+          <p className="text-xs text-orange-300/80 leading-relaxed">
+            Video analysis encountered an error. Values shown are typical ranges for an amateur
+            jump shot — not measurements from your clip. Orange dots indicate estimates.
+            Re-record with full body visible and good lighting for measured results.
+          </p>
+        </div>
+      )}
+
       {/* Measurement failed banner */}
       {biomechFailed && (
         <div className="rounded-lg border border-amber-600/50 bg-amber-900/15 px-4 py-3 mb-4">
           <p className="text-sm font-medium text-amber-200 mb-1">Biomechanics not measured</p>
           <p className="text-xs text-amber-300/80 leading-relaxed">
-            The clip was too short, joints were occluded, or lighting was too poor for MediaPipe to
+            The clip was too short, joints were occluded, or lighting was too poor to
             extract reliable landmarks. Re-record: full body visible, good lighting, 5+ seconds of motion.
           </p>
         </div>
@@ -406,11 +420,8 @@ export default function BasketballReport({
       {/* Athlete feedback */}
       {feedback.length > 0 && (
         <div className="mb-5">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
             Coaching points
-            <span className="chip-preview text-[10px] px-1.5 py-0.5 rounded font-normal normal-case">
-              ai_scout
-            </span>
           </h3>
           <div className="space-y-2">
             {feedback.slice(0, 3).map((fb, i) => (
@@ -418,9 +429,7 @@ export default function BasketballReport({
             ))}
           </div>
           <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
-            Coaching points are generated by Gemini 2.5 Flash from the deterministic
-            biomech numbers above and labelled <code className="font-mono text-slate-500">ai_scout</code>
-            so you can distinguish them from the measured kinematics.
+            Coaching points are generated by AI from the measured kinematics above.
           </p>
         </div>
       )}

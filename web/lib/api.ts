@@ -19,7 +19,7 @@ export type CalibrationFieldStatus =
   | "unavailable"
   | "within_reference"
   | "outside_reference";
-export type AnalysisMode = "canonical_backend" | "realtime_preview";
+export type AnalysisMode = "canonical_backend" | "realtime_preview" | "fallback";
 export type SportId = "basketball" | "gym";
 
 export interface FieldValue {
@@ -336,6 +336,10 @@ export interface BasketballAnalyzeResponse {
   api_schema_version?: string;
   /** A5: multi-shot consensus result. Null when segment_shots failed. */
   shot_segmentation?: ShotSegmentation | null;
+  /** Pipeline mode: "canonical_backend" for normal, "fallback" when analysis crashed. */
+  analysis_mode?: AnalysisMode;
+  /** Reason codes set when analysis_mode === "fallback". */
+  fallback_reason_codes?: string[];
   [k: string]: unknown;
 }
 

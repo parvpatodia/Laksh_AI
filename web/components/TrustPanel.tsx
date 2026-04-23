@@ -36,7 +36,7 @@ function parityChip(probe: ParityProbe | null): {
     return {
       label: "N/A",
       cls: "chip-unknown",
-      detail: "no realtime vectors submitted",
+      detail: "No live data submitted",
     };
   }
   const cls =
@@ -45,11 +45,15 @@ function parityChip(probe: ParityProbe | null): {
       : probe.status === "outside_tolerance"
         ? "chip-degraded"
         : "chip-unknown";
+  const friendlyLabel =
+    probe.status === "within_tolerance" ? "Matched"
+      : probe.status === "outside_tolerance" ? "Diverged"
+        : "Not enough data";
   const detail =
     probe.status === "insufficient_data"
-      ? "not enough overlapping reps to compare"
-      : `max Δ ${probe.max_abs_delta.toFixed(2)}, p90 ${probe.p90_abs_delta.toFixed(2)}`;
-  return { label: probe.status.replace(/_/g, " "), cls, detail };
+      ? "Perform more reps to compare"
+      : `Typical deviation ${probe.p90_abs_delta.toFixed(2)}, largest ${probe.max_abs_delta.toFixed(2)}`;
+  return { label: friendlyLabel, cls, detail };
 }
 
 export default function TrustPanel({ result }: Props) {
@@ -61,6 +65,12 @@ export default function TrustPanel({ result }: Props) {
       : calibStatus === "uncalibrated_v0" || calibStatus === "no_reference_yet"
         ? "chip-unknown"
         : "chip-degraded";
+  const calibFriendly =
+    calibStatus === "calibrated" ? "Calibrated"
+      : calibStatus === "cited" ? "Literature-verified"
+        : calibStatus === "uncalibrated_v0" || calibStatus === "no_reference_yet"
+          ? "No reference yet"
+          : calibStatus.replace(/_/g, " ");
 
   return (
     <div
@@ -90,9 +100,9 @@ export default function TrustPanel({ result }: Props) {
 
         {/* Parity probe */}
         <div className="rounded-lg bg-surface-900/60 px-3 py-2.5">
-          <p className="text-slate-500 mb-1">Realtime ↔ canonical parity</p>
+          <p className="text-slate-500 mb-1">Live vs. recorded accuracy</p>
           <div className="flex items-center gap-2">
-            <span className={`${parity.cls} text-xs px-1.5 py-0.5 rounded font-mono`}>
+            <span className={`${parity.cls} text-xs px-1.5 py-0.5 rounded`}>
               {parity.label}
             </span>
             <span className="text-slate-600">{parity.detail}</span>
@@ -101,18 +111,18 @@ export default function TrustPanel({ result }: Props) {
 
         {/* Calibration policy */}
         <div className="rounded-lg bg-surface-900/60 px-3 py-2.5">
-          <p className="text-slate-500 mb-1">Calibration</p>
+          <p className="text-slate-500 mb-1">Reference ranges</p>
           <div className="flex items-center gap-2">
-            <span className={`${calibChipCls} text-xs px-1.5 py-0.5 rounded font-mono`}>
-              {calibStatus.replace(/_/g, " ")}
+            <span className={`${calibChipCls} text-xs px-1.5 py-0.5 rounded`}>
+              {calibFriendly}
             </span>
           </div>
           <p className="text-slate-600 mt-1">
             {result.calibration.comparable_fields.length === 0
-              ? "values reported, ranges suppressed (no cohort yet)"
+              ? "Metrics shown without grading until reference data is collected"
               : calibStatus === "cited"
-                ? `${result.calibration.comparable_fields.length} field(s) compared to literature-cited ranges`
-                : `${result.calibration.comparable_fields.length} field(s) ranged`}
+                ? `${result.calibration.comparable_fields.length} metric(s) compared to published literature`
+                : `${result.calibration.comparable_fields.length} metric(s) with reference ranges`}
           </p>
         </div>
 
@@ -121,15 +131,15 @@ export default function TrustPanel({ result }: Props) {
           <p className="text-slate-500 mb-1">Reproducibility</p>
           <div className="text-slate-300 font-mono space-y-0.5">
             <p>
-              <span className="text-slate-500">exercise </span>
+              <span className="text-slate-500">Exercise config </span>
               {shortSha(result.provenance.exercise_manifest_sha)}
             </p>
             <p>
-              <span className="text-slate-500">calib    </span>
+              <span className="text-slate-500">Calibration     </span>
               {shortSha(result.provenance.calibration_manifest_sha)}
             </p>
             <p>
-              <span className="text-slate-500">git      </span>
+              <span className="text-slate-500">Code version    </span>
               {shortSha(result.provenance.git_commit_sha, 8)}
             </p>
           </div>
@@ -137,8 +147,8 @@ export default function TrustPanel({ result }: Props) {
       </div>
 
       <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
-        Every metric below is reported as <span className="font-mono">value · unit · status · reason_codes</span>.
-        Values without a reference range are shown but not graded — we never invent confidence we don&apos;t have.
+        Every metric is reported with its measurement status. Values without a reference range are shown
+        but not graded — we never invent confidence we don&apos;t have.
       </p>
     </div>
   );

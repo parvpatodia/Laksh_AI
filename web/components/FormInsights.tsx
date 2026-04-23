@@ -263,14 +263,11 @@ export default function FormInsights({ result }: Props) {
 
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-        Form insights
-        <span className="chip-valid text-xs px-1.5 py-0.5 rounded font-normal">
-          rule_based
-        </span>
+      <h2 className="text-base font-semibold text-slate-200 mb-1">
+        Form Insights
       </h2>
-      <p className="text-xs text-slate-600 mb-4">
-        Deterministic rules over the per-rep features. Every insight shows the rule that fired so you can audit it.
+      <p className="text-xs text-slate-500 mb-4">
+        Automatic coaching cues based on your measured reps. Each insight shows exactly what triggered it.
       </p>
 
       {insights.length === 0 ? (
@@ -293,11 +290,11 @@ export default function FormInsights({ result }: Props) {
                 <p className="text-xs text-slate-300 mb-2 leading-relaxed">{ins.body}</p>
                 <details>
                   <summary className="text-[11px] text-slate-600 cursor-pointer hover:text-slate-400 select-none">
-                    Why this fired
+                    How we detected this
                   </summary>
-                  <div className="mt-1.5 font-mono text-[11px] text-slate-500 space-y-0.5">
-                    <p><span className="text-slate-600">rule</span>     {ins.rule}</p>
-                    <p><span className="text-slate-600">evidence</span> {ins.evidence}</p>
+                  <div className="mt-1.5 text-[11px] text-slate-500 space-y-0.5">
+                    <p><span className="text-slate-600">Detection: </span>{ins.rule}</p>
+                    <p><span className="text-slate-600">Measured: </span>{ins.evidence}</p>
                   </div>
                 </details>
               </div>
