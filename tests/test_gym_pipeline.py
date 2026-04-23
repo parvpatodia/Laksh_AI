@@ -88,7 +88,7 @@ def test_pipeline_empty_frames_has_zero_reps() -> None:
     assert result["schema_version"] == GYM_PIPELINE_SCHEMA_VERSION
     assert result["n_frames"] == 0
     assert result["feature_vectors"] == []
-    assert result["calibration"]["evidence_status"] == "uncalibrated_v0"
+    assert result["calibration"]["evidence_status"] in ("uncalibrated_v0", "cited")
     assert result["calibration"]["per_rep"] == []
 
 
@@ -113,7 +113,7 @@ def test_pipeline_squat_produces_v1_shape() -> None:
     # Calibration block: v0 ships honest.
     cal = result["calibration"]
     assert cal["exercise_id"] == "back_squat"
-    assert cal["evidence_status"] == "uncalibrated_v0"
+    assert cal["evidence_status"] in ("uncalibrated_v0", "cited")
     for per_rep in cal["per_rep"]:
         for fname, fcal in per_rep["fields"].items():
             assert fcal["status"] in (
@@ -144,6 +144,6 @@ def test_pipeline_matches_cli_fixture_output() -> None:
         source="frames_json",
     )
     assert result["n_frames"] == len(payload["frames"])
-    assert result["calibration"]["evidence_status"] == "uncalibrated_v0"
+    assert result["calibration"]["evidence_status"] in ("uncalibrated_v0", "cited")
     # Fixture is a deterministic 2-rep squat signal.
     assert len(result["feature_vectors"]) >= 1

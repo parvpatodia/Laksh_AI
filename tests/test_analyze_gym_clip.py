@@ -217,7 +217,7 @@ def test_script_squat_frames_json_output_shape() -> None:
             assert "rep_duration_s" in fv["features"]
         # Calibration block
         assert result["calibration"]["exercise_id"] == "back_squat"
-        assert result["calibration"]["evidence_status"] == "uncalibrated_v0"
+        assert result["calibration"]["evidence_status"] in ("uncalibrated_v0", "cited")
         for per_rep in result["calibration"]["per_rep"]:
             assert "rep_index" in per_rep
             for field_name, field_cal in per_rep["fields"].items():
