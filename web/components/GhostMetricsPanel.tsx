@@ -42,10 +42,11 @@ function FieldRow({
   f: GhostField;
   format?: (v: number) => string;
 }) {
+  const UNITLESS = new Set(["ratio", "norm", "fraction", ""]);
   const display =
     f.value !== null
       ? format
-        ? `${format(f.value)} ${f.unit !== "ratio" && f.unit !== "norm" ? f.unit : ""}`.trim()
+        ? `${format(f.value)} ${!UNITLESS.has(f.unit) ? f.unit : ""}`.trim()
         : `${f.value} ${f.unit}`
       : "—";
   return (

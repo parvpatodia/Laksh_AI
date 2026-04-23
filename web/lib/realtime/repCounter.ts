@@ -199,18 +199,35 @@ const EXERCISE_CONFIGS: Record<string, ExerciseRepConfig> = {
   romanian_deadlift: { signalKind: "hip_angle", peakDirection: "trough", minAmplitude: 0.10, minRepS: 0.7 },
   // basketball: "rep" = one shot cycle (wind-up → release → follow-through).
   //
-  // minAmplitude 0.13: a proper shot from chest to release = ~0.35 amplitude
-  // (wrist rises ~35% of frame + elbow extends from ~60° to ~170°).  0.13
-  // rejects random arm waves (< 0.08) while accepting chest-pass fakes and
-  // short-range leaners.
+  // Signal: 0.52*(1-wrist_y) + 0.48*(elbow_angle/180)
   //
-  // minPeakValue 0.60: the blended signal (wrist height + elbow extension)
-  // must reach 60% of its [0,1] range at peak — confirms the wrist actually
-  // crossed the shoulder line and the elbow was near-extended, consistent
-  // with a real shot release.  Filters reaching / arm-swing that has large
-  // amplitude but stays below shoulder height.
-  basketball: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.13, minRepS: 0.5, minPeakValue: 0.60 },
-  jump_shot: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.13, minRepS: 0.5, minPeakValue: 0.60 },
+  // Calibration (2026-04-23):
+  //   At rest (arm at side, wrist_y≈0.80, elbow≈170°):
+  //     signal = 0.52*0.20 + 0.48*0.944 = 0.104 + 0.454 = 0.558
+  //   At full release (wrist above head, wrist_y≈0.10, elbow≈165°):
+  //     signal = 0.52*0.90 + 0.48*0.917 = 0.468 + 0.440 = 0.908
+  //   Amplitude for real jump shot: 0.908 - 0.558 = 0.350
+  //
+  //   For casual arm raise to chest (wrist_y≈0.55):
+  //     signal ≈ 0.52*0.45 + 0.48*0.94 ≈ 0.684 → amplitude ≈ 0.126 → REJECTED
+  //   For dribble (wrist briefly at wrist_y≈0.90):
+  //     signal drop: 0.52*0.10 + 0.48*0.94 ≈ 0.503 → amplitude ≈ 0.055 → REJECTED
+  //
+  // minAmplitude 0.28: accepts full jump shots (≥0.28); rejects all arm movement
+  //   that stays below the shoulder line (~0.13 max amplitude for below-shoulder raises).
+  //   Was 0.13 — that threshold caused 14 counted shots for 5 real shots by accepting
+  //   every casual arm movement and dribble rebound.
+  //
+  // minRepS 0.7: a real jump shot from gather to follow-through takes 0.8–1.5 s.
+  //   0.7 s rejects any sub-0.7 s micro-movement that somehow survives the amplitude gate.
+  //   Was 0.5 s.
+  //
+  // minPeakValue 0.72: requires the blended signal peak to reach 0.72 — corresponds to
+  //   the wrist reaching approximately shoulder height (wrist_y≈0.45 → 1-y=0.55, signal≈0.72).
+  //   A shot that doesn't elevate the wrist to at least shoulder height is not counted.
+  //   Was 0.60 (too low — elbow component alone drives signal above 0.60 even at rest).
+  basketball: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.28, minRepS: 0.7, minPeakValue: 0.72 },
+  jump_shot: { signalKind: "vertical_wrist", peakDirection: "peak", minAmplitude: 0.28, minRepS: 0.7, minPeakValue: 0.72 },
 };
 
 /** Public: list of exercises supported by the realtime ghost counter.

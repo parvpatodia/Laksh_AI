@@ -7,38 +7,37 @@ const SPORTS = [
     name: "Basketball",
     subtitle: "Jump shot biomechanics",
     description:
-      "Release velocity, shot arc, knee/elbow flexion, kinetic chain sync. " +
-      "Pose landmarker lite in-browser; heavy model on backend.",
+      "Point your camera and shoot. Get real-time skeleton overlay while you record, " +
+      "then upload for a full breakdown of release speed, arc, and body mechanics.",
     icon: "🏀",
     href: "/basketball",
     available: true,
     metrics: [
-      "Release velocity (m/s)",
-      "Shot arc (deg)",
-      "Knee flexion (deg)",
-      "Elbow flexion (deg)",
-      "Kinetic sync (ms)",
-      "Fluidity score (/100)",
+      "Release speed",
+      "Shot arc",
+      "Knee bend",
+      "Elbow angle",
+      "Body sync timing",
+      "Fluidity score",
     ],
   },
   {
     id: "gym",
     name: "Gym",
-    subtitle: "Compound-lift rep analysis",
+    subtitle: "Rep-by-rep lift analysis",
     description:
-      "12 compound movements. Per-rep feature vector: duration, tempo ratio, " +
-      "eccentric/concentric split, signal amplitude, visibility. " +
-      "Honest calibration: uncalibrated_v0 until reference data lands.",
+      "12 compound movements supported. See every rep scored on tempo, range of motion, " +
+      "and consistency. Honest results — only what the camera can actually measure.",
     icon: "🏋️",
     href: "/gym",
     available: true,
     metrics: [
-      "Rep duration (s)",
-      "Eccentric phase (s)",
-      "Concentric phase (s)",
+      "Rep duration",
+      "Lowering phase",
+      "Lifting phase",
       "Tempo ratio",
-      "Signal amplitude",
-      "Min visibility",
+      "Range of motion",
+      "Joint tracking quality",
     ],
   },
 ];
@@ -53,16 +52,9 @@ export default function HomePage() {
           <span className="text-brand-500">honest by construction</span>
         </h1>
         <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-          Real-time pose overlay in the browser. Canonical backend analysis with
-          per-field{" "}
-          <code className="font-mono text-sm bg-surface-800 px-1.5 py-0.5 rounded">
-            status
-          </code>{" "}
-          +{" "}
-          <code className="font-mono text-sm bg-surface-800 px-1.5 py-0.5 rounded">
-            reason_codes
-          </code>
-          . Numeric parity probe between the two paths.
+          Live skeleton overlay while you move. Upload your clip and get a full
+          biomechanical breakdown — every metric backed by pose data from your own body,
+          with honest gaps when the camera can&apos;t measure.
         </p>
       </div>
 
@@ -121,33 +113,28 @@ export default function HomePage() {
       {/* Research contribution callout */}
       <div className="rounded-xl border border-surface-700 bg-surface-800/50 p-6">
         <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">
-          Research contribution
+          What makes this different
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-slate-400">
           <div>
-            <p className="font-medium text-slate-200 mb-1">Measurement spine</p>
+            <p className="font-medium text-slate-200 mb-1">No invented numbers</p>
             <p>
-              Every number carries{" "}
-              <code className="font-mono text-xs bg-surface-700 px-1 rounded">
-                value, unit, status, reason_codes
-              </code>
-              . No bare floats.
+              Every metric reports what was actually measured and why.
+              If a joint was out of frame, that metric shows blank — not a guess.
             </p>
           </div>
           <div>
-            <p className="font-medium text-slate-200 mb-1">Calibration honesty</p>
+            <p className="font-medium text-slate-200 mb-1">Honest reference ranges</p>
             <p>
-              <code className="font-mono text-xs bg-surface-700 px-1 rounded">
-                uncalibrated_v0
-              </code>{" "}
-              entries cannot claim reference ranges. Policy enforced at serialisation time.
+              Metrics are only graded against reference data when that data exists.
+              Until then they&apos;re shown raw so you can still compare across sessions.
             </p>
           </div>
           <div>
-            <p className="font-medium text-slate-200 mb-1">Parity probe</p>
+            <p className="font-medium text-slate-200 mb-1">Live vs. video cross-check</p>
             <p>
-              p90 absolute delta between browser ghost metrics and canonical
-              backend result, reported per clip. Numerically auditable.
+              The live counter and the video analysis run independently.
+              Any difference between them is surfaced so you can see how accurate the live estimate was.
             </p>
           </div>
         </div>
