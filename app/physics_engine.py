@@ -1164,15 +1164,42 @@ class KinematicAnalyzer:
             # Video quality and validation (expert-grade robustness)
             vq = self._assess_video_quality(w, h, fps, total_frames, visibility, people_count)
             telemetry["video_quality"] = vq
+            # Source labels determined BEFORE metrics_out so the null-gate below
+            # can reference them.  A metric is "unavailable" when NO pose data
+            # (neither 3D world nor 2D image) was available for that joint.
+            # In that case we emit None — never a hardcoded constant — so the
+            # frontend shows "—" (honest) instead of a fabricated number.
+            vel_src = "measured" if actual_detections >= 8 else "predicted"
+            arc_src = "measured" if calc_arc is not None else "predicted"
+            knee_src = "measured" if has_knee_world else ("predicted" if has_knee_2d else "unavailable")
+            elbow_src = "measured" if has_elbow_world else ("predicted" if has_elbow_2d else "unavailable")
+            sync_src = "measured" if actual_detections >= 8 else "predicted"
+            hip_src = "measured" if yaw_measured else ("predicted" if yaw_2d_deg is not None else "unavailable")
+            # balance/fluidity: only "predicted" when they have a computed value;
+            # "unavailable" when the default 85/65 constant would have been returned.
+            bal_src = "measured" if balance_measured else "unavailable"
+            fluid_src = "measured" if fluidity_measured else "unavailable"
+
             metrics_out = {
+                # Always computable from wrist/shoulder geometry — never null.
                 "release_velocity_mps": round(float(vel_mps), 2),
                 "shot_arc_deg": round(float(arc_deg), 1),
-                "knee_angle": round(float(np.clip(k_ang, 90, 180)), 1),
-                "elbow_angle": round(float(np.clip(e_ang, 100, 180)), 1),
                 "kinetic_sync_ms": round(float(sync_ms), 1),
-                "hip_rotation_deg": round(float(yaw_deg), 1),
-                "balance_index": balance_index,
-                "fluidity_score": fluidity,
+                # Null when no joint data whatsoever — honest over a fabricated constant.
+                "knee_angle": (
+                    round(float(np.clip(k_ang, 90, 180)), 1)
+                    if knee_src != "unavailable" else None
+                ),
+                "elbow_angle": (
+                    round(float(np.clip(e_ang, 100, 180)), 1)
+                    if elbow_src != "unavailable" else None
+                ),
+                "hip_rotation_deg": (
+                    round(float(yaw_deg), 1)
+                    if hip_src != "unavailable" else None
+                ),
+                "balance_index": balance_index if balance_measured else None,
+                "fluidity_score": fluidity if fluidity_measured else None,
             }
             validation_flags = self._compute_validation_flags(metrics_out, visibility, used_fallback=False)
             if analysis_mode == "partial":
@@ -1197,14 +1224,7 @@ class KinematicAnalyzer:
                 vq_score, people_count, visibility, all_warnings, used_fallback=(analysis_mode == "fallback")
             )
 
-            vel_src = "measured" if actual_detections >= 8 else "predicted"
-            arc_src = "measured" if calc_arc is not None else "predicted"
-            knee_src = "measured" if has_knee_world else ("predicted" if has_knee_2d else "unavailable")
-            elbow_src = "measured" if has_elbow_world else ("predicted" if has_elbow_2d else "unavailable")
-            sync_src = "measured" if actual_detections >= 8 else "predicted"
-            hip_src = "measured" if yaw_measured else ("predicted" if yaw_2d_deg is not None else "unavailable")
-            bal_src = "measured" if balance_measured else "predicted"
-            fluid_src = "measured" if fluidity_measured else "predicted"
+            # Source labels were already set above metrics_out — no re-assignment.
             metric_status = {
                 "release_velocity_mps": self._status(
                     vel_src,
@@ -1274,13 +1294,6 @@ class KinematicAnalyzer:
                     None if fluid_src == "measured" else "insufficient_motion_window",
                 ),
             }
-            if metric_status["knee_angle"]["source"] == "unavailable":
-                metrics_out["knee_angle"] = None
-            if metric_status["elbow_angle"]["source"] == "unavailable":
-                metrics_out["elbow_angle"] = None
-            if metric_status["hip_rotation_deg"]["source"] == "unavailable":
-                metrics_out["hip_rotation_deg"] = None
-
             result = {
                 "analysis_mode": analysis_mode,
                 "fallback_reason_codes": sorted(set(reason_codes)),

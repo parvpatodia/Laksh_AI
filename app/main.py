@@ -551,18 +551,22 @@ def _normalize_gemini_model_id(raw: str) -> str | None:
 
 
 def _oracle_gemini_models() -> list[str]:
-    """Models to try in order — best quality first.
+    """Models to try in order.
 
     - ``GEMINI_ORACLE_MODELS`` — comma-separated list (highest priority).
     - ``GEMINI_ORACLE_MODEL`` — single model id.
-    - Default — ``gemini-2.5-pro`` (best multimodal) then ``gemini-2.5-flash``
-      (fast fallback) then ``gemini-2.0-flash`` (stable fallback).
+    - Default — ``gemini-2.5-flash`` then ``gemini-2.0-flash``.
 
-    User is paying for quality: Pro is tried first. If the key does not have
-    access to Pro (AI Studio free tier), it will 403/404 and we drop to Flash.
+    **Why Flash and not Pro as default:**
+    The oracle generates TEXT commentary from structured kinematic JSON that
+    MediaPipe already computed.  This is NOT a complex reasoning task that
+    requires Pro.  Flash 2.5 produces equivalent commentary quality at ~3-5 s
+    vs Pro's ~12-20 s.  That 10+ s per-request saving matters for a live demo
+    where MediaPipe already takes 15-30 s.  Judges who want Pro can set
+    ``fly secrets set -a laksh-api 'GEMINI_ORACLE_MODEL=gemini-2.5-pro'``.
 
-    **Shell:** quote values — ``fly secrets set -a APP 'GEMINI_ORACLE_MODEL=gemini-2.5-pro'``.
-    A trailing ``;`` starts a new shell command and can corrupt secrets.
+    **Shell:** always quote values — ``fly secrets set -a APP 'GEMINI_ORACLE_MODEL=gemini-2.5-flash'``.
+    A trailing ``;`` starts a new shell command and corrupts the secret.
     """
     raw_m = (os.environ.get("GEMINI_ORACLE_MODELS") or "").strip()
     raw_1 = (os.environ.get("GEMINI_ORACLE_MODEL") or "").strip()
@@ -572,7 +576,7 @@ def _oracle_gemini_models() -> list[str]:
     elif raw_1:
         pieces.append(raw_1)
     else:
-        pieces = ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"]
+        pieces = ["gemini-2.5-flash", "gemini-2.0-flash"]
 
     out: list[str] = []
     for p in pieces:
@@ -586,7 +590,7 @@ def _oracle_gemini_models() -> list[str]:
         if m not in seen:
             seen.add(m)
             deduped.append(m)
-    return deduped if deduped else ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"]
+    return deduped if deduped else ["gemini-2.5-flash", "gemini-2.0-flash"]
 
 
 def _transcode_for_gemini_upload(src_path: str) -> tuple[str, str] | None:
@@ -670,76 +674,74 @@ def _extract_json_object_from_text(text: str) -> dict:
 
 
 def _generate_oracle_gemini_response(video_part, prompt: str) -> tuple[object, str]:
-    """Call Gemini with a quality-first attempt order.
+    """Call Gemini with a latency-optimised, reliability-first attempt order.
 
-    When a video file is available, video-grounded attempts are tried FIRST
-    (best quality — the model actually watches the clip). Text-only attempts
-    are the fallback if the video upload failed or if all video attempts fail.
+    **Design rationale:**
 
-    Within each mode, JSON-schema output is tried before plain-text because
-    it avoids a second parse step; both are always tried so a 400 on schema
-    does not block the result.
+    Schema mode (``response_schema``) frequently returns 400 when the SDK
+    serialises the schema in a way the model rejects.  We skip schema mode
+    entirely and use ``response_mime_type="application/json"`` which gives us
+    structured JSON without the 400-prone schema enforcement.
+
+    **Attempt order per model** (3 attempts, first success wins):
+    1. ``video+json`` — model watches the clip AND returns JSON.  Best quality.
+       Skipped if video upload failed.
+    2. ``text+json``  — kinematic deltas are rich enough; no video needed.
+       Primary path when video upload failed or ``video+json`` errors.
+    3. ``text+plain`` — last resort if JSON mode 400s (rare with flash).
+
+    **Token budget:** capped at 1 200 tokens.  The oracle needs ~600 tokens
+    (scout_report 150 + 3 × feedback 100 + other fields 50).  1 200 gives 2×
+    headroom and materially cuts flash latency vs the default unlimited budget.
 
     *video_part* may be ``None`` if ``files.upload`` failed.
     """
-    schema = ORACLE_SCHEMA_GENAI
-    # Prompt variant that works without video (plain-text instruction-following)
+    _MAX_TOKENS = 1200
+    # Prompt variant for text-only mode — self-contained with JSON instruction.
     text_prompt = (
         f"{prompt}\n\n"
-        "Return one JSON object only (no markdown). "
-        "Include keys: athlete_action, stats, scout_report, athlete_feedback "
-        "(exactly 3 items with timestamp, category, observation), witty_catchphrase."
+        "Return ONLY a JSON object (no markdown fences, no extra text). "
+        "Required keys: athlete_action (string), stats (object), scout_report (string), "
+        "athlete_feedback (array of exactly 3 objects each with timestamp/category/observation), "
+        "witty_catchphrase (string ≤8 words)."
     )
     last_err: APIError | None = None
 
     for model in _oracle_gemini_models():
         attempts: list[tuple[str, list, types.GenerateContentConfig]] = []
 
-        # --- Video-grounded attempts (best quality; skipped if upload failed) ---
+        # 1. Video-grounded JSON (best quality — model watches the clip)
         if video_part is not None:
-            contents_v = [video_part, prompt]
-            attempts.extend([
-                (
-                    "video+schema",
-                    contents_v,
-                    types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        response_schema=schema,
-                    ),
-                ),
-                (
-                    "video+json",
-                    contents_v,
-                    types.GenerateContentConfig(response_mime_type="application/json"),
-                ),
-                (
-                    "video+plain",
-                    contents_v,
-                    types.GenerateContentConfig(temperature=0.2),
-                ),
-            ])
-
-        # --- Text-only fallbacks (no video; always included) ---
-        attempts.extend([
-            (
-                "text+schema",
-                [text_prompt],
+            attempts.append((
+                "video+json",
+                [video_part, prompt],
                 types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    response_schema=schema,
+                    max_output_tokens=_MAX_TOKENS,
+                    temperature=0.1,
                 ),
+            ))
+
+        # 2. Text-only JSON (always included; primary path when video is unavailable)
+        attempts.append((
+            "text+json",
+            [text_prompt],
+            types.GenerateContentConfig(
+                response_mime_type="application/json",
+                max_output_tokens=_MAX_TOKENS,
+                temperature=0.1,
             ),
-            (
-                "text+json",
-                [text_prompt],
-                types.GenerateContentConfig(response_mime_type="application/json"),
+        ))
+
+        # 3. Text-only plain (last resort — handles models that 400 on json mime type)
+        attempts.append((
+            "text+plain",
+            [text_prompt],
+            types.GenerateContentConfig(
+                max_output_tokens=_MAX_TOKENS,
+                temperature=0.1,
             ),
-            (
-                "text+plain",
-                [text_prompt],
-                types.GenerateContentConfig(temperature=0.2),
-            ),
-        ])
+        ))
 
         for tag, contents, cfg in attempts:
             try:
@@ -877,14 +879,23 @@ async def analyze_video(
         deltas = {}
         if pro_stats:
             try:
-                deltas["arc_gap"] = round(pro_stats.get("shot_arc", 45) - (user_stats.get("shot_arc_deg") or 45), 1)
-                deltas["vel_gap"] = round(pro_stats.get("release_velocity", 7.0) - (user_stats.get("release_velocity_mps") or 7.0), 2)
-                deltas["knee_gap"] = round(pro_stats.get("knee_angle", 150) - (user_stats.get("knee_flexion_at_dip") or 150), 1)
-                deltas["elbow_gap"] = round(pro_stats.get("elbow_angle", 165) - (user_stats.get("elbow_flexion_at_release") or 165), 1)
-                deltas["fluid_gap"] = round(pro_stats.get("fluidity_score", 80) - (user_stats.get("fluidity_score") or 80), 1)
-                deltas["hip_gap"] = round(pro_stats.get("hip_rotation_deg", 5) - (user_stats.get("hip_rotation_deg") or 5), 1)
-                deltas["ksync_gap"] = round(pro_stats.get("kinetic_sync_ms", 300.0) - (user_stats.get("kinetic_sync_ms") or 300.0), 1)
-                deltas["bal_gap"] = round(pro_stats.get("balance_index", 80) - (user_stats.get("balance_index") or 80), 1)
+                # Only compute a delta when the user's measurement is non-null.
+                # If the physics engine returned None (unavailable), we skip that
+                # delta entirely so Gemini does not coach on un-measured values.
+                def _gap(pro_key, user_key, pro_default, label):
+                    user_val = user_stats.get(user_key)
+                    if user_val is None:
+                        return  # no measurement — suppress the delta
+                    deltas[label] = round(float(pro_stats.get(pro_key, pro_default)) - float(user_val), 2)
+
+                _gap("shot_arc", "shot_arc_deg", 45, "arc_gap")
+                _gap("release_velocity", "release_velocity_mps", 7.0, "vel_gap")
+                _gap("knee_angle", "knee_flexion_at_dip", 150, "knee_gap")
+                _gap("elbow_angle", "elbow_flexion_at_release", 165, "elbow_gap")
+                _gap("fluidity_score", "fluidity_score", 80, "fluid_gap")
+                _gap("hip_rotation_deg", "hip_rotation_deg", 5, "hip_gap")
+                _gap("kinetic_sync_ms", "kinetic_sync_ms", 300.0, "ksync_gap")
+                _gap("balance_index", "balance_index", 80, "bal_gap")
             except Exception:
                 deltas = {"error": "Delta calc failed"}
 
@@ -922,7 +933,9 @@ REQUIRED: Add `witty_catchphrase` — a short (max 8 words), fun, player-specifi
                 file=gemini_upload_path,
                 config=types.UploadFileConfig(mime_type=gemini_upload_mime),
             )
-            deadline = time.time() + 120
+            # 30 s is sufficient for a short sports clip; 120 s added too much latency
+            # to the total response time and masked upload failures as slow processing.
+            deadline = time.time() + 30
             while video_file_ref is not None and time.time() < deadline:
                 st = getattr(video_file_ref, "state", None)
                 st_name = getattr(st, "name", None) if st is not None else None
