@@ -3,9 +3,8 @@
 /**
  * CanonicalReport: displays the full v1 form analysis response envelope.
  *
- * Shows per-rep metrics with human-readable labels and descriptions,
- * a summary scorecard, calibration footnote, and provenance block.
- * Parity probe (Live Counter Check) rendered when realtime vectors were submitted.
+ * Sports stats card aesthetic: bold scorecard at top, per-rep accordion below,
+ * provenance collapsed for technical reviewers.
  */
 
 import { useEffect, useState } from "react";
@@ -18,58 +17,56 @@ import type {
 import ParityProbePanel from "@/components/ParityProbePanel";
 
 // ---------------------------------------------------------------------------
-// Metric definitions: wire-key -> display label + plain-English description
-// + value formatter. Unknown wire keys fall through to raw key + raw value.
+// Metric definitions
 // ---------------------------------------------------------------------------
 
 interface MetricMeta {
   label: string;
   description: string;
   format?: (v: number, unit: string) => string;
-  /** Optional interpretation hint shown alongside the value. */
   interpret?: (v: number) => string | null;
 }
 
 const METRIC_META: Record<string, MetricMeta> = {
   rep_duration_s: {
     label: "Total Rep Time",
-    description: "How long the complete rep took from start to finish.",
-    format: (v) => `${v.toFixed(2)} s`,
-    interpret: (v) => v < 1.0 ? "Fast — consider slowing down" : v > 4.0 ? "Controlled pace" : null,
+    description: "Complete rep from start to finish.",
+    format: (v) => `${v.toFixed(2)}s`,
+    interpret: (v) => v < 1.0 ? "Fast -- consider slowing down" : v > 4.0 ? "Controlled pace" : null,
   },
   eccentric_duration_s: {
     label: "Lowering Phase",
-    description: "Time spent lowering the weight. Slower is generally better — it builds more muscle.",
-    format: (v) => `${v.toFixed(2)} s`,
-    interpret: (v) => v < 0.8 ? "Try to slow the lowering down" : null,
+    description: "Time lowering the weight. Slower builds more muscle.",
+    format: (v) => `${v.toFixed(2)}s`,
+    interpret: (v) => v < 0.8 ? "Try to slow the lowering" : null,
   },
   concentric_duration_s: {
     label: "Lifting Phase",
-    description: "Time spent lifting the weight through the working part of the rep.",
-    format: (v) => `${v.toFixed(2)} s`,
+    description: "Time through the working portion of the rep.",
+    format: (v) => `${v.toFixed(2)}s`,
   },
   tempo_ratio_ecc_over_con: {
     label: "Tempo Ratio",
-    description: "Lowering time divided by lifting time. Above 1.0 means you lowered slower than you lifted — the recommended pattern.",
-    format: (v) => `${v.toFixed(2)}×`,
-    interpret: (v) => v >= 1.0 ? "Good — controlled lowering" : "Lowering faster than lifting",
+    description: "Lowering time / lifting time. Above 1.0 means controlled lowering.",
+    format: (v) => `${v.toFixed(2)}x`,
+    interpret: (v) => v >= 1.0 ? "Good -- controlled lowering" : "Lowering faster than lifting",
   },
   signal_amplitude: {
     label: "Range of Motion",
-    description: "Total joint angle swept through the rep. Larger values mean a fuller range of motion.",
-    format: (v, u) => `${v.toFixed(1)}${u === "deg" ? "°" : " " + u}`,
+    description: "Total joint angle swept. Larger = fuller range.",
+    format: (v, u) => `${v.toFixed(1)}${u === "deg" ? "\u00b0" : " " + u}`,
   },
   primary_joints_min_visibility: {
     label: "Pose Confidence",
-    description: "How reliably the key joints were tracked across the clip. Above 70% is solid; below 50% means some measurements may be imprecise.",
+    description: "How reliably key joints were tracked. Above 70% is solid.",
     format: (v) => `${(v * 100).toFixed(0)}%`,
-    interpret: (v) => v < 0.5 ? "Low — measurements may be less precise" : v >= 0.8 ? "Good tracking" : null,
+    interpret: (v) => v < 0.5 ? "Low -- measurements may be imprecise" : v >= 0.8 ? "Good tracking" : null,
   },
   primary_joints_missing_frac: {
     label: "Tracking Gaps",
-    description: "Share of frames where a key joint wasn't detected. Lower is better; above 20% can reduce accuracy.",
+    description: "Share of frames where a key joint was not detected. Lower is better.",
     format: (v) => `${(v * 100).toFixed(0)}%`,
-    interpret: (v) => v > 0.20 ? "High — consider re-recording with better lighting" : null,
+    interpret: (v) => v > 0.20 ? "High -- consider re-recording with better lighting" : null,
   },
 };
 
@@ -104,6 +101,7 @@ function RepStatusBadge({ status }: { status: FieldValue["status"] | string }) {
   );
 }
 
+// CalibStatusBadge kept for potential use in calibration section
 function CalibStatusBadge({ status }: { status: CalibrationField["status"] }) {
   if (status === "within_reference") {
     return (
@@ -139,7 +137,7 @@ function MetricRow({ wireKey, f }: { wireKey: string; f: FieldValue }) {
       ? meta?.format
         ? meta.format(f.value, f.unit)
         : `${f.value} ${f.unit}`.trim()
-      : "—";
+      : "--";
 
   const hint = f.value !== null && meta?.interpret ? meta.interpret(f.value) : null;
 
@@ -167,38 +165,36 @@ function MetricRow({ wireKey, f }: { wireKey: string; f: FieldValue }) {
 }
 
 function RepCard({ rep, index }: { rep: RepVector; index: number }) {
-  const [open, setOpen] = useState(index === 0); // first rep expanded by default
+  const [open, setOpen] = useState(index === 0);
 
   const borderColor =
-    rep.rep_status === "valid"
-      ? "border-emerald-700/40"
-      : rep.rep_status === "degraded"
-        ? "border-amber-700/40"
-        : "border-slate-700/50";
+    rep.rep_status === "valid"    ? "border-emerald-700/40"
+    : rep.rep_status === "degraded" ? "border-amber-700/40"
+    : "border-slate-700/50";
 
-  const headerBg =
-    rep.rep_status === "valid"
-      ? "bg-emerald-900/10"
-      : rep.rep_status === "degraded"
-        ? "bg-amber-900/10"
-        : "bg-surface-900/30";
+  const headerAccent =
+    rep.rep_status === "valid"    ? "border-l-emerald-500"
+    : rep.rep_status === "degraded" ? "border-l-amber-500"
+    : "border-l-slate-600";
 
   return (
     <div className={`rounded-xl border ${borderColor} overflow-hidden`}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`w-full flex items-center justify-between px-4 py-3 ${headerBg}
-                    hover:bg-white/5 transition-colors text-left`}
+        className={`w-full flex items-center justify-between px-4 py-3 border-l-2 ${headerAccent}
+                    bg-surface-900/40 hover:bg-white/5 transition-colors text-left`}
       >
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-slate-200">Rep {rep.rep_index + 1}</span>
           <RepStatusBadge status={rep.rep_status} />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-600 font-mono">
-            frames {rep.start_frame}–{rep.end_frame}
+          <span className="text-[10px] text-slate-600 font-mono">
+            frames {rep.start_frame}-{rep.end_frame}
           </span>
-          <span className="text-slate-600 text-xs">{open ? "▲" : "▼"}</span>
+          <span className={`text-slate-500 text-xs transition-transform ${open ? "rotate-180" : ""}`}>
+            &#9660;
+          </span>
         </div>
       </button>
 
@@ -223,21 +219,33 @@ function AnalysisProgress() {
     const t = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, []);
+
   const stages = [
-    { at: 0,  msg: "Uploading clip…" },
-    { at: 3,  msg: "Extracting pose with MediaPipe…" },
-    { at: 12, msg: "Measuring per-rep biomechanics…" },
-    { at: 22, msg: "Almost done — computing rep scores…" },
+    { at: 0,  msg: "Uploading clip..." },
+    { at: 3,  msg: "Running MediaPipe Heavy -- 33-landmark pose extraction..." },
+    { at: 20, msg: "Measuring per-rep biomechanics..." },
+    { at: 40, msg: "Computing rep scores and calibration comparison..." },
   ];
   const current = [...stages].reverse().find((s) => elapsed >= s.at) ?? stages[0];
+  const pct = Math.min(97, (elapsed / 60) * 100);
+
   return (
-    <div className="text-center py-8">
-      <div className="inline-block w-9 h-9 rounded-full border-2 border-brand-500
-                      border-t-transparent animate-spin mb-4" />
-      <p className="text-sm font-medium text-slate-300">{current.msg}</p>
-      <p className="text-xs text-slate-600 mt-1">
-        {elapsed}s elapsed · typically 30–60 s for a 6-second clip
-      </p>
+    <div className="py-8">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-5 h-5 rounded-full border-2 border-brand-500 border-t-transparent animate-spin shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-slate-200">{current.msg}</p>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {elapsed}s elapsed -- typically 30-60s for a 15-second clip
+          </p>
+        </div>
+      </div>
+      <div className="h-1 rounded-full bg-surface-700 overflow-hidden">
+        <div
+          className="h-full bg-brand-500 rounded-full transition-all duration-1000"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -266,7 +274,7 @@ export default function CanonicalReport({
   exerciseId,
   onUpload,
 }: Props) {
-  // Pre-result state (no clip yet, uploading, or error).
+  // Pre-result state
   if (!result) {
     return (
       <div className="rounded-2xl border border-surface-700 bg-surface-800/80 p-6">
@@ -275,18 +283,26 @@ export default function CanonicalReport({
         </div>
 
         {uploadState.status === "idle" && capturedBlob && exerciseId && (
-          <div className="text-center py-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full
-                            bg-brand-500/10 border border-brand-500/30 mb-4">
-              <span className="text-2xl" aria-hidden>🎬</span>
+          <div className="py-2">
+            <div className="rounded-xl border border-surface-700/60 bg-surface-900/40 px-4 py-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-200">Clip ready</p>
+                  <p className="text-xs text-slate-500">
+                    {(capturedBlob.size / 1024).toFixed(0)} KB -- MediaPipe + biomechanics pipeline
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="text-sm font-medium text-slate-200 mb-1">Clip ready</p>
-            <p className="text-xs text-slate-500 mb-5">
-              {(capturedBlob.size / 1024).toFixed(0)} KB · runs MediaPipe + biomechanics pipeline
-            </p>
             <button
               onClick={onUpload}
-              className="px-6 py-2.5 rounded-lg bg-brand-500 text-white text-sm font-semibold
+              className="w-full px-6 py-3 rounded-xl bg-brand-500 text-white text-sm font-semibold
                          hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/20"
             >
               Analyse my form
@@ -298,9 +314,9 @@ export default function CanonicalReport({
 
         {uploadState.status === "error" && (
           <div className="rounded-xl border border-rose-700/50 bg-rose-900/20 px-4 py-4">
-            <p className="text-sm font-medium text-rose-300 mb-1">Analysis failed</p>
+            <p className="text-sm font-semibold text-rose-300 mb-1">Analysis failed</p>
             <p className="text-xs text-rose-400/80 leading-relaxed">
-              {uploadState.error ?? "Something went wrong. Try re-recording with your full body clearly visible."}
+              {uploadState.error ?? "Something went wrong. Re-record with full body clearly visible."}
             </p>
           </div>
         )}
@@ -314,10 +330,11 @@ export default function CanonicalReport({
     );
   }
 
-  // ---- Results view -------------------------------------------------------
+  // Results view
   const repCount = result.feature_vectors.length;
   const validReps = result.feature_vectors.filter((r) => r.rep_status === "valid").length;
   const degradedReps = result.feature_vectors.filter((r) => r.rep_status === "degraded").length;
+  const droppedReps = repCount - validReps - degradedReps;
 
   return (
     <div className="rounded-2xl border border-surface-700 bg-surface-800/80 p-6 space-y-5">
@@ -327,27 +344,34 @@ export default function CanonicalReport({
         <div className="flex items-center gap-2.5">
           <h2 className="text-base font-semibold text-slate-200">Form Analysis</h2>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/30
-                           text-emerald-400 border border-emerald-700/40 text-xs px-2 py-0.5 font-medium">
+                           text-emerald-400 border border-emerald-700/40 text-[10px] px-2 py-0.5 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             Verified
           </span>
         </div>
-        <span className="text-xs text-slate-600 font-mono">{result.fps.toFixed(1)} fps</span>
+        <span className="text-[10px] text-slate-600 font-mono">{result.fps.toFixed(1)} fps</span>
       </div>
 
-      {/* Summary scorecard */}
+      {/* Score card -- three stat boxes */}
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-xl bg-surface-900/60 border border-surface-700/40 px-3 py-3 text-center">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500 mb-1">Reps detected</p>
-          <p className="text-2xl font-bold text-slate-100 font-mono leading-none">{repCount}</p>
+          <p className="text-[9px] uppercase tracking-widest text-slate-500 mb-1.5">Detected</p>
+          <p className="text-3xl font-black text-slate-100 font-mono leading-none">{repCount}</p>
+          <p className="text-[9px] text-slate-600 mt-1">reps</p>
         </div>
         <div className="rounded-xl bg-emerald-900/20 border border-emerald-700/30 px-3 py-3 text-center">
-          <p className="text-[10px] uppercase tracking-wide text-emerald-600 mb-1">Full reps</p>
-          <p className="text-2xl font-bold text-emerald-400 font-mono leading-none">{validReps}</p>
+          <p className="text-[9px] uppercase tracking-widest text-emerald-600 mb-1.5">Full reps</p>
+          <p className="text-3xl font-black text-emerald-400 font-mono leading-none">{validReps}</p>
+          <p className="text-[9px] text-emerald-700 mt-1">valid</p>
         </div>
         <div className="rounded-xl bg-surface-900/60 border border-surface-700/40 px-3 py-3 text-center">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500 mb-1">Partial</p>
-          <p className="text-2xl font-bold text-amber-400 font-mono leading-none">{degradedReps}</p>
+          <p className="text-[9px] uppercase tracking-widest text-slate-500 mb-1.5">Partial</p>
+          <p className={`text-3xl font-black font-mono leading-none ${degradedReps > 0 ? "text-amber-400" : "text-slate-600"}`}>
+            {degradedReps}
+          </p>
+          <p className="text-[9px] text-slate-600 mt-1">
+            {droppedReps > 0 ? `${droppedReps} dropped` : "reps"}
+          </p>
         </div>
       </div>
 
@@ -356,7 +380,7 @@ export default function CanonicalReport({
         <div className="rounded-xl border border-slate-700/50 bg-surface-900/40 px-4 py-5 text-center">
           <p className="text-sm font-medium text-slate-400 mb-1">No reps detected</p>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Try a longer clip with your full movement clearly visible from the side.
+            Try a longer clip with the full movement clearly visible from the side.
           </p>
         </div>
       )}
@@ -377,21 +401,18 @@ export default function CanonicalReport({
 
       {/* Calibration footnote */}
       <div className="rounded-xl border border-surface-700/40 bg-surface-900/30 px-4 py-3">
-        <div className="flex items-start gap-2">
-          <span className="text-slate-600 text-sm mt-0.5" aria-hidden>📋</span>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {result.calibration.evidence_status === "cited"
-              ? `Reference ranges for ${result.calibration.exercise_id.replace(/_/g, " ")} are sourced from published biomechanics literature (NSCA, ACSM).`
-              : `Reference ranges for ${result.calibration.exercise_id.replace(/_/g, " ")} are not yet available — measurements shown are raw values without population comparison.`}
-          </p>
-        </div>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          {result.calibration.evidence_status === "cited"
+            ? `Reference ranges for ${result.calibration.exercise_id.replace(/_/g, " ")} sourced from published biomechanics literature (NSCA, ACSM).`
+            : `Reference ranges for ${result.calibration.exercise_id.replace(/_/g, " ")} not yet available -- raw values shown without population comparison.`}
+        </p>
       </div>
 
-      {/* Provenance (collapsed by default — for technical users / judges) */}
+      {/* Provenance (collapsed) */}
       <details className="group">
         <summary className="text-xs text-slate-600 cursor-pointer hover:text-slate-400
                             transition-colors select-none list-none flex items-center gap-1.5">
-          <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="group-open:rotate-90 transition-transform inline-block">&#9658;</span>
           Technical details
         </summary>
         <div className="mt-2 rounded-xl bg-surface-900/50 border border-surface-700/40

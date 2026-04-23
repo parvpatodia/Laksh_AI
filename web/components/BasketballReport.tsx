@@ -1,21 +1,16 @@
 "use client";
 
 /**
- * BasketballReport — renders the legacy /analyze-video response.
+ * BasketballReport - renders the legacy /analyze-video response.
  *
- * Why a dedicated component?
- *   The basketball pipeline (Gemini scout report + ChromaDB pro-match
- *   + biomech) predates the v1 envelope and returns a different shape.
- *   Wiring it through the v1 envelope is post-showcase work; for the
- *   demo we present its richer payload (matched NBA pro, 3 athlete
- *   feedback bullets) directly so basketball gets a real canonical
- *   analysis layer instead of just realtime ghosts.
+ * Broadcast aesthetic: large stat numbers, color-coded performance bands,
+ * horizontal fill bars. Inspired by ESPN/NBA box-score layout.
  *
- * Honesty contract
- *   - oracle_caveat (when present) is surfaced inline.
- *   - confidence + analysis_reliability_score are shown as-is.
- *   - athlete_feedback (LLM-generated) is clearly labelled "AI scout"
- *     so judges can distinguish it from the deterministic biomech.
+ * Honesty contract (unchanged):
+ *   - oracle_caveat surfaces inline.
+ *   - confidence + analysis_reliability_score shown as-is.
+ *   - athlete_feedback labelled as Gemini-generated coaching commentary.
+ *   - No values fabricated when biomech fails: null -> "--".
  */
 
 import React, { useEffect, useState } from "react";
@@ -38,89 +33,118 @@ interface Props {
 }
 
 function fmtNum(n: number | null | undefined, digits = 1, suffix = ""): string {
-  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  if (n === null || n === undefined || Number.isNaN(n)) return "--";
   return `${n.toFixed(digits)}${suffix}`;
 }
 
-/**
- * Source quality tier -> colour.
- * measured/predicted = green; interpolated = amber; estimated/constant = orange.
- * Judges can hover to read the full label.
- */
-function srcDot(src: string | undefined): React.ReactNode {
-  if (!src) return null;
-  const cls =
-    src === "measured"   ? "bg-emerald-400 title-measured"
-    : src === "predicted"  ? "bg-sky-400 title-predicted"
-    : src === "interpolated" ? "bg-amber-400"
-    : "bg-orange-400"; // estimated | constant
-  return (
-    <span
-      className={`inline-block w-1.5 h-1.5 rounded-full ml-1 flex-shrink-0 ${cls}`}
-      title={`Source: ${src}`}
-    />
-  );
+// ---------------------------------------------------------------------------
+// Performance tier colour system
+// ---------------------------------------------------------------------------
+
+type Tier = "elite" | "good" | "developing" | "none";
+
+type TierKey = "release_velocity" | "shot_arc" | "elbow_angle" | "knee_angle" | "reliability";
+
+function getTier(key: TierKey, value: number | null | undefined): Tier {
+  if (value === null || value === undefined || Number.isNaN(value)) return "none";
+  switch (key) {
+    case "release_velocity":
+      return value >= 7.0 ? "elite" : value >= 5.0 ? "good" : "developing";
+    case "shot_arc":
+      return value >= 43 && value <= 47 ? "elite"
+        : value >= 38 && value <= 52 ? "good"
+          : "developing";
+    case "elbow_angle":
+      return value >= 80 && value <= 110 ? "elite"
+        : value >= 70 && value <= 120 ? "good"
+          : "developing";
+    case "knee_angle":
+      return value >= 120 && value <= 160 ? "elite"
+        : value >= 100 && value <= 170 ? "good"
+          : "developing";
+    case "reliability":
+      return value >= 70 ? "elite" : value >= 40 ? "good" : "developing";
+  }
 }
 
-function MetricCell({
+const TIER_STYLES: Record<Tier, {
+  num: string;
+  bar: string;
+  label: string;
+  badge: string;
+}> = {
+  elite:      { num: "text-emerald-400", bar: "bg-emerald-500", label: "Elite",      badge: "bg-emerald-900/40 text-emerald-400 border-emerald-700/50" },
+  good:       { num: "text-sky-400",     bar: "bg-sky-500",     label: "Good",       badge: "bg-sky-900/40 text-sky-400 border-sky-700/50" },
+  developing: { num: "text-amber-400",   bar: "bg-amber-500",   label: "Developing", badge: "bg-amber-900/30 text-amber-400 border-amber-700/40" },
+  none:       { num: "text-slate-300",   bar: "bg-slate-600",   label: "",           badge: "bg-slate-800 text-slate-500 border-slate-700" },
+};
+
+// ---------------------------------------------------------------------------
+// StatBox: broadcast-style large-number stat cell with performance bar
+// ---------------------------------------------------------------------------
+
+function StatBox({
   label,
   value,
-  sourceSrc,
-  uncertainty,
-  uncertaintyUnit = "",
+  fill,
+  tier,
+  srcLabel,
   hint,
 }: {
   label: string;
   value: string;
-  sourceSrc?: string;
-  uncertainty?: number | null;
-  uncertaintyUnit?: string;
+  fill?: number;
+  tier: Tier;
+  srcLabel?: string;
   hint?: string;
 }) {
+  const styles = TIER_STYLES[tier];
   return (
-    <div className={`rounded-lg bg-surface-900/60 px-3 py-2 ${hint ? "border border-amber-700/30" : ""}`} title={hint}>
-      <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-0.5 flex items-center gap-0.5">
-        {label}
-        {srcDot(sourceSrc)}
-      </p>
-      <p className="text-base font-mono tabular-nums text-slate-100">{value}</p>
-      {uncertainty != null && uncertainty > 0 && (
-        <p className="text-[10px] text-slate-600 mt-0.5 font-mono">
-          ±{uncertainty.toFixed(uncertainty < 5 ? 1 : 0)}{uncertaintyUnit}
-        </p>
+    <div className="rounded-xl bg-surface-900/70 border border-surface-700/50 px-4 py-3" title={hint}>
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-medium">{label}</p>
+        {tier !== "none" && (
+          <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${styles.badge}`}>
+            {styles.label}
+          </span>
+        )}
+      </div>
+      <p className={`text-2xl font-bold font-mono tabular-nums leading-none ${styles.num}`}>{value}</p>
+      {fill !== undefined && (
+        <div className="h-0.5 rounded-full bg-surface-700/80 mt-2 overflow-hidden">
+          <div
+            className={`h-full rounded-full ${styles.bar} transition-all duration-300`}
+            style={{ width: `${Math.max(3, Math.min(97, fill * 100))}%` }}
+          />
+        </div>
       )}
-      {hint && (
-        <p className="text-[10px] text-amber-400/80 mt-0.5 leading-tight line-clamp-2">{hint}</p>
-      )}
+      {srcLabel && <p className="text-[9px] text-slate-600 mt-1.5">{srcLabel}</p>}
+      {hint && <p className="text-[10px] text-amber-400/70 mt-1 leading-tight line-clamp-2">{hint}</p>}
     </div>
   );
 }
 
-/**
- * A5: Shot-count chip from multi-signal consensus segmentation.
- *
- * Honesty contract: shows raw counts from the segmenter.  Does NOT claim
- * biomech metrics are per-shot medians — the top-line numbers come from
- * the single dominant-shot detection and are labelled accordingly.
- */
+// ---------------------------------------------------------------------------
+// Shot-count chip (A5 multi-shot consensus)
+// ---------------------------------------------------------------------------
+
 function ShotCountChip({ seg }: { seg: ShotSegmentation }) {
   const { n_shots_detected, n_shots_valid, n_shots_degraded } = seg;
   if (n_shots_detected === 0) return null;
-  // Guard against inconsistent counts (dropped can't be negative).
   const dropped = Math.max(0, n_shots_detected - n_shots_valid - n_shots_degraded);
   return (
-    <div className="flex items-center gap-2 mb-3">
-      <span className="text-[11px] text-slate-500 uppercase tracking-wider">Shots detected</span>
-      <span className="chip-valid text-[11px] px-1.5 py-0.5 rounded font-mono">
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-[10px] text-slate-500 uppercase tracking-widest">Shot detection</span>
+      <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-900/40 text-emerald-400 border border-emerald-700/40">
         {n_shots_valid} valid
       </span>
       {n_shots_degraded > 0 && (
-        <span className="chip-preview text-[11px] px-1.5 py-0.5 rounded font-mono">
+        <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-amber-900/30 text-amber-400 border border-amber-700/40">
           {n_shots_degraded} degraded
         </span>
       )}
       {dropped > 0 && (
-        <span className="bg-rose-900/40 text-rose-300 text-[11px] px-1.5 py-0.5 rounded font-mono">
+        <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-rose-900/30 text-rose-400 border border-rose-700/40">
           {dropped} dropped
         </span>
       )}
@@ -128,52 +152,75 @@ function ShotCountChip({ seg }: { seg: ShotSegmentation }) {
   );
 }
 
-/**
- * Shows an animated spinner with elapsed seconds so judges don't close the
- * browser thinking the request hung. The 25-40 s wait is normal; surfacing
- * the elapsed time turns uncertainty into information.
- */
+// ---------------------------------------------------------------------------
+// Progress indicator with a fill bar and stage messages
+// ---------------------------------------------------------------------------
+
 function UploadingProgress() {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, []);
+
   const stages = [
-    { at: 0,  msg: "Running MediaPipe + Gemini scout pipeline…" },
-    { at: 10, msg: "MediaPipe analysing pose landmarks…" },
-    { at: 22, msg: "Gemini scoring your biomechanics…" },
-    { at: 35, msg: "Matching NBA player archetype…" },
+    { at: 0,  msg: "Uploading clip to analysis server..." },
+    { at: 5,  msg: "Running MediaPipe Heavy -- 33-landmark pose at 30 fps..." },
+    { at: 45, msg: "Extracting release kinematics and joint angles..." },
+    { at: 60, msg: "Gemini generating personalised coaching commentary..." },
   ];
   const current = [...stages].reverse().find((s) => elapsed >= s.at) ?? stages[0];
+  const pct = Math.min(97, (elapsed / 75) * 100);
+
   return (
-    <div className="text-center py-6">
-      <div className="inline-block w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin mb-3" />
-      <p className="text-sm text-slate-400">{current.msg}</p>
-      <p className="text-xs text-slate-600 mt-1">
-        {elapsed}s elapsed · ~25–40 s total for a 5-second clip
-      </p>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-5 h-5 rounded-full border-2 border-brand-500 border-t-transparent animate-spin shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-slate-200">{current.msg}</p>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {elapsed}s elapsed -- 60-80s total for a 15-second clip
+          </p>
+        </div>
+      </div>
+      <div className="h-1 rounded-full bg-surface-700 overflow-hidden">
+        <div
+          className="h-full bg-brand-500 rounded-full transition-all duration-1000"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Coaching point card
+// ---------------------------------------------------------------------------
 
 function FeedbackCard({ idx, fb }: { idx: number; fb: BasketballAthleteFeedback }) {
   const title = (fb.title as string | undefined) ?? `Coaching point ${idx + 1}`;
   const body = (fb.feedback as string | undefined) ?? "";
   const drill = (fb.drill as string | undefined) ?? "";
+  const accentColors = ["border-l-brand-500", "border-l-emerald-500", "border-l-amber-500"];
+  const accent = accentColors[idx % accentColors.length];
+
   return (
-    <div className="rounded-lg border border-amber-700/40 bg-surface-900/40 p-3">
-      <p className="text-sm font-medium text-amber-200 mb-1">{title}</p>
-      <p className="text-xs text-slate-300 leading-relaxed mb-2">{body}</p>
+    <div className={`rounded-r-xl border-l-2 ${accent} bg-surface-900/50 pl-3 pr-4 py-3`}>
+      <p className="text-sm font-semibold text-slate-200 mb-1">{title}</p>
+      <p className="text-xs text-slate-400 leading-relaxed">{body}</p>
       {drill && (
-        <div className="border-t border-surface-700/60 pt-2 mt-1">
-          <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-0.5">Drill</p>
-          <p className="text-xs text-slate-300 leading-relaxed">{drill}</p>
-        </div>
+        <>
+          <p className="text-[10px] text-slate-600 uppercase tracking-widest mt-2.5 mb-0.5">Drill</p>
+          <p className="text-xs text-slate-400 leading-relaxed">{drill}</p>
+        </>
       )}
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export default function BasketballReport({
   result,
@@ -181,268 +228,296 @@ export default function BasketballReport({
   capturedBlob,
   onUpload,
 }: Props) {
-  // Upload CTA / progress / error state
+  // Pre-result state
   if (!result) {
     return (
-      <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-        <h2 className="text-base font-semibold text-slate-200 mb-4 flex items-center gap-2">
-          Shot Analysis
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/15
-                           text-brand-400 border border-brand-500/30 text-[10px] px-2 py-0.5 font-medium">
-            Verified
+      <div className="rounded-2xl border border-surface-700 bg-surface-800 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="text-base font-semibold text-slate-200">Shot Analysis</h2>
+          <span className="text-[10px] px-2 py-0.5 rounded-full border border-brand-500/40 bg-brand-500/10 text-brand-400 font-medium">
+            Full Analysis
           </span>
-        </h2>
+        </div>
 
         {uploadState.status === "idle" && capturedBlob && (
-          <div className="text-center py-4">
-            <p className="text-sm text-slate-400 mb-4">
-              Clip ready ({(capturedBlob.size / 1024).toFixed(0)} KB).
-              Upload to analyse your shooting form and get personalised coaching (~25–40 s).
-            </p>
+          <div className="py-2">
+            <div className="rounded-xl border border-surface-700/60 bg-surface-900/40 px-4 py-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 10l4.55-2.55A1 1 0 0121 8.39V15.6a1 1 0 01-1.45.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-200">Clip ready</p>
+                  <p className="text-xs text-slate-500">
+                    {(capturedBlob.size / 1024).toFixed(0)} KB -- MediaPipe Heavy + Gemini biomechanics pipeline
+                  </p>
+                </div>
+              </div>
+            </div>
             <button
               onClick={onUpload}
-              className="px-6 py-2.5 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
+              className="w-full px-6 py-3 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/20"
             >
-              Analyse shot
+              Run full analysis
             </button>
           </div>
         )}
 
-        {uploadState.status === "uploading" && (
-          <UploadingProgress />
-        )}
+        {uploadState.status === "uploading" && <UploadingProgress />}
 
         {uploadState.status === "error" && (
-          <div className="rounded-lg border border-rose-700/50 bg-rose-900/20 px-4 py-3 text-sm text-rose-300">
-            {uploadState.error ?? "Upload failed."}
+          <div className="rounded-xl border border-rose-700/50 bg-rose-900/15 px-4 py-4">
+            <p className="text-sm font-semibold text-rose-300 mb-1">Analysis failed</p>
+            <p className="text-xs text-rose-400/80 leading-relaxed">
+              {uploadState.error ?? "Upload failed. Try re-recording with full body visible."}
+            </p>
           </div>
         )}
 
         {uploadState.status === "idle" && !capturedBlob && (
-          <p className="text-xs text-slate-600">
-            Record a jump shot first, then upload for canonical analysis.
+          <p className="text-xs text-slate-600 py-2">
+            Record a jump shot above, then run full analysis.
           </p>
         )}
       </div>
     );
   }
 
+  // Result view
   const conf = result.confidence ?? result.analysis_reliability_score ?? null;
-  const proName =
-    (result.matched_pro?.name as string | undefined) ??
-    (typeof result.matched_pro === "object" ? null : null);
+  const proName = (result.matched_pro?.name as string | undefined) ?? null;
   const feedback = result.athlete_feedback ?? [];
-
-  // Detect when biomech pipeline produced no measurements (clip too short / occlusion / VFR)
   const biomechFailed =
     result.release_velocity_mps == null &&
     result.shot_arc_deg == null &&
     result.knee_angle == null &&
     result.elbow_angle == null;
-  const reliabilityCls =
-    conf === null ? "text-slate-300"
-      : conf >= 70 ? "text-emerald-300"
-        : conf >= 40 ? "text-amber-300"
-          : "text-rose-300";
-  // Helper: extract source label from metric_status for a given metric key.
   const ms = result.metric_status ?? {};
-  const src = (key: string) => (ms[key] as { source?: string } | undefined)?.source;
   const hints = result.metric_hints ?? {};
 
-  return (
-    <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-      <h2 className="text-base font-semibold text-slate-200 mb-4 flex items-center gap-2">
-        Shot Analysis
-        <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/15
-                         text-brand-400 border border-brand-500/30 text-[10px] px-2 py-0.5 font-medium">
-          Verified
-        </span>
-        {result.video_quality_label && (
-          <span className="ml-auto text-[11px] text-slate-500 normal-case tracking-normal">
-            Video quality: {result.video_quality_label}
-          </span>
-        )}
-      </h2>
+  const srcLabel = (key: string): string | undefined => {
+    const s = (ms[key] as { source?: string } | undefined)?.source;
+    return s && s !== "measured" ? `Source: ${s}` : undefined;
+  };
 
-      {/* A4: Preflight warning — pose detection failed, give actionable hints */}
+  return (
+    <div className="rounded-2xl border border-surface-700 bg-surface-800 p-5 space-y-5">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-base font-semibold text-slate-200">Shot Analysis</h2>
+          <span className="text-[10px] px-2 py-0.5 rounded-full border border-brand-500/40 bg-brand-500/10 text-brand-400 font-medium">
+            Full Analysis
+          </span>
+        </div>
+        {result.video_quality_label && (
+          <span className="text-[10px] text-slate-600 font-mono">{result.video_quality_label}</span>
+        )}
+      </div>
+
+      {/* Preflight warning */}
       {result.preflight_status === "pose_detection_failed" && (result.preflight_hints ?? []).length > 0 && (
-        <div className="rounded-lg border border-yellow-600/50 bg-yellow-900/15 px-3 py-2 mb-4">
-          <p className="text-xs font-medium text-yellow-300 mb-1">Pose detection was limited — metrics are estimates</p>
-          <ul className="list-disc list-inside space-y-0.5">
+        <div className="rounded-xl border border-yellow-600/40 bg-yellow-900/10 px-3 py-3">
+          <p className="text-xs font-semibold text-yellow-300 mb-1.5">Pose detection was limited</p>
+          <ul className="space-y-1">
             {(result.preflight_hints ?? []).map((h, i) => (
-              <li key={i} className="text-[11px] text-yellow-200/80">{h}</li>
+              <li key={i} className="text-[11px] text-yellow-200/80 flex items-start gap-1.5">
+                <span className="shrink-0 mt-0.5">-</span>{h}
+              </li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* A5: Multi-shot consensus chip — honest label, no invented median */}
+      {/* Shot count */}
       {result.shot_segmentation && (
         <ShotCountChip seg={result.shot_segmentation as ShotSegmentation} />
       )}
 
-      {/* Top-line numbers — from dominant shot detection.
-          Coloured dot = source quality: green=measured, blue=predicted, amber=interpolated, orange=estimated/constant.
-          ±uncertainty shown below each value when source < measured. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-        <MetricCell label="Reliability" value={conf !== null ? `${conf.toFixed(0)}%` : "—"} />
-        <MetricCell
-          label="Release speed"
-          value={fmtNum(result.release_velocity_mps, 2, " m/s")}
-          sourceSrc={src("release_velocity_mps")}
-        />
-        <MetricCell
-          label="Shot arc"
-          value={fmtNum(result.shot_arc_deg, 1, "°")}
-          sourceSrc={src("shot_arc_deg")}
-        />
-        <MetricCell
-          label="Elbow angle"
-          value={fmtNum(result.elbow_angle, 1, "°")}
-          sourceSrc={src("elbow_angle")}
-          uncertainty={result.elbow_angle_uncertainty}
-          uncertaintyUnit="°"
-          hint={hints["elbow_angle"]}
-        />
-      </div>
-      {(() => {
-        const seg = result.shot_segmentation as ShotSegmentation | null | undefined;
-        const multiShot = seg && seg.n_shots_detected > 1;
-        return (
-          <>
-            <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${multiShot ? "mb-1" : "mb-5"}`}>
-              <MetricCell
-                label="Knee angle"
-                value={fmtNum(result.knee_angle, 1, "°")}
-                sourceSrc={src("knee_angle")}
-                uncertainty={result.knee_angle_uncertainty}
-                uncertaintyUnit="°"
-                hint={hints["knee_angle"]}
-              />
-              <MetricCell
-                label="Hip rotation"
-                value={fmtNum(result.hip_rotation_deg, 2, "°")}
-                sourceSrc={src("hip_rotation_deg")}
-                uncertainty={result.hip_rotation_uncertainty}
-                uncertaintyUnit="°"
-                hint={hints["hip_rotation_deg"]}
-              />
-              <MetricCell
-                label="Body sync"
-                value={fmtNum(result.kinetic_sync_ms, 0, " ms")}
-                sourceSrc={src("kinetic_sync_ms")}
-              />
-              <MetricCell
-                label="Balance"
-                value={fmtNum(result.balance_index, 0, "")}
-                sourceSrc={src("balance_index")}
-                uncertainty={result.balance_index_uncertainty}
-                hint={hints["balance_index"]}
-              />
-            </div>
-            {multiShot && (
-              <p className="text-[10px] text-slate-600 mb-4 leading-relaxed">
-                Metrics from best shot of {seg!.n_shots_detected} detected. Per-shot breakdown is post-showcase roadmap.
-              </p>
-            )}
-          </>
-        );
-      })()}
+      {/* Primary stat boxes */}
+      {!biomechFailed && (
+        <>
+          <div className="grid grid-cols-2 gap-2.5">
+            <StatBox
+              label="Release Speed"
+              value={fmtNum(result.release_velocity_mps, 1, " m/s")}
+              tier={getTier("release_velocity", result.release_velocity_mps)}
+              fill={
+                result.release_velocity_mps != null
+                  ? Math.min(1, result.release_velocity_mps / 10)
+                  : undefined
+              }
+              srcLabel={srcLabel("release_velocity_mps")}
+            />
+            <StatBox
+              label="Shot Arc"
+              value={fmtNum(result.shot_arc_deg, 1, "\u00b0")}
+              tier={getTier("shot_arc", result.shot_arc_deg)}
+              fill={
+                result.shot_arc_deg != null
+                  ? (result.shot_arc_deg - 30) / 30
+                  : undefined
+              }
+              srcLabel={srcLabel("shot_arc_deg")}
+            />
+          </div>
 
-      {/* Reliability annotation */}
-      {conf !== null && (
-        <p className={`text-xs ${reliabilityCls} mb-4`}>
-          Pose reliability {conf.toFixed(0)}% —
-          {conf >= 70 ? " biomech numbers are trustworthy."
-            : conf >= 40 ? " interpret biomech numbers with care."
-              : " biomech numbers are likely unreliable; re-record with clearer framing."}
-        </p>
-      )}
+          <div className="grid grid-cols-2 gap-2.5">
+            <StatBox
+              label="Elbow Angle"
+              value={fmtNum(result.elbow_angle, 1, "\u00b0")}
+              tier={getTier("elbow_angle", result.elbow_angle)}
+              fill={result.elbow_angle != null ? result.elbow_angle / 180 : undefined}
+              srcLabel={srcLabel("elbow_angle")}
+              hint={hints["elbow_angle"]}
+            />
+            <StatBox
+              label="Knee Drive"
+              value={fmtNum(result.knee_angle, 1, "\u00b0")}
+              tier={getTier("knee_angle", result.knee_angle)}
+              fill={result.knee_angle != null ? result.knee_angle / 180 : undefined}
+              srcLabel={srcLabel("knee_angle")}
+              hint={hints["knee_angle"]}
+            />
+          </div>
 
-      {/* Estimated values banner (shown when pipeline used population-median fallback) */}
-      {!biomechFailed && result.analysis_mode === "fallback" && (result.fallback_reason_codes ?? []).includes("analysis_exception") && (
-        <div className="rounded-lg border border-orange-600/40 bg-orange-900/10 px-4 py-3 mb-4">
-          <p className="text-sm font-medium text-orange-200 mb-1">Showing population averages</p>
-          <p className="text-xs text-orange-300/80 leading-relaxed">
-            Video analysis encountered an error. Values shown are typical ranges for an amateur
-            jump shot — not measurements from your clip. Orange dots indicate estimates.
-            Re-record with full body visible and good lighting for measured results.
-          </p>
-        </div>
-      )}
+          {/* Secondary metrics row */}
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                { label: "Hip Rotation", value: fmtNum(result.hip_rotation_deg, 1, "\u00b0") },
+                { label: "Body Sync", value: fmtNum(result.kinetic_sync_ms, 0, " ms") },
+                { label: "Balance", value: fmtNum(result.balance_index, 0) },
+              ] as const
+            ).map(({ label, value }) => (
+              <div
+                key={label}
+                className="rounded-xl bg-surface-900/50 border border-surface-700/40 px-3 py-3 text-center"
+              >
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">{label}</p>
+                <p className="text-lg font-bold font-mono tabular-nums text-slate-300">{value}</p>
+              </div>
+            ))}
+          </div>
 
-      {/* Measurement failed banner */}
-      {biomechFailed && (
-        <div className="rounded-lg border border-amber-600/50 bg-amber-900/15 px-4 py-3 mb-4">
-          <p className="text-sm font-medium text-amber-200 mb-1">Biomechanics not measured</p>
-          <p className="text-xs text-amber-300/80 leading-relaxed">
-            The clip was too short, joints were occluded, or lighting was too poor to
-            extract reliable landmarks. Re-record: full body visible, good lighting, 5+ seconds of motion.
-          </p>
-        </div>
-      )}
-
-      {/* Oracle caveat (if backend marked the pro match degraded) */}
-      {result.oracle_caveat && (
-        <div className="rounded-lg border border-amber-700/40 bg-amber-900/10 px-3 py-2 mb-4">
-          <p className="text-xs text-amber-200">{result.oracle_caveat}</p>
-        </div>
-      )}
-
-      {/* Matched pro */}
-      {proName && (
-        <div className="mb-5">
-          <div className="rounded-lg bg-surface-900/60 px-4 py-3 flex items-center justify-between">
+          {/* Reliability bar */}
+          {conf !== null && (
             <div>
-              <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-0.5">
-                Closest NBA style match
-              </p>
-              <p className="text-base font-medium text-slate-100">{proName}</p>
-              {(result.matched_pro?.team as string | undefined) && (
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {result.matched_pro!.team as string}
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest">Pose reliability</span>
+                <span className={`text-sm font-bold font-mono ${TIER_STYLES[getTier("reliability", conf)].num}`}>
+                  {conf.toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-surface-700 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${TIER_STYLES[getTier("reliability", conf)].bar}`}
+                  style={{ width: `${conf}%` }}
+                />
+              </div>
+              {conf < 40 && (
+                <p className="text-[10px] text-amber-400/80 mt-1.5">
+                  Low confidence -- re-record with full body visible in good light.
                 </p>
               )}
             </div>
-            {result.witty_catchphrase && (
-              <p className="text-xs text-slate-400 italic max-w-[40%] text-right">
-                &ldquo;{result.witty_catchphrase}&rdquo;
+          )}
+
+          {/* Multi-shot footnote */}
+          {(() => {
+            const seg = result.shot_segmentation as ShotSegmentation | null | undefined;
+            return seg && seg.n_shots_detected > 1 ? (
+              <p className="text-[10px] text-slate-600 leading-relaxed">
+                Metrics from best shot of {seg.n_shots_detected} detected. Per-shot breakdown is post-showcase roadmap.
               </p>
-            )}
-          </div>
-          <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">
-            Style match is estimated from playing profile (position, shooting %, usage) —
-            not from motion-capture of the player&apos;s actual shooting form.
+            ) : null;
+          })()}
+        </>
+      )}
+
+      {/* Biomech failed */}
+      {biomechFailed && (
+        <div className="rounded-xl border border-amber-600/40 bg-amber-900/10 px-4 py-4">
+          <p className="text-sm font-semibold text-amber-200 mb-1">Biomechanics not measured</p>
+          <p className="text-xs text-amber-300/80 leading-relaxed">
+            Joints were occluded or the clip was too short to extract reliable landmarks.
+            Re-record: full body visible, good lighting, 5+ seconds of motion.
           </p>
         </div>
       )}
 
-      {/* Athlete feedback */}
+      {/* Fallback (population averages) banner */}
+      {!biomechFailed && result.analysis_mode === "fallback" &&
+        (result.fallback_reason_codes ?? []).includes("analysis_exception") && (
+        <div className="rounded-xl border border-orange-600/40 bg-orange-900/10 px-4 py-3">
+          <p className="text-sm font-semibold text-orange-200 mb-1">Population averages shown</p>
+          <p className="text-xs text-orange-300/80 leading-relaxed">
+            Video analysis encountered an error. Values are typical amateur ranges, not measurements from your clip.
+          </p>
+        </div>
+      )}
+
+      {/* Oracle caveat */}
+      {result.oracle_caveat && (
+        <div className="rounded-xl border border-surface-700/50 bg-surface-900/40 px-3 py-2.5">
+          <p className="text-xs text-slate-400 leading-relaxed">{result.oracle_caveat}</p>
+        </div>
+      )}
+
+      {/* Matched pro player card */}
+      {proName && (
+        <div className="rounded-xl border border-surface-700/60 bg-surface-900/50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-surface-700/40">
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Closest NBA style match</p>
+            <div className="flex items-baseline gap-3 justify-between">
+              <p className="text-xl font-bold text-slate-100">{proName}</p>
+              {(result.matched_pro?.team as string | undefined) && (
+                <p className="text-xs text-slate-500 shrink-0">{result.matched_pro!.team as string}</p>
+              )}
+            </div>
+          </div>
+          {result.witty_catchphrase && (
+            <p className="px-4 py-2.5 text-xs text-slate-400 italic">
+              &ldquo;{result.witty_catchphrase}&rdquo;
+            </p>
+          )}
+          <p className="px-4 pb-3 text-[9px] text-slate-600 leading-relaxed">
+            Style match estimated from playing profile (position, shooting %, usage) --
+            not motion-capture of that player&apos;s shooting form.
+          </p>
+        </div>
+      )}
+
+      {/* Coaching points */}
       {feedback.length > 0 && (
-        <div className="mb-5">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-            Coaching points
-          </h3>
-          <div className="space-y-2">
+        <div>
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-3">Coaching points</p>
+          <div className="space-y-2.5">
             {feedback.slice(0, 3).map((fb, i) => (
               <FeedbackCard key={i} idx={i} fb={fb} />
             ))}
           </div>
-          <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
-            Coaching points are generated by AI from the measured kinematics above.
+          <p className="text-[10px] text-slate-600 mt-2">
+            Generated by Gemini from measured kinematics above.
           </p>
         </div>
       )}
 
       {/* Validation warnings */}
       {result.validation_warnings && result.validation_warnings.length > 0 && (
-        <details className="mt-4 group">
-          <summary className="text-xs text-slate-600 cursor-pointer hover:text-slate-400 select-none">
-            Validation warnings ({result.validation_warnings.length})
+        <details className="group">
+          <summary className="text-[11px] text-slate-600 cursor-pointer hover:text-slate-400 list-none flex items-center gap-1.5">
+            <span className="group-open:rotate-90 transition-transform inline-block text-xs">&#9658;</span>
+            Validation notes ({result.validation_warnings.length})
           </summary>
-          <ul className="mt-2 list-disc list-inside text-xs text-slate-500 space-y-0.5">
+          <ul className="mt-2 space-y-0.5">
             {result.validation_warnings.map((w, i) => (
-              <li key={i}>{w}</li>
+              <li key={i} className="text-xs text-slate-500 flex items-start gap-1.5">
+                <span className="shrink-0 mt-0.5">-</span>{w}
+              </li>
             ))}
           </ul>
         </details>
