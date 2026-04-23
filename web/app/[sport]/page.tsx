@@ -319,31 +319,53 @@ function SportPageInner() {
   // ---------------------------------------------------------------------------
   if (sport === "gym" && !exerciseId) {
     return (
-      <div className="max-w-screen-2xl mx-auto px-6 xl:px-16 py-10">
+      <div className="max-w-screen-2xl mx-auto px-6 xl:px-16">
 
-        {/* Back link */}
-        <a href="/"
-           className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500
-                      hover:text-slate-300 transition-colors mb-8">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Home
-        </a>
-
-        <div className="mb-10">
-          <h1 className="text-3xl xl:text-4xl font-black text-white mb-2">Choose an exercise</h1>
-          <p className="text-slate-500 text-sm">
-            12 compound movements. Select one to begin live tracking and analysis.
-          </p>
+        {/* Banner */}
+        <div className="relative overflow-hidden border-b border-perf-500/20 mb-10">
+          <div className="absolute inset-0 bg-gradient-to-r from-perf-500/15 via-perf-500/5 to-transparent pointer-events-none" />
+          <div className="relative z-10 py-6">
+            <nav className="flex items-center gap-1.5 text-[10px] text-slate-600 mb-2">
+              <a href="/" className="hover:text-slate-400 transition-colors font-medium">Home</a>
+              <span>/</span>
+              <span className="text-slate-400">Gym</span>
+            </nav>
+            <div className="flex items-end justify-between flex-wrap gap-4">
+              <div>
+                <h1 className="text-3xl xl:text-4xl font-black text-white mb-1">Choose an exercise</h1>
+                <p className="text-slate-500 text-sm">
+                  12 compound movements. Select one to begin live tracking and analysis.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1
+                               rounded-full uppercase tracking-widest bg-perf-500/10 text-perf-400
+                               border border-perf-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-perf-500" />
+                Strength Training
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-8">
           {CATEGORIES.map((cat) => {
             const exercises = GYM_EXERCISES.filter((e) => e.category === cat);
+            const catColors: Record<string, string> = {
+              Pull:  "text-brand-400 border-brand-500/30 bg-brand-500/10",
+              Push:  "text-perf-400 border-perf-500/30 bg-perf-500/10",
+              Squat: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
+              Hinge: "text-violet-400 border-violet-500/30 bg-violet-500/10",
+              Lunge: "text-rose-400 border-rose-500/30 bg-rose-500/10",
+            };
+            const catStyle = catColors[cat] ?? "text-slate-400 border-slate-600 bg-surface-700";
             return (
               <div key={cat}>
-                <p className="label-section mb-3">{cat}</p>
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${catStyle}`}>
+                    {cat}
+                  </span>
+                  <div className="flex-1 h-px bg-surface-700/60" />
+                </div>
                 <div className="space-y-2">
                   {exercises.map((ex) => (
                     <button
@@ -351,26 +373,31 @@ function SportPageInner() {
                       onClick={() => router.push(`/gym?exercise=${ex.id}`)}
                       className="w-full rounded-xl border border-surface-700 bg-surface-800 px-5 py-4
                                  flex items-center justify-between gap-4
-                                 hover:border-brand-500/50 hover:bg-surface-750
+                                 hover:border-perf-500/40 hover:bg-surface-750
                                  transition-all duration-150 group text-left"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-slate-200 group-hover:text-white mb-0.5">
+                        <p className="text-sm font-bold text-slate-200 group-hover:text-white mb-0.5">
                           {ex.label}
                         </p>
-                        <p className="text-xs text-slate-500 leading-snug">{ex.tip}</p>
+                        <p className="text-xs text-slate-600 leading-snug line-clamp-1">{ex.tip}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {ex.dumbbell && (
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-brand-400
-                                           border border-brand-500/40 bg-brand-500/10 rounded px-1.5 py-0.5">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-perf-400
+                                           border border-perf-500/40 bg-perf-500/10 rounded px-1.5 py-0.5">
                             DB
                           </span>
                         )}
-                        <svg className="w-4 h-4 text-slate-600 group-hover:text-brand-500 transition-colors"
-                             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
+                        <div className="w-6 h-6 rounded-lg bg-surface-700/60 border border-surface-600/50
+                                        flex items-center justify-center
+                                        group-hover:bg-perf-500/10 group-hover:border-perf-500/30 transition-all">
+                          <svg className="w-3 h-3 text-slate-600 group-hover:text-perf-400 transition-colors
+                                         group-hover:translate-x-0.5 duration-150"
+                               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -380,7 +407,7 @@ function SportPageInner() {
           })}
         </div>
 
-        <p className="text-xs text-slate-600 mt-6">
+        <p className="text-xs text-slate-700 mt-8 pb-10">
           DB = works with a single pair of dumbbells, no rack required.
         </p>
       </div>
@@ -408,51 +435,81 @@ function SportPageInner() {
   // ---------------------------------------------------------------------------
   // Main capture + analysis page
   // ---------------------------------------------------------------------------
+
+  const sportAccent = sport === "basketball"
+    ? { from: "from-brand-500/20", via: "via-brand-500/5", border: "border-brand-500/20", dot: "bg-brand-500" }
+    : { from: "from-perf-500/20",  via: "via-perf-500/5",  border: "border-perf-500/20",  dot: "bg-perf-500"  };
+
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 xl:px-16 py-8 xl:py-10">
+    <div className="max-w-screen-2xl mx-auto px-6 xl:px-16 py-0">
 
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-xs text-slate-600">
-        <a href="/" className="hover:text-slate-300 transition-colors font-medium">Home</a>
-        <span className="text-surface-600">/</span>
-        {sport === "gym" && exerciseId ? (
-          <>
-            <a href="/gym" className="hover:text-slate-300 transition-colors">Gym</a>
-            <span className="text-surface-600">/</span>
-            <span className="text-slate-400 font-medium">{exerciseLabel}</span>
-          </>
-        ) : (
-          <span className="text-slate-400 font-medium">{sportLabel}</span>
-        )}
-      </nav>
+      {/* ================================================================ */}
+      {/* SPORT BANNER                                                      */}
+      {/* ================================================================ */}
+      <div className={`relative overflow-hidden border-b ${sportAccent.border} mb-8`}>
+        {/* Gradient sweep */}
+        <div className={`absolute inset-0 bg-gradient-to-r ${sportAccent.from} ${sportAccent.via} to-transparent pointer-events-none`} />
+        {/* Decorative diagonal lines */}
+        <div className="absolute right-0 top-0 bottom-0 w-64 opacity-[0.03] pointer-events-none"
+             style={{
+               backgroundImage: "repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)",
+               backgroundSize: "10px 10px",
+             }} />
 
-      {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl xl:text-3xl font-black text-white leading-tight">{exerciseLabel}</h1>
-          <p className="label-section mt-1">{sportLabel} analysis</p>
-        </div>
-        <div className="flex items-center gap-2.5">
-          {(capturedBlob || haveCanonicalResult) && (
-            <button
-              onClick={resetAll}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white
-                         border border-surface-700 hover:border-surface-600 transition-all"
-            >
-              Start over
-            </button>
-          )}
-          {!capturedBlob && !haveCanonicalResult && (
-            <button
-              onClick={() => { setCameraError(null); setCameraActive((v) => !v); }}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
-                ${cameraActive
-                  ? "bg-surface-700 text-slate-300 hover:bg-surface-600 border border-surface-600"
-                  : "bg-brand-500 text-white hover:bg-brand-400 shadow-lg shadow-brand-500/25"}`}
-            >
-              {cameraActive ? "Stop camera" : "Start camera"}
-            </button>
-          )}
+        <div className="relative z-10 py-5 xl:py-6 flex items-center justify-between flex-wrap gap-4">
+          {/* Left: breadcrumb + title */}
+          <div>
+            <nav className="flex items-center gap-1.5 text-[10px] text-slate-600 mb-2">
+              <a href="/" className="hover:text-slate-400 transition-colors font-medium">Home</a>
+              <span>/</span>
+              {sport === "gym" && exerciseId ? (
+                <>
+                  <a href="/gym" className="hover:text-slate-400 transition-colors">Gym</a>
+                  <span>/</span>
+                  <span className="text-slate-400">{exerciseLabel}</span>
+                </>
+              ) : (
+                <span className="text-slate-400">{sportLabel}</span>
+              )}
+            </nav>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl xl:text-3xl font-black text-white leading-tight">{exerciseLabel}</h1>
+              <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1
+                                rounded-full uppercase tracking-widest border
+                                ${sport === "basketball"
+                                  ? "bg-brand-500/10 text-brand-400 border-brand-500/30"
+                                  : "bg-perf-500/10 text-perf-400 border-perf-500/30"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${sportAccent.dot} ${cameraActive ? "animate-pulse" : ""}`} />
+                {sportLabel} Analysis
+              </span>
+            </div>
+          </div>
+
+          {/* Right: action buttons */}
+          <div className="flex items-center gap-2.5">
+            {(capturedBlob || haveCanonicalResult) && (
+              <button
+                onClick={resetAll}
+                className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white
+                           border border-surface-700 hover:border-surface-600 transition-all"
+              >
+                Start over
+              </button>
+            )}
+            {!capturedBlob && !haveCanonicalResult && (
+              <button
+                onClick={() => { setCameraError(null); setCameraActive((v) => !v); }}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
+                  ${cameraActive
+                    ? "bg-surface-700 text-slate-300 hover:bg-surface-600 border border-surface-600"
+                    : sport === "basketball"
+                      ? "bg-brand-500 text-white hover:bg-brand-400 shadow-lg shadow-brand-500/25"
+                      : "bg-perf-500 text-white hover:bg-perf-400 shadow-lg shadow-perf-500/25"}`}
+              >
+                {cameraActive ? "Stop camera" : "Start camera"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -517,22 +574,56 @@ function SportPageInner() {
           maxDurationS={15}
         />
       ) : !haveCanonicalResult ? (
-        <div className="w-full aspect-video max-h-[60vh] rounded-2xl border border-emerald-700/30
-                        bg-surface-800 flex flex-col items-center justify-center gap-4 mb-2">
-          <div className="rounded-full border border-emerald-700/50 bg-emerald-900/20 p-5">
-            <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24"
-                 stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z" />
-            </svg>
-          </div>
-          <div className="text-center">
-            <p className="text-base font-bold text-emerald-300">
-              Clip captured -- {(capturedBlob!.size / 1024).toFixed(0)} KB
-            </p>
-            <p className="text-xs text-slate-500 mt-1">
-              Click &ldquo;Run full analysis&rdquo; in the panel below to start the biomechanics pipeline.
-            </p>
+        /* Capture success state */
+        <div className="relative w-full rounded-2xl border border-emerald-700/30 bg-surface-800 overflow-hidden mb-2">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/10 via-surface-800 to-surface-900 pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row items-center gap-6 p-8 xl:p-10">
+            {/* Icon */}
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 rounded-full bg-emerald-400/10 blur-xl" />
+              <div className="relative w-20 h-20 rounded-2xl border border-emerald-700/50 bg-emerald-900/30
+                              flex items-center justify-center">
+                <svg className="w-9 h-9 text-emerald-400" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="text-center sm:text-left flex-1">
+              <div className="flex items-center gap-2 justify-center sm:justify-start mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded
+                                 bg-emerald-900/50 text-emerald-400 border border-emerald-700/50">
+                  Clip Captured
+                </span>
+                <span className="text-xs font-mono text-slate-500">
+                  {(capturedBlob!.size / 1024).toFixed(0)} KB
+                </span>
+              </div>
+              <p className="text-lg font-bold text-white mb-1">Ready for biomechanics analysis</p>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                MediaPipe Heavy will run 33-landmark pose detection at 30 fps.
+                Analysis takes 60-80 s for a 15-second clip.
+              </p>
+            </div>
+
+            {/* Stats from live session */}
+            {repCount > 0 && (
+              <div className="shrink-0 text-center rounded-xl border border-surface-700/60 bg-surface-900/60 px-5 py-4">
+                <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-1">
+                  Live count
+                </p>
+                <p className="text-3xl font-black font-mono tabular-nums text-slate-200 leading-none">
+                  {repCount}
+                </p>
+                <p className="text-[10px] text-slate-600 mt-0.5 uppercase">
+                  {sport === "basketball" ? "shots" : "reps"}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       ) : null}
