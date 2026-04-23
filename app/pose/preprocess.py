@@ -38,10 +38,8 @@ def normalize_video_for_pose(video_path: str, *, timeout_sec: float = 120.0) -> 
         "-crf",
         "20",
         # format=yuv420p strips VP9 alpha (YUVA420P from MediaRecorder WebM)
-        # before the fps filter runs.  We intentionally drop the scale filter:
-        # the min(720,ih) expression requires shell quoting that breaks in
-        # subprocess list mode and is unnecessary for typical webcam resolutions.
-        # fps=30 converts VFR -> CFR so MediaPipe timestamp ordering is satisfied.
+        # before the fps filter runs.  fps=30 converts VFR -> CFR so
+        # MediaPipe timestamp ordering is satisfied.
         "-vf",
         "format=yuv420p,fps=30",
         "-an",
