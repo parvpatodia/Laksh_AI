@@ -104,6 +104,10 @@ const UPPER_BODY_EXERCISE_IDS = new Set([
   "push_up",
   "pull_up",
   "plank",
+  // Basketball: chest-up selfie angle is valid. Only shoulders/elbows/wrists
+  // need to be in frame for release mechanics; hips/knees are not required.
+  "basketball",
+  "jump_shot",
 ]);
 // Landmark indices: 11=left_shoulder, 12=right_shoulder, 13=left_elbow,
 // 14=right_elbow, 15=left_wrist, 16=right_wrist,
