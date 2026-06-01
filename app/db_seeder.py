@@ -1,18 +1,35 @@
 """
-Apex.ai Dynamic NBA Database Seeder.
+NBA "stat-personality" archetype seeder for the Oracle Match feature.
 
-Rate-limit-safe pipeline to seed ChromaDB collection 'apex_oracle_v7' with
-active NBA players. Uses nba_api.LeagueDashPlayerStats for a single bulk
-fetch. Deterministic heuristics synthesize 8D kinematic vectors from real stats.
+Rate-limit-safe pipeline to seed a ChromaDB collection with active NBA players
+for the playful "which pro does your shot vibe with?" feature. Uses
+nba_api.LeagueDashPlayerStats for a single bulk fetch.
 
-8D Vector schema (aligned 1:1 with physics_engine output and main.py query_vector):
-  v0: release_velocity_mps  (raw m/s,  4.0 – 9.0)
+⚠️ HONESTY NOTE — READ THIS BEFORE TRUSTING THE "MATCH":
+The per-player vectors below are NOT measured biomechanics. They are synthesized
+by deterministic heuristics from BOX-SCORE stats (points, rebounds, assists,
+3P%), which contain ZERO information about how a player actually moves. A
+player's "elbow_angle" here is literally a function of their 3-point percentage.
+
+Consequence: the Oracle Match is an ENTERTAINMENT feature, not a biomechanical
+comparison. It reports which NBA player's *box-score-derived archetype* lands
+nearest the user's *measured* form in an 8-axis space that merely shares labels.
+Shared axis labels are not shared meaning — do NOT present this as "your
+mechanics are like Player X's mechanics." A knowledgeable coach or engineer will
+see through that instantly. Keep it framed as a fun stat-personality match.
+
+The 8 axes mirror physics_engine's output schema ONLY so the two vectors are the
+same shape for cosine search; the NBA values are fabricated, the user's values
+are measured. See README "What this is / isn't".
+
+8D Vector schema (shape mirrors physics_engine output; NBA values are heuristic):
+  v0: release_velocity_mps  (heuristic; user-side is a 2D pixel-ratio PROXY, not true m/s — to be renamed release_power_index)
   v1: shot_arc_deg          (degrees, 38 – 55)
   v2: knee_angle            (degrees at dip, 135 – 175)
   v3: elbow_angle           (degrees at release, 150 – 178)
   v4: kinetic_sync_ms       (dip→release ms, 150 – 600)
   v5: fluidity_score        (0 – 100)
-  v6: hip_rotation_deg      (XZ-plane yaw, −20 – +20)
+  v6: hip_rotation_deg      (XZ-plane yaw, −20 – +20; low-confidence from monocular video)
   v7: balance_index         (0 – 100)
 """
 
@@ -60,9 +77,13 @@ FALLBACK_PLAYERS = [
 
 def translate_to_kinematics(row: dict[str, Any]) -> list[float]:
     """
-    Deterministic heuristic: map NBA box-score stats to 8D kinematic vector.
-    Output schema is aligned 1:1 with physics_engine.py output so ChromaDB
-    similarity search compares like-for-like units.
+    Map NBA box-score stats → an 8D "stat-personality" ARCHETYPE vector.
+
+    ⚠️ This is NOT a measurement of any player's biomechanics. Every value below
+    is a hand-tuned function of box-score rates (3P%, AST, REB, TOV). Those stats
+    encode role and outcomes, not movement. The output only SHARES SHAPE with the
+    user's measured vector so ChromaDB can run a cosine search; it does not share
+    meaning. Treat the resulting "match" as entertainment, not biomechanical truth.
 
     Elite shooters (Curry, Thompson) → ~[7.5, 48, 155, 168, 230, 92, 4, 90]
     """
