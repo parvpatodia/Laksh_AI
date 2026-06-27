@@ -29,7 +29,15 @@
  *   metrics that are well-defined without per-exercise range lookup.
  */
 
-import type { AnalyzeResponse, FieldValue, RepVector } from "@/lib/api";
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  groundCoaching,
+  type AnalyzeResponse,
+  type CoachingCitation,
+  type FieldValue,
+  type RepVector,
+} from "@/lib/api";
 
 // ---------------------------------------------------------------------------
 // Insight types
@@ -259,13 +267,51 @@ interface Props {
 }
 
 export default function FormInsights({ result }: Props) {
-  const insights = buildInsights(result);
+  const insights = useMemo(() => buildInsights(result), [result]);
+  const [citations, setCitations] = useState<Record<string, CoachingCitation[]>>({});
+  const [grounding, setGrounding] = useState<"idle" | "loading" | "on" | "off" | "error">("idle");
+
+  // Ground the actionable faults (warn/info) in real sources via You.com.
+  // "good" insights are positive feedback and need no remediation sources.
+  useEffect(() => {
+    const faults = insights
+      .filter((i) => i.severity !== "good")
+      .map((i) => ({ id: i.id, title: i.title, cue: i.body }));
+    if (faults.length === 0) {
+      setGrounding("idle");
+      setCitations({});
+      return;
+    }
+    let cancelled = false;
+    setGrounding("loading");
+    groundCoaching(result.exercise_id, faults)
+      .then((res) => {
+        if (cancelled) return;
+        const map: Record<string, CoachingCitation[]> = {};
+        for (const cue of res.cues) {
+          if (cue.grounded && cue.citations.length > 0) map[cue.fault_id] = cue.citations;
+        }
+        setCitations(map);
+        setGrounding(res.grounding_enabled ? "on" : "off");
+      })
+      .catch(() => {
+        if (!cancelled) setGrounding("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [insights, result.exercise_id]);
 
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-800 p-5">
-      <h2 className="text-base font-semibold text-slate-200 mb-1">
-        Form Insights
-      </h2>
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-base font-semibold text-slate-200">Form Insights</h2>
+        {grounding === "on" && (
+          <span className="text-[10px] uppercase tracking-wider text-brand-400" title="Remediation sources retrieved live via You.com">
+            ● Sourced via You.com
+          </span>
+        )}
+      </div>
       <p className="text-xs text-slate-500 mb-4">
         Automatic coaching cues based on your measured reps. Each insight shows exactly what triggered it.
       </p>
@@ -278,6 +324,7 @@ export default function FormInsights({ result }: Props) {
         <div className="space-y-3">
           {insights.map((ins) => {
             const styles = SEVERITY_STYLES[ins.severity];
+            const cites = citations[ins.id];
             return (
               <div key={ins.id} className={`rounded-lg border ${styles.border} bg-surface-900/40 p-3`}>
                 <div className="flex items-center gap-2 mb-1">
@@ -288,6 +335,25 @@ export default function FormInsights({ result }: Props) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mb-2 leading-relaxed">{ins.body}</p>
+
+                {cites && cites.length > 0 && (
+                  <div className="mb-2 space-y-1 border-l-2 border-brand-700/50 pl-2.5">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500">Grounded in</p>
+                    {cites.map((c, i) => (
+                      <a
+                        key={`${ins.id}-${i}`}
+                        href={c.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-[11px] text-brand-400 hover:text-brand-300 hover:underline truncate"
+                        title={c.snippet || c.title}
+                      >
+                        [{i + 1}] {c.title}
+                      </a>
+                    ))}
+                  </div>
+                )}
+
                 <details>
                   <summary className="text-[11px] text-slate-600 cursor-pointer hover:text-slate-400 select-none">
                     How we detected this

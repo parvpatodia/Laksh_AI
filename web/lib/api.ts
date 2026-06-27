@@ -262,6 +262,61 @@ export async function fetchLeaderboard(
   return apiFetch<LeaderboardResponse>(`/v1/leaderboard?${params.toString()}`);
 }
 
+// ---------------------------------------------------------------------------
+// Grounded coaching (POST /v1/coaching/ground)
+// ---------------------------------------------------------------------------
+
+/** A resolvable source citation backing a coaching cue. */
+export interface CoachingCitation {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+/** One deterministic cue plus the You.com sources that ground its remediation. */
+export interface GroundedCue {
+  fault_id: string;
+  title: string;
+  cue: string;
+  query: string;
+  grounded: boolean;
+  citations: CoachingCitation[];
+  reason_codes: string[];
+}
+
+export interface GroundCoachingResponse {
+  exercise_id: string;
+  grounding_enabled: boolean;
+  backend: string;
+  disclaimer: string;
+  cues: GroundedCue[];
+}
+
+/** A detected fault sent to the grounding endpoint. */
+export interface FaultInput {
+  id: string;
+  title?: string;
+  cue?: string;
+  query?: string;
+}
+
+/**
+ * POST /v1/coaching/ground — ground deterministically-detected faults in real
+ * You.com sources. When grounding is disabled server-side (no key), cues come
+ * back with grounded=false and no citations; callers should render the cue
+ * unchanged in that case.
+ */
+export async function groundCoaching(
+  exerciseId: string,
+  faults: FaultInput[],
+  freshness = "year",
+): Promise<GroundCoachingResponse> {
+  return apiFetch<GroundCoachingResponse>("/v1/coaching/ground", {
+    method: "POST",
+    body: JSON.stringify({ exercise_id: exerciseId, faults, freshness }),
+  });
+}
+
 /**
  * One ghost rep vector as accumulated by the browser-side repCounter.
  * Sent alongside the video blob to populate the parity_probe block.
