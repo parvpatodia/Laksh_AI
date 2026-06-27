@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "laksh-web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd web && NEXT_PUBLIC_API_BASE=https://laksh-api.fly.dev npm run dev"],
+      "port": 3000
+    }
+  ]
+}
