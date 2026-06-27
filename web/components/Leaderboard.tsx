@@ -130,53 +130,87 @@ export default function Leaderboard() {
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-surface-700 bg-surface-800/60 overflow-hidden">
-          {/* Column header */}
-          <div className="grid grid-cols-12 gap-2 px-5 py-3 border-b border-surface-700
-                          text-xs uppercase tracking-wider text-slate-500 font-semibold">
-            <div className="col-span-1">Rank</div>
-            <div className="col-span-4">Athlete</div>
-            <div className="col-span-2">Exercise</div>
-            <div className="col-span-2 text-right">Form Score</div>
-            <div className="col-span-1 text-right">Reps</div>
-            <div className="col-span-2 text-right">Verified</div>
+<>
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-xl border border-surface-700 bg-surface-800/60 overflow-hidden">
+            {/* Column header */}
+            <div className="grid grid-cols-12 gap-2 px-5 py-3 border-b border-surface-700
+                            text-xs uppercase tracking-wider text-slate-500 font-semibold">
+              <div className="col-span-1">Rank</div>
+              <div className="col-span-4">Athlete</div>
+              <div className="col-span-2">Exercise</div>
+              <div className="col-span-2 text-right">Form Score</div>
+              <div className="col-span-1 text-right">Reps</div>
+              <div className="col-span-2 text-right">Verified</div>
+            </div>
+
+            {data.entries.map((e) => (
+              <div
+                key={e.session_id}
+                className="grid grid-cols-12 gap-2 px-5 py-3.5 items-center border-b border-surface-800
+                           last:border-0 hover:bg-surface-800 transition-colors"
+              >
+                <div className="col-span-1 text-lg font-black text-slate-300">
+                  {rankBadge(e.rank)}
+                </div>
+                <div className="col-span-4 font-medium text-slate-100 truncate">
+                  {e.display_name}
+                </div>
+                <div className="col-span-2 text-sm text-slate-400 truncate">
+                  {prettyExercise(e.exercise_id)}
+                </div>
+                <div className="col-span-2 text-right">
+                  <span className="font-mono text-base font-bold text-white">
+                    {e.form_index.toFixed(1)}
+                  </span>
+                  <span className={`${statusChip(e.form_index_status)} ml-2 text-[11px] px-1.5 py-0.5 rounded`}>
+                    {statusLabel(e.form_index_status)}
+                  </span>
+                </div>
+                <div className="col-span-1 text-right font-mono text-sm text-slate-400">
+                  {e.n_valid_reps}/{e.n_reps}
+                </div>
+                <div
+                  className="col-span-2 text-right text-xs text-slate-500"
+                  title={e.git_commit_sha ? `Analysis code version ${e.git_commit_sha.slice(0, 12)}` : undefined}
+                >
+                  <span className="text-emerald-500">✓</span> {whenShort(e.created_at)}
+                </div>
+              </div>
+            ))}
           </div>
 
-          {data.entries.map((e) => (
-            <div
-              key={e.session_id}
-              className="grid grid-cols-12 gap-2 px-5 py-3.5 items-center border-b border-surface-800
-                         last:border-0 hover:bg-surface-800 transition-colors"
-            >
-              <div className="col-span-1 text-lg font-black text-slate-300">
-                {rankBadge(e.rank)}
-              </div>
-              <div className="col-span-4 font-medium text-slate-100 truncate">
-                {e.display_name}
-              </div>
-              <div className="col-span-2 text-sm text-slate-400 truncate">
-                {prettyExercise(e.exercise_id)}
-              </div>
-              <div className="col-span-2 text-right">
-                <span className="font-mono text-base font-bold text-white">
-                  {e.form_index.toFixed(1)}
-                </span>
-                <span className={`${statusChip(e.form_index_status)} ml-2 text-[11px] px-1.5 py-0.5 rounded`}>
-                  {statusLabel(e.form_index_status)}
-                </span>
-              </div>
-              <div className="col-span-1 text-right font-mono text-sm text-slate-400">
-                {e.n_valid_reps}/{e.n_reps}
-              </div>
+          {/* Mobile cards — the 12-col table is unreadable on narrow screens */}
+          <div className="md:hidden space-y-2">
+            {data.entries.map((e) => (
               <div
-                className="col-span-2 text-right text-xs text-slate-500"
-                title={e.git_commit_sha ? `Analysis code version ${e.git_commit_sha.slice(0, 12)}` : undefined}
+                key={e.session_id}
+                className="rounded-xl border border-surface-700 bg-surface-800/60 p-4
+                           flex items-center justify-between gap-3"
               >
-                <span className="text-emerald-500">✓</span> {whenShort(e.created_at)}
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-lg font-black text-slate-300 shrink-0 w-7 text-center">
+                    {rankBadge(e.rank)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-100 truncate">{e.display_name}</p>
+                    <p className="text-xs text-slate-500 truncate">
+                      {prettyExercise(e.exercise_id)} · {e.n_valid_reps}/{e.n_reps} reps · {whenShort(e.created_at)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-mono text-lg font-bold text-white leading-none">
+                    {e.form_index.toFixed(1)}
+                  </p>
+                  <span className={`${statusChip(e.form_index_status)} inline-block mt-1 text-[11px] px-1.5 py-0.5 rounded`}>
+                    {statusLabel(e.form_index_status)}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Plain-language note — honest, without the jargon. */}
