@@ -75,6 +75,14 @@ export interface ParityProbe {
   status: "within_tolerance" | "outside_tolerance" | "insufficient_data";
 }
 
+/** Where this session landed on the leaderboard (the "you're #N" reveal). */
+export interface LeaderboardStanding {
+  form_index: number | null;
+  form_index_status: FieldStatus;
+  rank: number | null;
+  total: number;
+}
+
 export interface AnalyzeResponse {
   schema_version: string;
   sport_id: SportId;
@@ -88,6 +96,7 @@ export interface AnalyzeResponse {
   feature_vectors: RepVector[];
   calibration: CalibrationBlock;
   parity_probe: ParityProbe | null;
+  leaderboard_standing?: LeaderboardStanding | null;
 }
 
 export interface HealthResponse {
