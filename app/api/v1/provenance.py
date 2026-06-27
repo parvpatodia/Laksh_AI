@@ -29,11 +29,19 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 def _git_commit_sha() -> str | None:
     """Short git SHA if available -- None on read-only / non-git deploys.
 
-    Prefer the ``LAKSH_GIT_SHA`` env var (set by the Dockerfile) so the
-    deploy image does not need ``.git`` mounted.
+    Prefer the ``GIT_COMMIT_SHA`` env var (baked by the Dockerfile via
+    ``ENV GIT_COMMIT_SHA`` and passed at deploy time by
+    ``make fly-deploy --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD)``) so the
+    deploy image does not need ``.git`` mounted. ``LAKSH_GIT_SHA`` is honored as
+    a legacy fallback. The Dockerfile's ``ARG`` default of ``"unknown"`` is
+    treated as absent so a deploy that forgot the build-arg does not ship a
+    bogus SHA.
     """
-    env = os.environ.get("LAKSH_GIT_SHA")
-    if env:
+    # WHY: this must match the env var the Dockerfile/Makefile set (main.py:40
+    # already reads GIT_COMMIT_SHA). A prior version read a never-set
+    # LAKSH_GIT_SHA, so v1 reports shipped git_commit_sha: null.
+    env = os.environ.get("GIT_COMMIT_SHA") or os.environ.get("LAKSH_GIT_SHA")
+    if env and env.strip() and env.strip() != "unknown":
         return env.strip()[:40]
     try:
         out = subprocess.check_output(
