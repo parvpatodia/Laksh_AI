@@ -68,6 +68,13 @@ export default function RootLayout({
                 Gym
               </a>
               <a
+                href="/leaderboard"
+                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white
+                           hover:bg-surface-700/60 rounded-lg transition-all duration-150"
+              >
+                Leaderboard
+              </a>
+              <a
                 href="https://github.com/parvpatodia/Laksh_AI"
                 target="_blank"
                 rel="noopener noreferrer"
