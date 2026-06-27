@@ -53,8 +53,8 @@ const METRIC_META: Record<string, MetricMeta> = {
   },
   signal_amplitude: {
     label: "Range of Motion",
-    description: "Total joint angle swept. Larger = fuller range.",
-    format: (v, u) => `${v.toFixed(1)}${u === "deg" ? "\u00b0" : " " + u}`,
+    description: "How far you moved through the rep. Larger = fuller range.",
+    format: (v, u) => (u === "deg" ? `${v.toFixed(1)}\u00b0` : v.toFixed(2)),
   },
   primary_joints_min_visibility: {
     label: "Pose Confidence",
@@ -366,6 +366,34 @@ export default function CanonicalReport({
 
       {/* Body: score card + rep list + footnotes */}
       <div className="p-6 space-y-5">
+
+      {/* Leaderboard standing — the "you're #N" reveal (powered by the InsForge leaderboard) */}
+      {result.leaderboard_standing && result.leaderboard_standing.rank !== null && (
+        <a
+          href="/leaderboard"
+          className="block rounded-xl border border-brand-500/40 bg-gradient-to-r from-brand-500/15 via-brand-500/5
+                     to-transparent px-4 py-3.5 hover:border-brand-500/70 transition-colors"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-brand-300">
+                {result.leaderboard_standing.rank === 1
+                  ? "🏆 New #1 — top form score!"
+                  : "You made the leaderboard"}
+              </p>
+              <p className="text-base font-bold text-white mt-0.5">
+                {result.leaderboard_standing.form_index !== null && (
+                  <span className="font-mono">{result.leaderboard_standing.form_index.toFixed(1)}</span>
+                )}{" "}
+                Form Score · Ranked{" "}
+                <span className="font-mono">#{result.leaderboard_standing.rank}</span> of{" "}
+                {result.leaderboard_standing.total}
+              </p>
+            </div>
+            <span className="shrink-0 text-xs font-medium text-brand-400">View leaderboard →</span>
+          </div>
+        </a>
+      )}
 
       {/* Score card -- three stat boxes */}
       <div className="grid grid-cols-3 gap-2">
