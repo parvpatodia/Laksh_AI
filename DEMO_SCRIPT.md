@@ -80,14 +80,15 @@ Open `/leaderboard`. Refresh.
 
 (Invite a judge to do a squat → they appear on the board. Huge engagement moment.)
 
-### Beat 5 — The sponsor + agent story (20s)
-> "The whole backend — Postgres schema, auth, clip storage — was provisioned **live
-> by an AI agent through InsForge's MCP**: the agent operates the backend. And the
-> coaching cues are **grounded in real sources via You.com Search** — every cue links
-> to live sports-science references you can click."
+### Beat 5 — The sponsor + agent story (20s) — both LIVE
+> "This backend wasn't hand-built. An **AI agent provisioned it live through InsForge** —
+> the Postgres schema, auth, and clip storage were all created by the agent operating
+> InsForge directly. The leaderboard row you just created is a real InsForge record.
+> And these coaching cues are **grounded in real sources via You.com Search** — every
+> cue links to live sports-science references, including peer-reviewed studies, you can
+> click."
 
-(If a key isn't live yet: demo the deterministic coaching + say "grounding flips on
-with the You.com key — here's the cited version," and show a prepared example.)
+(Proof on hand: `SPONSORS.md` has one-line `curl` checks a judge can run for both.)
 
 ### Close (10s)
 > "Real-time pose, honest measurement, an agent-run backend, and grounded coaching —
