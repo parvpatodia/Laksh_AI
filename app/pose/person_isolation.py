@@ -137,8 +137,8 @@ class HaarMilPersonIsolation:
     tracker_update_failures: int = 0
 
     def __post_init__(self) -> None:
-        ub_path = cv2.data.haarcascades + "haarcascade_upperbody.xml"
-        fb_path = cv2.data.haarcascades + "haarcascade_fullbody.xml"
+        ub_path = cv2.data.haarcascades + "haarcascade_upperbody.xml"  # type: ignore[attr-defined]  # cv2.data exists at runtime; not in stubs
+        fb_path = cv2.data.haarcascades + "haarcascade_fullbody.xml"  # type: ignore[attr-defined]  # cv2.data exists at runtime; not in stubs
         self._cascade_ub = cv2.CascadeClassifier(ub_path)
         self._cascade_fb = cv2.CascadeClassifier(fb_path)
         if self._cascade_ub.empty() or self._cascade_fb.empty():
@@ -179,7 +179,7 @@ class HaarMilPersonIsolation:
         return clamp_roi_xyxy(x0, y0, x1, y1, w, h, min_side=self.min_side_px)
 
     def _init_tracker(self, bgr: np.ndarray, x0: int, y0: int, x1: int, y1: int) -> bool:
-        self._tracker = cv2.TrackerMIL_create()
+        self._tracker = cv2.TrackerMIL_create()  # type: ignore[attr-defined]  # exists at runtime; not in cv2 stubs
         bw, bh = x1 - x0, y1 - y0
         bbox = (float(x0), float(y0), float(bw), float(bh))
         try:
