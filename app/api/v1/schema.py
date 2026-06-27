@@ -156,6 +156,18 @@ class ParityProbeModel(BaseModel):
     status: Literal["within_tolerance", "outside_tolerance", "insufficient_data"]
 
 
+class LeaderboardStandingModel(BaseModel):
+    """Where this session landed on the leaderboard. Best-effort: fields are null
+    when persistence/ranking is unavailable, so it never blocks the report."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    form_index: Optional[float] = None
+    form_index_status: str = "unknown"
+    rank: Optional[int] = None
+    total: int = 0
+
+
 class AnalyzeResponseModel(BaseModel):
     """The v1 analyze response (same for every sport)."""
 
@@ -173,6 +185,7 @@ class AnalyzeResponseModel(BaseModel):
     feature_vectors: list[RepVectorModel]
     calibration: CalibrationBlockModel
     parity_probe: Optional[ParityProbeModel] = None
+    leaderboard_standing: Optional[LeaderboardStandingModel] = None
 
 
 # ---------- request models -----------------------------------------------

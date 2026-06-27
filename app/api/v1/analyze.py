@@ -24,6 +24,7 @@ from app.api.v1.provenance import build_provenance
 from app.api.v1.schema import (
     AnalyzeGymRequest,
     AnalyzeResponseModel,
+    LeaderboardStandingModel,
     ParityProbeModel,
 )
 from app.gym.pipeline import UnknownExerciseError, analyze_gym_clip
@@ -37,19 +38,39 @@ log = logging.getLogger(__name__)
 router = APIRouter(tags=["analyze"])
 
 
-def _persist_best_effort(
+def _persist_and_rank(
     store: SessionStore, envelope: AnalyzeResponseModel, display_name: str
-) -> None:
-    """Persist a session without ever failing the request.
+) -> LeaderboardStandingModel | None:
+    """Persist the session and compute its leaderboard standing -- both best-effort.
 
-    Persistence is a side effect of analysis: if the store is down, the user
-    still gets their report. The failure is logged, not raised.
+    Persistence is a side effect of analysis: if the store is down the user still
+    gets their report, just without a standing. Never raises.
     """
     try:
         record = build_session_record(envelope.model_dump(), display_name=display_name)
         store.persist(record)
     except Exception:  # noqa: BLE001 -- persistence must never break analysis
         log.warning("session persistence failed (non-fatal)", exc_info=True)
+        return None
+
+    if record.form_index is None:
+        return None  # unscored session never ranks
+
+    rank: int | None = None
+    total = 0
+    try:
+        board = store.leaderboard(exercise_id=record.exercise_id, limit=1000)
+        total = len(board)
+        rank = next((e.rank for e in board if e.session_id == record.session_id), None)
+    except Exception:  # noqa: BLE001 -- a ranking miss must not break the report
+        log.warning("leaderboard standing lookup failed (non-fatal)", exc_info=True)
+
+    return LeaderboardStandingModel(
+        form_index=record.form_index,
+        form_index_status=record.form_index_status,
+        rank=rank,
+        total=total,
+    )
 
 # ---------------------------------------------------------------------------
 # Shared helper
@@ -149,7 +170,7 @@ def analyze_gym(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     envelope = _build_envelope(result, model="none_frames_json")
-    _persist_best_effort(store, envelope, req.display_name or "anon")
+    envelope.leaderboard_standing = _persist_and_rank(store, envelope, req.display_name or "anon")
     return envelope
 
 
@@ -270,5 +291,5 @@ async def analyze_gym_video(
             )
 
     envelope = _build_envelope(result, model="mediapipe_pose_landmarker_heavy", parity_probe=parity_probe)
-    _persist_best_effort(store, envelope, display_name or "anon")
+    envelope.leaderboard_standing = _persist_and_rank(store, envelope, display_name or "anon")
     return envelope
