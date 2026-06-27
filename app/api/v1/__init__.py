@@ -25,6 +25,7 @@ from fastapi import APIRouter
 
 from app.api.v1.analyze import router as analyze_router
 from app.api.v1.health import router as health_router
+from app.api.v1.leaderboard import router as leaderboard_router
 from app.api.v1.sports import router as sports_router
 
 #: Prefix applied when the v1 router is mounted on the parent app.
@@ -34,5 +35,6 @@ router = APIRouter(prefix=V1_PREFIX)
 router.include_router(health_router)
 router.include_router(sports_router)
 router.include_router(analyze_router)
+router.include_router(leaderboard_router)
 
 __all__ = ["V1_PREFIX", "router"]
