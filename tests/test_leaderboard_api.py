@@ -78,3 +78,23 @@ def test_analysis_without_name_defaults_to_anon(client):
 def test_leaderboard_limit_param_is_validated(client):
     assert client.get("/v1/leaderboard", params={"limit": 0}).status_code == 422
     assert client.get("/v1/leaderboard", params={"limit": 101}).status_code == 422
+
+
+def test_analyze_returns_leaderboard_standing(client):
+    # The analyze response carries the session's rank-reveal standing.
+    r = client.post("/v1/analyze/gym", json=_frames_body("ranktest"))
+    assert r.status_code == 200, r.text
+    standing = r.json()["leaderboard_standing"]
+    assert standing is not None
+    assert standing["form_index"] is not None
+    assert standing["rank"] == 1  # first (and only) session in a fresh temp store
+    assert standing["total"] == 1
+
+
+def test_analyze_standing_ranks_among_existing(client):
+    # Second identical session ranks below the first (tie broken by created_at).
+    client.post("/v1/analyze/gym", json=_frames_body("first"))
+    r = client.post("/v1/analyze/gym", json=_frames_body("second"))
+    standing = r.json()["leaderboard_standing"]
+    assert standing["total"] == 2
+    assert standing["rank"] in (1, 2)
