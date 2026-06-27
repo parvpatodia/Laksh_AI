@@ -41,35 +41,35 @@ export default function RootLayout({
         {/* Global navigation */}
         <header className="sticky top-0 z-50 border-b border-surface-700/60
                            bg-surface-900/90 backdrop-blur-md">
-          <div className="max-w-screen-2xl mx-auto px-6 xl:px-12 py-0 flex items-center justify-between h-14">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 xl:px-12 py-0 flex items-center justify-between h-14">
 
             {/* Logo */}
             <a href="/" className="flex items-center gap-2 group">
-              <span className="text-xl font-black tracking-tight text-white group-hover:text-brand-400 transition-colors">
+              <span className="text-lg sm:text-xl font-black tracking-tight text-white group-hover:text-brand-400 transition-colors">
                 LAKSH
               </span>
-              <span className="text-xl font-black tracking-tight text-brand-500">.AI</span>
+              <span className="text-lg sm:text-xl font-black tracking-tight text-brand-500">.AI</span>
             </a>
 
-            {/* Nav links */}
-            <nav className="flex items-center gap-1">
+            {/* Nav links — tightened on mobile so labels never clip; GitHub hidden on small screens */}
+            <nav className="flex items-center gap-0.5 sm:gap-1">
               <a
                 href="/basketball"
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white
+                className="px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-400 hover:text-white
                            hover:bg-surface-700/60 rounded-lg transition-all duration-150"
               >
                 Basketball
               </a>
               <a
                 href="/gym"
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white
+                className="px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-400 hover:text-white
                            hover:bg-surface-700/60 rounded-lg transition-all duration-150"
               >
                 Gym
               </a>
               <a
                 href="/leaderboard"
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white
+                className="px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-400 hover:text-white
                            hover:bg-surface-700/60 rounded-lg transition-all duration-150"
               >
                 Leaderboard
@@ -78,7 +78,7 @@ export default function RootLayout({
                 href="https://github.com/parvpatodia/Laksh_AI"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-2 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-300
+                className="hidden sm:inline-flex ml-2 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-300
                            border border-surface-600 hover:border-surface-500 rounded-lg transition-all duration-150"
               >
                 GitHub
