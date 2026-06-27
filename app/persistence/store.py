@@ -177,11 +177,17 @@ def get_session_store(
     if resolved == "none":
         return NullSessionStore()
     if resolved == "insforge":
-        # WHY: the InsForge adapter is wired only once the MCP/key are
-        # provisioned. Falling back keeps the live demo + leaderboard working.
+        # Lazy import avoids a circular import (insforge_store imports SessionStore).
+        api_url = os.environ.get("INSFORGE_API_URL")
+        api_key = os.environ.get("INSFORGE_API_KEY")
+        if api_url and api_key:
+            from app.persistence.insforge_store import InsForgeSessionStore
+
+            return InsForgeSessionStore(api_url, api_key)
+        # WHY: missing creds must not break the demo -- fall back to SQLite.
         log.warning(
-            "LAKSH_PERSISTENCE_BACKEND=insforge but the adapter is not wired yet; "
-            "using the SQLite fallback."
+            "LAKSH_PERSISTENCE_BACKEND=insforge but INSFORGE_API_URL/INSFORGE_API_KEY "
+            "are unset; using the SQLite fallback."
         )
         resolved = "sqlite"
     if resolved != "sqlite":

@@ -50,3 +50,20 @@ ORCHESTRATOR_REVIEW.md
 SECURITY_AUDIT.md
 .vercel
 .env*.local
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude/settings.local.json
+.mcp.json
+AGENTS.md
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
