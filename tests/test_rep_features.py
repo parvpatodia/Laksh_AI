@@ -313,3 +313,33 @@ def test_invalid_span_raises() -> None:
     rep = RepSpan(start_frame=10, end_frame=5, peak_frame=7, status="valid", reason_codes=())
     with pytest.raises(ValueError, match="RepSpan"):
         compute_rep_features(rep, 0, [], BACK_SQUAT, fps=30.0)
+
+
+# ----- eccentric/concentric phase polarity ---------------------------------
+
+
+def test_phase_polarity_squat_vs_pull() -> None:
+    """start->peak is eccentric for a squat but concentric for a pull (curl).
+
+    The segmenter peak is the bottom for a squat (eccentric end) but the
+    contracted top for a curl (concentric end), so the phase labels must flip.
+    """
+    curl = get_exercise("dumbbell_bicep_curl")
+    # peak near the start: start->peak = 5 frames, peak->end = 25 frames.
+    rep = RepSpan(start_frame=0, end_frame=30, peak_frame=5, status="valid", reason_codes=())
+    frames = [None] * 31
+    fps = 30.0
+
+    sq = compute_rep_features(rep, 0, frames, BACK_SQUAT, fps).features
+    # Squat: start->peak (short, 5 frames) is the eccentric lowering.
+    assert sq["eccentric_duration_s"].value == pytest.approx(5 / 30)
+    assert sq["concentric_duration_s"].value == pytest.approx(25 / 30)
+
+    cu = compute_rep_features(rep, 0, frames, curl, fps).features
+    # Curl: start->peak is the concentric lift, so phases are swapped.
+    assert cu["concentric_duration_s"].value == pytest.approx(5 / 30)
+    assert cu["eccentric_duration_s"].value == pytest.approx(25 / 30)
+
+    # tempo_ratio = ecc/con therefore inverts between the two movements.
+    assert sq["tempo_ratio_ecc_over_con"].value == pytest.approx(5 / 25)
+    assert cu["tempo_ratio_ecc_over_con"].value == pytest.approx(25 / 5)

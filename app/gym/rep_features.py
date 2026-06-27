@@ -59,6 +59,33 @@ _ANGLE_TRIPLETS: dict[str, tuple[str, str, str]] = {
     "left_hip": ("left_shoulder", "left_hip", "left_knee"),
 }
 
+# Categories where the segmenter's detected peak (work-extremum) is the
+# CONCENTRIC contraction at the top of the lift rather than a lowered bottom.
+# For these the start->peak phase is the lift (concentric) and peak->end is the
+# lowering (eccentric), so the two phases must be swapped before labelling.
+#
+# WHY: cyclic_angle pulls (bicep curl, row, pull-up) flex the tracked joint INTO
+# the contracted finish concentrically, so min-angle (the detected peak) is the
+# TOP. Squats (cyclic_vertical) and angle-tracked push/hinge movements (bench,
+# OHP, push-up, RDL) instead reach their peak at the bottom, so start->peak is
+# eccentric. v0 exact inverted set: dumbbell_bicep_curl, barbell_row, pull_up.
+# (Post-demo this polarity belongs as an explicit field on ExerciseV0.)
+_CONCENTRIC_INTO_PEAK_CATEGORIES: frozenset[str] = frozenset(
+    {"horizontal_pull", "vertical_pull"}
+)
+
+
+def _start_to_peak_is_eccentric(exercise: ExerciseV0) -> bool:
+    """Whether the start->peak phase is the eccentric (lowering) phase.
+
+    True for squats and angle-tracked push/hinge movements (peak = bottom).
+    False for angle-tracked pulls (peak = the concentric contraction at the top).
+    """
+    return not (
+        exercise.rep_signal_type == "cyclic_angle"
+        and exercise.category in _CONCENTRIC_INTO_PEAK_CATEGORIES
+    )
+
 
 @dataclass(frozen=True)
 class RepFeaturesConfig:
@@ -304,16 +331,23 @@ def extract_rep_signal(
 
 
 def _duration_features(
-    rep: RepSpan, fps: float, cfg: RepFeaturesConfig
+    rep: RepSpan,
+    fps: float,
+    cfg: RepFeaturesConfig,
+    start_to_peak_is_eccentric: bool = True,
 ) -> dict[str, FieldValue]:
     length_frames = rep.end_frame - rep.start_frame + 1
     total_s = max(0.0, length_frames / fps)
-    # eccentric = start -> peak, concentric = peak -> end. If the peak sits
-    # at a boundary we degrade the corresponding phase.
-    ecc_frames = rep.peak_frame - rep.start_frame
-    con_frames = rep.end_frame - rep.peak_frame
-    ecc_s = ecc_frames / fps
-    con_s = con_frames / fps
+    # The rep has two phases: start->peak and peak->end. Which is eccentric
+    # depends on the movement (see _start_to_peak_is_eccentric): for a squat the
+    # peak is the bottom so start->peak is the eccentric lowering; for a curl/
+    # row/pull-up the peak is the concentric contraction, so they are reversed.
+    start_to_peak_s = (rep.peak_frame - rep.start_frame) / fps
+    peak_to_end_s = (rep.end_frame - rep.peak_frame) / fps
+    if start_to_peak_is_eccentric:
+        ecc_s, con_s = start_to_peak_s, peak_to_end_s
+    else:
+        ecc_s, con_s = peak_to_end_s, start_to_peak_s
 
     def _phase(value: float, code_prefix: str) -> FieldValue:
         if value <= 0:
@@ -626,7 +660,7 @@ def compute_rep_features(
     if rep.start_frame < 0 or rep.end_frame < rep.start_frame:
         raise ValueError(f"invalid RepSpan frames: {rep.start_frame}..{rep.end_frame}")
     cfg = config or RepFeaturesConfig()
-    features = _duration_features(rep, fps, cfg)
+    features = _duration_features(rep, fps, cfg, _start_to_peak_is_eccentric(exercise))
     signal, miss = extract_rep_signal(canonical_frames, exercise)
     features["signal_amplitude"] = _amplitude_feature(signal, miss, rep, exercise, cfg)
     vis, missing = _visibility_and_missing_features(canonical_frames, rep, exercise, cfg)
