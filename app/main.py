@@ -33,6 +33,8 @@ from app.api.v1 import router as v1_router
 from app.logging_config import configure_logging
 from app.physics_engine import KinematicAnalyzer
 from app.correction_engine import generate_correction_video
+from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS, METRIC_DEFAULTS  # single source of truth shared with db_seeder
+from app.config import settings  # centralised env-driven config — replaces scattered os.environ.get() calls
 
 # A6: Git SHA read from environment variable set at Docker build time.
 # Do NOT use subprocess.run(["git", ...]) — git may not be installed in the
@@ -50,7 +52,6 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
-COLLECTION_NAME = "apex_oracle_v7"
 # Repo root (parent of app/) — chroma_db lives next to requirements.txt, not inside app/
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 PERSIST_DIR = str(_REPO_ROOT / "chroma_db")
@@ -119,7 +120,7 @@ def _get_collection():
     return _collection
 
 
-def calculate_market_index(vector: list[float], match_distance: float) -> str:
+def calculate_market_index(match_distance: float) -> str:  # was: (vector, match_distance) — vector was accepted but never read inside; removed to avoid silent dead param
     """
     Deterministic valuation from cosine distance to nearest NBA pro.
     ChromaDB with hnsw:space='cosine' returns cosine distance in [0, 2]
@@ -142,8 +143,9 @@ def calculate_market_index(vector: list[float], match_distance: float) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Configure logging, initialise ChromaDB, warm pose landmarker; yield for request handling."""
+    """Configure logging, validate config, initialise ChromaDB, warm pose landmarker; yield for requests."""
     configure_logging()
+    settings.validate()  # fails loudly if GEMINI_API_KEY missing — was: silent failure on first request
     _init_chroma()
     threading.Thread(target=_warm_pose_landmarker, daemon=True).start()
     yield
@@ -883,11 +885,17 @@ async def analyze_video(
     raw = await video.read()
     if not raw:
         raise HTTPException(status_code=400, detail="Empty video upload")
+    # Upload size guard (from config) — was a hardcoded literal on main.
+    if len(raw) > settings.max_upload_bytes:
+        raise HTTPException(status_code=413, detail=f"Video file too large. Maximum allowed size is {settings.max_upload_bytes // (1024*1024)} MB.")
+    # MIME-aware temp path: the frontend sends WebM from MediaRecorder, not MP4.
     safe_name, gemini_mime = _temp_video_path_and_gemini_mime(video, raw)
     extra_cleanup: list[str] = []
     with open(safe_name, "wb") as b:
         b.write(raw)
     try:
+        # Sanitise athlete_name to prevent prompt injection into the Gemini prompt.
+        athlete_name = (str(athlete_name or "").strip())[:100] or None
         # --- A4: Fast pre-check (< 0.3 s, OpenCV only) --------------------------------
         # Catches corrupted/too-short/low-fps inputs before burning 25-40 s of MediaPipe.
         _pre_ok, _pre_code, _pre_actuals = _fast_video_precheck(safe_name)
@@ -907,12 +915,18 @@ async def analyze_video(
         end_val = None
         if start_sec is not None and str(start_sec).strip():
             try:
-                start_val = float(start_sec)
+                v = float(start_sec)
+                if not (0.0 <= v <= 7200.0):  # guard: reject negative/infinity/absurd values
+                    raise HTTPException(status_code=422, detail="start_sec must be between 0 and 7200.")
+                start_val = v
             except (TypeError, ValueError):
                 pass
         if end_sec is not None and str(end_sec).strip():
             try:
-                end_val = float(end_sec)
+                v = float(end_sec)
+                if not (0.0 <= v <= 7200.0):
+                    raise HTTPException(status_code=422, detail="end_sec must be between 0 and 7200.")
+                end_val = v
             except (TypeError, ValueError):
                 pass
         # Speed strategy (2026-04-23):
@@ -984,9 +998,9 @@ async def analyze_video(
             ]
 
         # Query ChromaDB BEFORE Gemini so we can compute deltas for the prompt.
-        # Weights must mirror db_seeder.FEATURE_WEIGHTS exactly so query and index
-        # live in the same normalised L2 space.
-        FEATURE_WEIGHTS = [16.6, 3.3, 1.25, 1.66, 0.33, 1.66, 2.22, 2.0]
+        # FEATURE_WEIGHTS and METRIC_DEFAULTS imported from app.constants — same
+        # values used at index time in db_seeder.py so query and index live in
+        # the same normalised L2 space.
         def _num(v, default):
             try:
                 if v is None:
@@ -995,14 +1009,14 @@ async def analyze_video(
             except (TypeError, ValueError):
                 return float(default)
         raw_vector = [
-            _num(biomech.get("release_velocity_mps"), 7.0),
-            _num(biomech.get("shot_arc_deg"), 45.0),
-            _num(biomech.get("knee_angle"), 150.0),
-            _num(biomech.get("elbow_angle"), 165.0),
-            _num(biomech.get("kinetic_sync_ms"), 300.0),
-            _num(biomech.get("fluidity_score"), 75.0),
-            _num(biomech.get("hip_rotation_deg"), 5.0),
-            _num(biomech.get("balance_index"), 75.0),
+            _num(biomech.get("release_velocity_mps"), METRIC_DEFAULTS["release_velocity_mps"]),
+            _num(biomech.get("shot_arc_deg"),          METRIC_DEFAULTS["shot_arc_deg"]),
+            _num(biomech.get("knee_angle"),            METRIC_DEFAULTS["knee_angle"]),
+            _num(biomech.get("elbow_angle"),           METRIC_DEFAULTS["elbow_angle"]),
+            _num(biomech.get("kinetic_sync_ms"),       METRIC_DEFAULTS["kinetic_sync_ms"]),
+            _num(biomech.get("fluidity_score"),        METRIC_DEFAULTS["fluidity_score"]),
+            _num(biomech.get("hip_rotation_deg"),      METRIC_DEFAULTS["hip_rotation_deg"]),
+            _num(biomech.get("balance_index"),         METRIC_DEFAULTS["balance_index"]),
         ]
         query_vector = [v * w for v, w in zip(raw_vector, FEATURE_WEIGHTS)]
 
@@ -1050,7 +1064,7 @@ async def analyze_video(
             logger.warning("_build_matched_pro failed: %s", _pro_err)
             matched_pro = None
             match_name = "—"
-        market_index = calculate_market_index(query_vector, match_distance)
+        market_index = calculate_market_index(match_distance)  # signature updated on main: dropped unused vector param
 
         # Build pro_stats from meta (v0-v7) for delta calculation.
         # Schema: v0=vel_mps, v1=arc, v2=knee, v3=elbow, v4=ksync_ms, v5=fluidity, v6=hip, v7=balance
@@ -1467,7 +1481,9 @@ async def generate_correction_video_endpoint(
             video_path = None
 
     try:
-        render_result = generate_correction_video(
+        # Run OpenCV video rendering off the event loop — CPU-bound, same reason as analyze-video
+        render_result = await asyncio.to_thread(
+            generate_correction_video,
             telemetry, stats,
             athlete_name     = (athlete_name or "Athlete").strip() or "Athlete",
             kinematic_deltas = kinematic_deltas,
