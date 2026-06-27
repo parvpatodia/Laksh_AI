@@ -208,6 +208,9 @@ class AnalyzeGymRequest(BaseModel):
             "{joint_name: {x, y, z?, visibility?}}."
         ),
     )
+    display_name: Optional[str] = Field(
+        None, description="Optional leaderboard display name for this session."
+    )
 
 
 class SportInfoModel(BaseModel):

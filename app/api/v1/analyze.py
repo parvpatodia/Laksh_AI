@@ -16,9 +16,10 @@ import os
 import tempfile
 import uuid
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
 
+from app.api.v1.deps import get_store
 from app.api.v1.provenance import build_provenance
 from app.api.v1.schema import (
     AnalyzeGymRequest,
@@ -28,10 +29,27 @@ from app.api.v1.schema import (
 from app.gym.pipeline import UnknownExerciseError, analyze_gym_clip
 from app.gym.pose_adapter import frames_json_to_canonical_frames
 from app.parity.realtime import probe_reps
+from app.persistence.models import build_session_record
+from app.persistence.store import SessionStore
 
 log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["analyze"])
+
+
+def _persist_best_effort(
+    store: SessionStore, envelope: AnalyzeResponseModel, display_name: str
+) -> None:
+    """Persist a session without ever failing the request.
+
+    Persistence is a side effect of analysis: if the store is down, the user
+    still gets their report. The failure is logged, not raised.
+    """
+    try:
+        record = build_session_record(envelope.model_dump(), display_name=display_name)
+        store.persist(record)
+    except Exception:  # noqa: BLE001 -- persistence must never break analysis
+        log.warning("session persistence failed (non-fatal)", exc_info=True)
 
 # ---------------------------------------------------------------------------
 # Shared helper
@@ -100,7 +118,10 @@ def _build_envelope(
     status_code=status.HTTP_200_OK,
     summary="Analyse a gym clip from pre-extracted canonical pose frames",
 )
-def analyze_gym(req: AnalyzeGymRequest) -> AnalyzeResponseModel:
+def analyze_gym(
+    req: AnalyzeGymRequest,
+    store: SessionStore = Depends(get_store),
+) -> AnalyzeResponseModel:
     """Run the gym measurement spine on ``req.frames``.
 
     Accepts pre-extracted canonical-joint frames (same shape as the
@@ -127,7 +148,9 @@ def analyze_gym(req: AnalyzeGymRequest) -> AnalyzeResponseModel:
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
-    return _build_envelope(result, model="none_frames_json")
+    envelope = _build_envelope(result, model="none_frames_json")
+    _persist_best_effort(store, envelope, req.display_name or "anon")
+    return envelope
 
 
 # ---------------------------------------------------------------------------
@@ -151,6 +174,8 @@ async def analyze_gym_video(
             "repCounter, used to compute the parity_probe block."
         ),
     ),
+    display_name: str | None = Form(None, description="Leaderboard display name"),
+    store: SessionStore = Depends(get_store),
 ) -> AnalyzeResponseModel:
     """Run the full canonical pipeline on an uploaded video file.
 
@@ -244,4 +269,6 @@ async def analyze_gym_video(
                 exc_info=True,
             )
 
-    return _build_envelope(result, model="mediapipe_pose_landmarker_heavy", parity_probe=parity_probe)
+    envelope = _build_envelope(result, model="mediapipe_pose_landmarker_heavy", parity_probe=parity_probe)
+    _persist_best_effort(store, envelope, display_name or "anon")
+    return envelope
