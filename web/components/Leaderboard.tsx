@@ -38,6 +38,13 @@ function statusChip(status: FieldStatus): string {
   return "chip-unknown";
 }
 
+/** Plain-language label for the measurement status (no jargon for general users). */
+function statusLabel(status: FieldStatus): string {
+  if (status === "valid") return "Clean";
+  if (status === "degraded") return "Partial";
+  return "Unrated";
+}
+
 function rankBadge(rank: number): string {
   return rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
 }
@@ -79,7 +86,7 @@ export default function Leaderboard() {
           <p className="text-xs font-semibold tracking-[0.2em] text-brand-400 uppercase mb-2">
             ● Leaderboard
           </p>
-          <h1 className="text-3xl font-black text-white">Top form indices</h1>
+          <h1 className="text-3xl font-black text-white">Form Leaderboard</h1>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -126,13 +133,13 @@ export default function Leaderboard() {
         <div className="rounded-xl border border-surface-700 bg-surface-800/60 overflow-hidden">
           {/* Column header */}
           <div className="grid grid-cols-12 gap-2 px-5 py-3 border-b border-surface-700
-                          text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                          text-xs uppercase tracking-wider text-slate-500 font-semibold">
             <div className="col-span-1">Rank</div>
             <div className="col-span-4">Athlete</div>
             <div className="col-span-2">Exercise</div>
-            <div className="col-span-2 text-right">Form index</div>
+            <div className="col-span-2 text-right">Form Score</div>
             <div className="col-span-1 text-right">Reps</div>
-            <div className="col-span-2 text-right">Code · Date</div>
+            <div className="col-span-2 text-right">Verified</div>
           </div>
 
           {data.entries.map((e) => (
@@ -154,27 +161,31 @@ export default function Leaderboard() {
                 <span className="font-mono text-base font-bold text-white">
                   {e.form_index.toFixed(1)}
                 </span>
-                <span className={`${statusChip(e.form_index_status)} ml-2 text-[10px] px-1.5 py-0.5 rounded`}>
-                  {e.form_index_status}
+                <span className={`${statusChip(e.form_index_status)} ml-2 text-[11px] px-1.5 py-0.5 rounded`}>
+                  {statusLabel(e.form_index_status)}
                 </span>
               </div>
               <div className="col-span-1 text-right font-mono text-sm text-slate-400">
                 {e.n_valid_reps}/{e.n_reps}
               </div>
-              <div className="col-span-2 text-right font-mono text-[11px] text-slate-600">
-                {e.git_commit_sha ? e.git_commit_sha.slice(0, 7) : "—"} · {whenShort(e.created_at)}
+              <div
+                className="col-span-2 text-right text-xs text-slate-500"
+                title={e.git_commit_sha ? `Analysis code version ${e.git_commit_sha.slice(0, 12)}` : undefined}
+              >
+                <span className="text-emerald-500">✓</span> {whenShort(e.created_at)}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Honesty disclaimer */}
+      {/* Plain-language note — honest, without the jargon. */}
       {data && (
-        <p className="text-[11px] text-slate-600 mt-4 leading-relaxed">
-          {data.disclaimer}
-          {data.backend ? (
-            <span className="text-slate-700"> · store: {data.backend}</span>
+        <p className="text-xs text-slate-500 mt-4 leading-relaxed">
+          Form Score reflects how cleanly and consistently you moved — a relative score
+          for comparing sessions, not a medical or certified grade.
+          {data.backend === "insforge" ? (
+            <span className="text-slate-600"> Scores are saved live to InsForge.</span>
           ) : null}
         </p>
       )}
