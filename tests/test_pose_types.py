@@ -15,3 +15,10 @@ def test_merge_reason_codes_low_detection():
 def test_merge_reason_codes_short_clip():
     c = merge_reason_codes(1.0, 2, 0.9)
     assert "short_clip" in c
+
+
+def test_merge_reason_codes_multi_person():
+    c = merge_reason_codes(0.5, 100, 0.5, max_people_seen=2)
+    assert "multiple_people_detected" in c
+    c0 = merge_reason_codes(0.5, 100, 0.5, max_people_seen=1)
+    assert "multiple_people_detected" not in c0

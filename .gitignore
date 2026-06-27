@@ -36,6 +36,10 @@ evaluation/gym_clips/*.mp4
 .agent-logs/
 .agent-work/
 .agent-docs/
+
+# Claude Code / Cursor session-local worktrees (each session gets its own isolated checkout)
+.claude/worktrees/
+.cursor/worktrees/
 HEALTH_LOG.md
 REVIEW_LOG.md
 RESEARCH_LOG.md
@@ -44,3 +48,22 @@ END_OF_DAY.md
 URGENT.md
 ORCHESTRATOR_REVIEW.md
 SECURITY_AUDIT.md
+.vercel
+.env*.local
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude/settings.local.json
+.mcp.json
+AGENTS.md
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf

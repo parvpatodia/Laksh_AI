@@ -4,6 +4,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from app.pose.reason_codes import merge_reason_codes
+
+__all__ = ["PoseBaselineResult", "merge_reason_codes"]
+
 
 @dataclass
 class PoseBaselineResult:
@@ -34,17 +38,3 @@ class PoseBaselineResult:
 
     def to_dict(self) -> dict:
         return asdict(self)
-
-
-def merge_reason_codes(detection_rate: float, n_frames: int, vis: float) -> list[str]:
-    """Human-readable taxonomy for manifests and gates (not user-facing product copy)."""
-    codes: list[str] = []
-    if n_frames < 3:
-        codes.append("short_clip")
-    if detection_rate < 0.05:
-        codes.append("very_low_detection")
-    elif detection_rate < 0.15:
-        codes.append("low_detection")
-    if vis < 0.25:
-        codes.append("low_visibility_core")
-    return codes

@@ -49,6 +49,12 @@ def summarize_analysis(result: dict) -> dict:
         "selected_preprocess_pass": dm.get("selected_preprocess_pass"),
         "people_detected_max": dm.get("people_detected_max"),
     }
+    # ADR 0002 Phase C: pass through canonical-vs-legacy parity probe when emitted
+    # (LAKSH_USE_CANONICAL_JOINTS=1). Absent when flag off; scripts/pose_parity_report.py
+    # reduces this across a basketball manifest run for the default-flip gate.
+    cprobe = tel.get("canonical_joint_path")
+    if cprobe is not None:
+        row["canonical_joint_path"] = cprobe
     return row
 
 

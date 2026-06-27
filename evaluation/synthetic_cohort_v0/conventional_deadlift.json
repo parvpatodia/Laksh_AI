@@ -1,0 +1,1868 @@
+{
+  "exercise_id": "conventional_deadlift",
+  "n_reps": 30,
+  "reps": [
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4304
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2265
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7913
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1051
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3384
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.219
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.102
+        }
+      },
+      "rep_index": 0
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0958
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9673
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7096
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1391
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1634
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.97
+        }
+      },
+      "rep_index": 1
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9161
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0876
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.725
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0825
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.0982
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2578
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.6282
+        }
+      },
+      "rep_index": 2
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9501
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2672
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8768
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0366
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.3063
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0344
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.835
+        }
+      },
+      "rep_index": 3
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2469
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7291
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7029
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0331
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6209
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2302
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.9874
+        }
+      },
+      "rep_index": 4
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5052
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.7412
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.829
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0574
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9263
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1973
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.0958
+        }
+      },
+      "rep_index": 5
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.906
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2341
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8205
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0452
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.0558
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2675
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.149
+        }
+      },
+      "rep_index": 6
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3422
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.2238
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.743
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0178
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.5737
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.3505
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1313
+        }
+      },
+      "rep_index": 7
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9746
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8496
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6589
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0894
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.6439
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2314
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.6881
+        }
+      },
+      "rep_index": 8
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.8
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6455
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7483
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0061
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.7048
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1471
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.5475
+        }
+      },
+      "rep_index": 9
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4966
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0623
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7532
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1131
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.1414
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2715
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1415
+        }
+      },
+      "rep_index": 10
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3575
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4873
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.6608
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0026
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.5122
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.377
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1239
+        }
+      },
+      "rep_index": 11
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7395
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.121
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7196
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1439
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.0615
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2282
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8806
+        }
+      },
+      "rep_index": 12
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7881
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1481
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9303
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1142
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.2683
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.3034
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.5366
+        }
+      },
+      "rep_index": 13
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.4897
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9047
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7551
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1181
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.8537
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.3072
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8559
+        }
+      },
+      "rep_index": 14
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0267
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.135
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8697
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0706
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.7102
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.185
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8132
+        }
+      },
+      "rep_index": 15
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1868
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0075
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.746
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1567
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.3642
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1612
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.7246
+        }
+      },
+      "rep_index": 16
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.44
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.212
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7029
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0454
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.6459
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2775
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2737
+        }
+      },
+      "rep_index": 17
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1908
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5317
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8505
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1471
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.1416
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2051
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.463
+        }
+      },
+      "rep_index": 18
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.7256
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0864
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8624
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0845
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.6299
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1887
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.1045
+        }
+      },
+      "rep_index": 19
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0584
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0455
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7086
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0036
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.567
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1993
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.7879
+        }
+      },
+      "rep_index": 20
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.1094
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.2383
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7504
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0639
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 4.658
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2064
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.0234
+        }
+      },
+      "rep_index": 21
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.361
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.6744
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8201
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1023
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.8643
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2018
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.0601
+        }
+      },
+      "rep_index": 22
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7435
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.0448
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8406
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0515
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.9226
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.0673
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.8488
+        }
+      },
+      "rep_index": 23
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0671
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.5823
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7549
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.098
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.361
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2133
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.0181
+        }
+      },
+      "rep_index": 24
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.261
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.7767
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.8302
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0339
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.2804
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1868
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.7519
+        }
+      },
+      "rep_index": 25
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.1365
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9302
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7803
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0288
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 5.7331
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2189
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.5165
+        }
+      },
+      "rep_index": 26
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.3508
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.9363
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7906
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.987
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2644
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.5672
+        }
+      },
+      "rep_index": 27
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.5935
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.192
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.9432
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.0569
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 3.3257
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.1901
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 0.7947
+        }
+      },
+      "rep_index": 28
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "features": {
+        "concentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 0.9873
+        },
+        "eccentric_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 1.0997
+        },
+        "primary_joints_min_visibility": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "visibility",
+          "value": 0.7896
+        },
+        "primary_joints_missing_frac": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "frac",
+          "value": 0.1556
+        },
+        "rep_duration_s": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "s",
+          "value": 2.8801
+        },
+        "signal_amplitude": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "normalized_y",
+          "value": 0.2455
+        },
+        "tempo_ratio_ecc_over_con": {
+          "reason_codes": [
+            "synthetic_cohort_v0"
+          ],
+          "status": "valid",
+          "unit": "ratio",
+          "value": 1.2239
+        }
+      },
+      "rep_index": 29
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed": 0
+}

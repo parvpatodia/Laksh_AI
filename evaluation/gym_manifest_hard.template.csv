@@ -1,0 +1,4 @@
+clip_id,path,tags,notes,exercise_id,expect_pose_usable,expect_min_detection_rate
+g_multi_hard_01,evaluation/gym_clips/PLACEHOLDER_multi_person_gym.mp4,multi_person|hard_subset|gym_floor,Background lifters — use for P2 full-frame vs ROI A/B,mixed,,
+g_far_subject_01,evaluation/gym_clips/PLACEHOLDER_pullup_far.mp4,far_subject|hard_subset|small_bbox,Small / distant subject,mixed,,
+g_occlusion_01,evaluation/gym_clips/PLACEHOLDER_deadlift_bar_occlusion.mp4,occlusion|hard_subset,Partial body occlusion,deadlift,,

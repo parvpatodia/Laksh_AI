@@ -1,0 +1,47 @@
+name: PR
+
+# Fast checks on every PR and push to main.
+# Heavy work (full pytest, gym eval, pose A/B, scorecard) runs in nightly.yml.
+# Rationale: roadmap Phase A — "PR = fast (unit + L0 + readiness); nightly = full eval".
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies (locked)
+        run: |
+          python -m pip install --upgrade pip
+          # requirements-dev.lock is a superset of requirements.lock (runtime + dev).
+          # Regenerate after editing requirements*.txt:
+          #   uv pip compile requirements.txt requirements-dev.txt \
+          #     --python-version 3.11 --output-file requirements-dev.lock
+          pip install -r requirements-dev.lock
+
+      - name: Ruff
+        run: ruff check app tests scripts
+
+      - name: Mypy (app/pose)
+        run: mypy app/pose
+
+      - name: Pose landmarker model (repo root)
+        run: python scripts/download_pose_model.py
+
+      - name: Pose eval readiness (strict)
+        run: python scripts/check_pose_eval_readiness.py --manifest evaluation/gym_manifest.csv --strict
+
+      - name: Pose contract tests (fast subset)
+        run: make test-pose-core

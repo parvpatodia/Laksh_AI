@@ -45,7 +45,7 @@ def test_partial_mode_returns_metric_status(monkeypatch):
     def fake_extract(self, variant, start_sec=None, end_sec=None, video_path_override=None):
         # Slightly sparse detections to force partial mode.
         raw_3d, raw_2d = _make_raw_pose(n=7, nan_tail=4)
-        return 30.0, raw_3d, raw_2d, 1
+        return 30.0, raw_3d, raw_2d, 1, None
 
     monkeypatch.setattr(KinematicAnalyzer, "_extract_frames_with_variant", fake_extract)
 
@@ -140,7 +140,7 @@ def test_knee_elbow_predicted_when_world_missing_but_2d_valid(monkeypatch):
     raw_3d["right_elbow"][:, :] = np.nan
 
     def fake_extract(self, variant, start_sec=None, end_sec=None, video_path_override=None):
-        return 30.0, raw_3d, raw_2d, 1
+        return 30.0, raw_3d, raw_2d, 1, None
 
     monkeypatch.setattr(KinematicAnalyzer, "_extract_frames_with_variant", fake_extract)
 
@@ -160,7 +160,7 @@ def test_set_shot_telemetry_for_minimal_wrist_motion(monkeypatch):
     raw_3d, raw_2d = _make_minimal_motion_pose(n=32)
 
     def fake_extract(self, variant, start_sec=None, end_sec=None, video_path_override=None):
-        return 30.0, raw_3d, raw_2d, 1
+        return 30.0, raw_3d, raw_2d, 1, None
 
     monkeypatch.setattr(KinematicAnalyzer, "_extract_frames_with_variant", fake_extract)
 

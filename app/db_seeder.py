@@ -17,12 +17,10 @@ fetch. Deterministic heuristics synthesize 8D kinematic vectors from real stats.
 """
 
 import logging
-import os
 import time
 from typing import Any, Optional
 
 import chromadb
-import pandas as pd
 
 from app.constants import COLLECTION_NAME, FEATURE_WEIGHTS  # was: both defined inline here — moved to app/constants.py so main.py and db_seeder.py always use the same values
 from app.config import settings  # NBA API timeouts now from centralised config — was: inline os.environ.get()
@@ -77,7 +75,6 @@ def translate_to_kinematics(row: dict[str, Any]) -> list[float]:
     ast = _f("AST", 2.0)
     tov = max(_f("TOV", 1.0), 0.1)
     fg3_pct = _f("FG3_PCT", 0.35)
-    pts = _f("PTS", 10.0)
     gp = max(_f("GP", 10), 1)
 
     reb_pg = reb / gp
@@ -220,9 +217,9 @@ def seed_database(chroma_client: Optional[chromadb.Client] = None) -> int:
     Fetch active NBA players, compute 8D vectors, seed ChromaDB.
     Returns number of players seeded. Idempotent (wipes collection first).
     """
-    try:
-        from nba_api.stats.endpoints import leaguedashplayerstats
-    except ImportError:
+    import importlib.util
+
+    if importlib.util.find_spec("nba_api") is None:
         logger.warning("nba_api not installed; using fallback seed.")
         return _seed_fallback(chroma_client) if chroma_client else 0
 

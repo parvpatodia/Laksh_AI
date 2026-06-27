@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -----------------------------------------------------------------------
+   Design tokens
+   ----------------------------------------------------------------------- */
+:root {
+  --foreground: 226 232 240;   /* slate-200 */
+  --background: 8 15 26;       /* surface-900 */
+}
+
+/* -----------------------------------------------------------------------
+   Base
+   ----------------------------------------------------------------------- */
+body {
+  color: rgb(var(--foreground));
+  background: rgb(var(--background));
+  font-feature-settings: "rlig" 1, "calt" 1, "cv11" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tight headlines at large scale -- removes optical gap between lines */
+.headline-display {
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+/* Section label -- all-caps, wide tracking, small */
+.label-section {
+  @apply text-[11px] font-semibold uppercase tracking-widest text-slate-500;
+}
+
+/* Thin horizontal rule with brand tint */
+.rule-brand {
+  @apply block w-8 h-0.5 bg-brand-500 mb-5;
+}
+
+/* -----------------------------------------------------------------------
+   Skeleton canvas overlay (PoseCamera)
+   ----------------------------------------------------------------------- */
+.pose-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* -----------------------------------------------------------------------
+   Status chips -- measurement spine taxonomy
+   ----------------------------------------------------------------------- */
+.chip-valid    { @apply bg-emerald-900/50 text-emerald-300 border border-emerald-700/60; }
+.chip-degraded { @apply bg-amber-900/50   text-amber-300   border border-amber-700/60; }
+.chip-unknown  { @apply bg-surface-700    text-slate-400   border border-surface-600; }
+.chip-preview  { @apply bg-sky-900/50     text-sky-300     border border-sky-700/60; }
+
+/* -----------------------------------------------------------------------
+   Parity probe
+   ----------------------------------------------------------------------- */
+.parity-within  { @apply bg-emerald-900/40 text-emerald-300; }
+.parity-outside { @apply bg-rose-900/40    text-rose-300; }
+.parity-insuf   { @apply bg-surface-700    text-slate-400; }
+
+/* -----------------------------------------------------------------------
+   Sport card hover shimmer -- very subtle gradient border effect
+   ----------------------------------------------------------------------- */
+.sport-card {
+  position: relative;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+.sport-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 60px -12px rgba(14, 165, 233, 0.15);
+}
+
+/* -----------------------------------------------------------------------
+   Stats number -- tabular, heavy, used in hero bar and scorecards
+   ----------------------------------------------------------------------- */
+.stat-number {
+  @apply font-black font-mono tabular-nums leading-none;
+  font-feature-settings: "tnum" 1;
+}
+
+/* -----------------------------------------------------------------------
+   Scrollbar -- thin, dark-themed (webkit)
+   ----------------------------------------------------------------------- */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1c2a40; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #273a55; }

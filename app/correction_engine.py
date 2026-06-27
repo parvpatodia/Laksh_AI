@@ -315,7 +315,6 @@ def _correct_joints(joints_norm: dict, stats: dict, targets: dict,
         if deficit > 5:
             dx = c["wrist"][0] - c["elbow"][0]
             dy = c["wrist"][1] - c["elbow"][1]
-            dist = math.sqrt(dx**2 + dy**2) or 1e-4
             scale = 1.0 + (deficit / 50.0) * 0.28
             c["wrist"][0] = float(np.clip(c["elbow"][0] + dx * scale, 0.02, 0.98))
             c["wrist"][1] = float(np.clip(c["elbow"][1] + dy * scale, 0.02, 0.98))
@@ -395,9 +394,12 @@ def _label(img: np.ndarray, text: str, pos: tuple,
 
 
 def _phase_label(frame_t: float, dip_t: float, release_t: float) -> str:
-    if frame_t < dip_t - 0.05:          return "SETUP"
-    if frame_t < release_t - 0.05:      return "DRIVE"
-    if abs(frame_t - release_t) < 0.12: return "RELEASE"
+    if frame_t < dip_t - 0.05:
+        return "SETUP"
+    if frame_t < release_t - 0.05:
+        return "DRIVE"
+    if abs(frame_t - release_t) < 0.12:
+        return "RELEASE"
     return "FOLLOW-THROUGH"
 
 

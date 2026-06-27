@@ -27,11 +27,13 @@
 
 Details and pass/fail rules: [docs/evaluation_set_spec.md](../docs/evaluation_set_spec.md).
 
+Claim discipline template for PRs and internal reports: [SCORECARD_TEMPLATE.md](SCORECARD_TEMPLATE.md).
+
 `results.jsonl` and `clips/*.mp4` are gitignored; keep the manifest in version control once curated.
 
 ## Gym pose baseline (Phase A)
 
-Gym-specific manifest template: [gym_manifest.template.csv](gym_manifest.template.csv). Place videos under `gym_clips/`. Spec and metrics: [docs/gym_pose_evaluation.md](../docs/gym_pose_evaluation.md).
+Gym-specific manifest template: [gym_manifest.template.csv](gym_manifest.template.csv). Place videos under `gym_clips/`. **P2 hard-subset ideas:** [gym_manifest_hard.template.csv](gym_manifest_hard.template.csv) (crowded / far / occlusion — copy and fill real paths). Spec and metrics: [docs/gym_pose_evaluation.md](../docs/gym_pose_evaluation.md). **Capture protocol and internal data practice:** [docs/GYM_EVAL_CAPTURE_AND_DATA.md](../docs/GYM_EVAL_CAPTURE_AND_DATA.md). **Backbone upgrades and A/B gates:** [docs/POSE_UPGRADE_EXECUTION_PLAN.md](../docs/POSE_UPGRADE_EXECUTION_PLAN.md). **Compare two pose JSONL runs:** `python scripts/compare_pose_baseline_jsonl.py --a … --b …` (see [docs/gym_pose_evaluation.md](../docs/gym_pose_evaluation.md)). **One-shot backbone A/B + compare:** `make eval-pose-ab-orchestrate`. **P2 full-frame vs person-isolation:** `make eval-pose-isolation-ab`. **Readiness (no inference):** `make check-pose-readiness` or `make check-pose-readiness-strict` (same as CI gate).
 
 ```bash
 python scripts/eval_pose_baseline.py --manifest evaluation/gym_manifest.template.csv \

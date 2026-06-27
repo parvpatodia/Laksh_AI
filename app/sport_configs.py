@@ -70,9 +70,34 @@ GOLF_CONFIG: SportConfig = {
     "metrics": [],
 }
 
+
+# Gym — 12 compound movements via the frozen v0 exercise taxonomy. Unlike
+# basketball, gym has no single canonical movement; the exercise_id field is
+# chosen per-request from app.gym.exercises_v0.EXERCISES_V0. The phases and
+# metrics below describe the measurement spine shape, not an individual lift.
+GYM_CONFIG: SportConfig = {
+    "id": "gym",
+    "name": "Gym",
+    "description": "Compound-lift biomechanics: rep segmentation, per-rep feature vector, honest calibration.",
+    "event_phases": ["Setup", "Eccentric", "Bottom", "Concentric", "Lockout"],
+    "min_clip_sec": 3.0,
+    "recommended_aspect": "16:9 side view, 2m offset, hip-height lens",
+    "pro_db_collection": None,  # cited reference ranges will live in calibration_v0 config
+    "metrics": [
+        {"key": "rep_duration_s",           "label": "Rep Duration",        "unit": "s",              "ideal_range": "uncalibrated_v0", "limitation": "Awaiting labeled reference subset."},
+        {"key": "eccentric_duration_s",     "label": "Eccentric Phase",     "unit": "s",              "ideal_range": "uncalibrated_v0", "limitation": "Phase split depends on peak detection."},
+        {"key": "concentric_duration_s",    "label": "Concentric Phase",    "unit": "s",              "ideal_range": "uncalibrated_v0", "limitation": "Phase split depends on peak detection."},
+        {"key": "tempo_ratio_ecc_over_con", "label": "Tempo Ratio",         "unit": "ratio",          "ideal_range": "uncalibrated_v0", "limitation": "Ratio undefined when either phase is zero."},
+        {"key": "signal_amplitude",         "label": "Signal Amplitude",    "unit": "deg|norm_y",     "ideal_range": "uncalibrated_v0", "limitation": "2D projection; side-view compression."},
+        {"key": "primary_joints_min_visibility", "label": "Min Visibility", "unit": "visibility",     "ideal_range": "uncalibrated_v0", "limitation": "Occlusion drives this below threshold."},
+        {"key": "primary_joints_missing_frac",   "label": "Missing Frames", "unit": "frac",           "ideal_range": "uncalibrated_v0", "limitation": "High missingness flips rep to degraded."},
+    ],
+}
+
 # Available sports
 SPORT_CONFIGS: dict[str, SportConfig] = {
     "basketball": BASKETBALL_CONFIG,
+    "gym": GYM_CONFIG,
     "tennis": TENNIS_CONFIG,
     "golf": GOLF_CONFIG,
 }
@@ -86,6 +111,7 @@ def get_available_sports() -> List[dict]:
     """Return list of {id, name, available: bool} for UI dropdown."""
     return [
         {"id": "basketball", "name": "Basketball", "available": True},
+        {"id": "gym", "name": "Gym", "available": True},
         {"id": "tennis", "name": "Tennis", "available": False},
         {"id": "golf", "name": "Golf", "available": False},
     ]

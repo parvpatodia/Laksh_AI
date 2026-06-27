@@ -1,0 +1,62 @@
+name: Nightly
+
+# Heavy path: full test suite, scorecard dry-run, optional gym/A-B eval
+# when runner has manifest paths. Runs nightly at 06:00 UTC and on demand.
+# PR workflow stays fast (pr.yml) — this catches regressions PR cannot afford
+# to block on.
+#
+# What is deliberately NOT here:
+#   - Pose A/B orchestration against real clips — requires L1 reel outside CI
+#     runner. Run locally or on a self-hosted runner with clip mount.
+#   - GPU nightly — add a self-hosted runner label when budget allows.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed by scorecard generator to resolve git HEAD
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies (locked, full dev)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.lock
+
+      - name: Pose landmarker model
+        run: python scripts/download_pose_model.py
+
+      - name: Pose eval readiness (strict)
+        run: python scripts/check_pose_eval_readiness.py --manifest evaluation/gym_manifest.csv --strict
+
+      - name: Full pytest (all tests, verbose summary)
+        run: pytest tests/ -v --tb=short
+
+      - name: Scorecard header (dry run)
+        # Always safe: no clip dependency. Archives hashes for the nightly run.
+        run: |
+          mkdir -p evaluation/nightly_reports
+          python scripts/eval_scorecard_header.py \
+            --manifest evaluation/gym_manifest.csv \
+            > evaluation/nightly_reports/header_$(date -u +%Y%m%dT%H%M%SZ).json
+          tail -n 50 evaluation/nightly_reports/header_*.json
+
+      - name: Upload nightly reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-reports-${{ github.run_id }}
+          path: evaluation/nightly_reports/
+          if-no-files-found: ignore
+          retention-days: 14

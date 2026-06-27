@@ -14,6 +14,9 @@ def test_provenance_required_keys():
         calibration_record={"calibration_source": "test"},
     )
     assert p["pose_baseline_schema_version"] == POSE_BASELINE_SCHEMA_VERSION
+    assert p["canonical_joint_schema_version"]
+    assert p["canonical_joint_set"] == "coco_17_names"
+    assert p["canonical_mapping_id"] == "mediapipe_blazepose33_v1"
     assert p["ffmpeg_preprocess_applied"] is False
     assert p["frame_preprocess_multipass"] is False
     assert "landmarker_options" in p

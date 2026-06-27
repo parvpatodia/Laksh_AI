@@ -1,0 +1,453 @@
+{
+  "schema_version": "1.0.0",
+  "manifest_version": "v0.2.0",
+  "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+  "exercises": [
+    {
+      "exercise_id": "back_squat",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.7,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.5,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.8,
+          4.0
+        ],
+        "signal_amplitude": [
+          0.05,
+          0.45
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Tempo bands: NSCA-4e Ch.17 + ACSM-11e Ch.6 controlled-tempo prescription. signal_amplitude: hip-y normalised travel; wide bracket covers framing variance. Visibility/missing fields are tracking-quality, not biomech -> left as no_reference_yet."
+    },
+    {
+      "exercise_id": "barbell_row",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.7,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.4,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.7,
+          4.0
+        ],
+        "signal_amplitude": [
+          30.0,
+          130.0
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Tempo bands: NSCA-4e Ch.17. signal_amplitude: elbow flexion (deg) per NSCA-4e Ch.14 row-mechanics figure (~40-110 deg full-ROM)."
+    },
+    {
+      "exercise_id": "bench_press",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.7,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.4,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.8,
+          4.0
+        ],
+        "signal_amplitude": [
+          60.0,
+          140.0
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Tempo bands: NSCA-4e Ch.17 + ACSM-11e Ch.6. signal_amplitude: elbow flexion (deg) per Wilk-1996 + Escamilla-2001 (~80-130 deg full ROM)."
+    },
+    {
+      "exercise_id": "conventional_deadlift",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.5,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.5,
+          3.0
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.5,
+          3.0
+        ],
+        "signal_amplitude": [
+          0.05,
+          0.45
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Tempo bands: NSCA-4e Ch.17 (deadlift commonly equal-tempo or concentric-emphasised, hence the looser ratio bracket). signal_amplitude: hip-y normalised travel. Note rest-pause between reps is normal for heavy DLs."
+    },
+    {
+      "exercise_id": "dumbbell_bicep_curl",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.2,
+          5.0
+        ],
+        "eccentric_duration_s": [
+          0.5,
+          3.0
+        ],
+        "concentric_duration_s": [
+          0.4,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.7,
+          4.0
+        ],
+        "signal_amplitude": [
+          80.0,
+          160.0
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Demo-driven exercise (registry v0.2.0). Tempo bands: NSCA-4e Ch.17 isolation prescription. signal_amplitude: full-ROM elbow flexion (deg) per NSCA-4e Ch.13 (~110-150 deg)."
+    },
+    {
+      "exercise_id": "farmer_carry",
+      "comparable_fields": [
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "signal_amplitude": [
+          0.01,
+          0.20
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "gait_cadence exercise; rep-based duration fields omitted until stride segmentation is labeled (Milestone 2). signal_amplitude bracket: ankle-y oscillation magnitude during steady-state walking gait."
+    },
+    {
+      "exercise_id": "front_squat",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.7,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.5,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.8,
+          4.0
+        ],
+        "signal_amplitude": [
+          0.05,
+          0.45
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Same prescription as back_squat; front-loaded squat shares hip-y kinematics with back-loaded squat (NSCA-4e Ch.17 + Escamilla-2001)."
+    },
+    {
+      "exercise_id": "overhead_press",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.7,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.4,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.7,
+          4.0
+        ],
+        "signal_amplitude": [
+          60.0,
+          150.0
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Tempo bands: NSCA-4e Ch.17. signal_amplitude: elbow flexion change per Escamilla-2001 OHP analysis (~70-140 deg). Works identically with dumbbells in hand."
+    },
+    {
+      "exercise_id": "plank",
+      "comparable_fields": [
+        "rep_duration_s",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          10.0,
+          300.0
+        ],
+        "signal_amplitude": [
+          0.0,
+          0.10
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Isometric hold; eccentric/concentric/tempo do not apply. signal_amplitude SEMANTICS ARE FLIPPED: small = stable. rep_duration band: ACSM-11e Ch.6 typical hold prescription."
+    },
+    {
+      "exercise_id": "pull_up",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.2,
+          5.5
+        ],
+        "eccentric_duration_s": [
+          0.5,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.4,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.7,
+          4.0
+        ],
+        "signal_amplitude": [
+          60.0,
+          160.0
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Bodyweight cyclic. Tempo: NSCA-4e Ch.17. signal_amplitude: elbow flexion change from dead hang to chin-over-bar (~80-150 deg)."
+    },
+    {
+      "exercise_id": "push_up",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.2,
+          5.0
+        ],
+        "eccentric_duration_s": [
+          0.5,
+          3.0
+        ],
+        "concentric_duration_s": [
+          0.4,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.7,
+          4.0
+        ],
+        "signal_amplitude": [
+          50.0,
+          140.0
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Bodyweight cyclic. Tempo: NSCA-4e Ch.17. signal_amplitude: elbow flexion (deg) per Cogley-2005 (standard hand position, ~70-130 deg full ROM)."
+    },
+    {
+      "exercise_id": "romanian_deadlift",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.7,
+          4.0
+        ],
+        "concentric_duration_s": [
+          0.5,
+          2.5
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.8,
+          4.0
+        ],
+        "signal_amplitude": [
+          30.0,
+          110.0
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Tempo bands: NSCA-4e Ch.17 (eccentric-emphasised hinge work). signal_amplitude: hip-angle change (shoulder-hip-knee triplet) per Escamilla-2001 deadlift kinematics (~40-90 deg full hinge)."
+    },
+    {
+      "exercise_id": "walking_lunge",
+      "comparable_fields": [
+        "rep_duration_s",
+        "eccentric_duration_s",
+        "concentric_duration_s",
+        "tempo_ratio_ecc_over_con",
+        "signal_amplitude",
+        "primary_joints_min_visibility",
+        "primary_joints_missing_frac"
+      ],
+      "reference_ranges": {
+        "rep_duration_s": [
+          1.5,
+          6.0
+        ],
+        "eccentric_duration_s": [
+          0.5,
+          3.0
+        ],
+        "concentric_duration_s": [
+          0.5,
+          3.0
+        ],
+        "tempo_ratio_ecc_over_con": [
+          0.5,
+          3.0
+        ],
+        "signal_amplitude": [
+          0.04,
+          0.40
+        ]
+      },
+      "evidence_status": "cited",
+      "evidence_source": "evaluation/calibration_evidence_v0/literature_bundle_v0.md",
+      "notes": "Lunge step (eccentric down + concentric up) is the rep unit. Tempo: NSCA-4e Ch.17 unilateral prescription (looser ratio bracket; symmetric step is normal). signal_amplitude: knee-y normalised travel."
+    }
+  ]
+}

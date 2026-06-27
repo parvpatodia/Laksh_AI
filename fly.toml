@@ -1,0 +1,72 @@
+# fly.toml — Laksh.ai API backend (Fly.io)
+#
+# Machine spec: shared-cpu-1x, 1 GB RAM (~$5/mo always-on).
+# Always-on: min_machines_running=1, auto_stop_machines="off".
+# Single region: iad (US East / Ashburn) -- lowest latency to Northeastern.
+#
+# Before first deploy:
+#   fly apps create laksh-api              (one-time)
+#   fly secrets set \
+#     R2_ACCOUNT_ID=<hex> \
+#     R2_ACCESS_KEY=<key> \
+#     R2_SECRET=<secret> \
+#     R2_BUCKET=laksh-clips \
+#     GOOGLE_API_KEY=<key> \
+#     GEMINI_API_KEY=<key>
+#   fly volumes create laksh_chroma --region iad --size 1
+#   fly deploy
+
+app = "laksh-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+  # A6: Pass git SHA at deploy time for provenance.
+  # Usage: fly deploy --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD)
+  # The [build.args] table is NOT used here because the SHA must be dynamic
+  # (evaluated at deploy time, not baked into fly.toml).  A Makefile target
+  # in the repo root handles this automatically (see `make deploy`).
+
+[env]
+  # Non-secret runtime config. Secrets (R2_*, API keys) set via `fly secrets set`.
+  PORT = "8000"
+  LAKSH_ENV = "production"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "off"
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  # Allow long-running POST /v1/analyze/* without Fly Proxy closing the connection (default
+  # idle window is shorter; gunicorn timeout is 300s).
+  [http_service.http_options]
+    idle_timeout = 360
+
+# Cold start: gunicorn boots quickly but the worker imports TensorFlow/MediaPipe and
+# runs lifespan (ChromaDB) before /v1/health can succeed — often 30–90s on shared-cpu.
+# A short grace_period marks the machine unhealthy while still starting; the proxy then
+# returns "failed to connect" / load-balancing errors (browser: Failed to fetch).
+# Fly caps this at 1 minute (`fly config validate`); 60s is the effective max.
+[[http_service.checks]]
+  grace_period = "60s"
+  interval = "30s"
+  method = "GET"
+  path = "/v1/health"
+  protocol = "http"
+  timeout = "15s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
+
+[[mounts]]
+  source = "laksh_chroma"
+  destination = "/app/chroma_db"
+  processes = ["app"]
