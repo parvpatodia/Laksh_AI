@@ -220,6 +220,48 @@ export async function fetchSports(): Promise<SportInfo[]> {
   return apiFetch<SportInfo[]>("/v1/sports");
 }
 
+// ---------------------------------------------------------------------------
+// Leaderboard (GET /v1/leaderboard)
+// ---------------------------------------------------------------------------
+
+/** One ranked leaderboard row. Mirrors app/persistence/models.LeaderboardEntry. */
+export interface LeaderboardEntry {
+  rank: number;
+  session_id: string;
+  display_name: string;
+  exercise_id: string;
+  form_index: number;
+  form_index_status: FieldStatus;
+  n_valid_reps: number;
+  n_reps: number;
+  created_at: string;
+  git_commit_sha: string | null;
+}
+
+export interface LeaderboardResponse {
+  backend: string;
+  exercise_id: string | null;
+  count: number;
+  /** Honesty note: form_index is an uncalibrated relative index, not a grade. */
+  disclaimer: string;
+  entries: LeaderboardEntry[];
+}
+
+/**
+ * GET /v1/leaderboard — best form-index sessions, optionally per exercise.
+ * form_index is a transparent, uncalibrated relative ranking (see disclaimer),
+ * never a validated form grade.
+ */
+export async function fetchLeaderboard(
+  exerciseId?: string,
+  limit = 10,
+): Promise<LeaderboardResponse> {
+  const params = new URLSearchParams();
+  if (exerciseId) params.set("exercise_id", exerciseId);
+  params.set("limit", String(limit));
+  return apiFetch<LeaderboardResponse>(`/v1/leaderboard?${params.toString()}`);
+}
+
 /**
  * One ghost rep vector as accumulated by the browser-side repCounter.
  * Sent alongside the video blob to populate the parity_probe block.
