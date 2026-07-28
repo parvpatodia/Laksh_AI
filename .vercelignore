@@ -7,8 +7,6 @@ tests/
 scripts/
 static/
 docs/
-.claude/
-.cursor/
 .github/
 *.py
 pyproject.toml
@@ -18,9 +16,4 @@ requirements*.lock
 Dockerfile
 fly.toml
 fly.*.toml
-orchestrator.sh
-setup-schedule.sh
-background-runner.sh
 Makefile
-HANDOFF.md
-SESSION_LOG*.md

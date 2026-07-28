@@ -1,5 +1,6 @@
 # Secrets (CRITICAL)
 .env
+.env*.local
 
 # Heavy / generated artifacts
 chroma_db/
@@ -29,41 +30,10 @@ evaluation/pose_baseline.jsonl
 evaluation/clips/*.mp4
 evaluation/gym_clips/*.mp4
 
-# Cursor worktree apply artifact (prevents "Unable to read file .sh" error)
-.sh
-
-# Agent output files
-.agent-logs/
-.agent-work/
-.agent-docs/
-
-# Claude Code / Cursor session-local worktrees (each session gets its own isolated checkout)
-.claude/worktrees/
-.cursor/worktrees/
-HEALTH_LOG.md
-REVIEW_LOG.md
-RESEARCH_LOG.md
-SUGGESTIONS.md
-END_OF_DAY.md
-URGENT.md
-ORCHESTRATOR_REVIEW.md
-SECURITY_AUDIT.md
+# Vercel
 .vercel
-.env*.local
 
-# InsForge & AI agent skills
-.insforge
-.agent
-.agents
-.augment
-.claude/settings.local.json
-.mcp.json
-AGENTS.md
-.cline
-.github/copilot*
-.kilocode
-.qoder
-.qwen
-.roo
-.trae
-.windsurf
+# Local editor/tooling scratch (not part of the project)
+.agent-logs/
+.agent-docs/
+.cursor/

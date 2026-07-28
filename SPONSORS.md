@@ -11,9 +11,8 @@ is live. Both integrations are deployed and verified against the live backend.
 
 ## 🟦 InsForge — *Best Use of InsForge* ($500)
 
-**Thesis: the AI agent operates the backend.** During this build, the coding agent
-(Claude Code) authenticated to InsForge and **provisioned the entire backend live**
-via the InsForge CLI/OAuth — no hand-clicking in a dashboard:
+**The backend is provisioned entirely through code, not a dashboard.** It authenticates
+to InsForge and provisions the whole backend live via the InsForge CLI and OAuth:
 
 - Created the Postgres schema — `sessions` + `rep_results` — via `insforge db import`
   (migration: [`infra/insforge/0001_init.sql`](infra/insforge/0001_init.sql)).
