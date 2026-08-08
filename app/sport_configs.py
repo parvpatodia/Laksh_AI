@@ -2,6 +2,11 @@
 Sports-agnostic configuration for Laksh.ai video analysis.
 Each sport defines: event phases, key joints, metrics schema, and UI labels.
 Adding a new sport = add a config entry + implement analyzer in physics_engine.
+
+Note on labels/units: these describe single-camera, monocular-pose estimates.
+They are directional practice-feedback cues, NOT lab-grade biomechanics. Metrics
+that cannot be honestly measured from one phone camera (e.g. release power, hip
+rotation) are labelled as proxies / low-confidence rather than given false units.
 """
 from typing import TypedDict, List
 
@@ -29,20 +34,20 @@ class SportConfig(TypedDict):
 BASKETBALL_CONFIG: SportConfig = {
     "id": "basketball",
     "name": "Basketball",
-    "description": "Jump shot biomechanics: release velocity, arc, knee/elbow flexion, kinetic sync.",
+    "description": "Jump-shot form features from monocular video: arc, knee/elbow flexion, release timing, plus proxy power/balance scores. Directional practice cues, not lab-grade biomechanics.",
     "event_phases": ["Setup", "Dip", "Drive", "Release", "Follow-through"],
     "min_clip_sec": 2.0,
     "recommended_aspect": "16:9 landscape, 45° front-offset",
     "pro_db_collection": "apex_oracle_v7",
     "metrics": [
-        {"key": "release_velocity_mps", "label": "Release Velocity", "unit": "m/s", "ideal_range": "7–9", "limitation": "2D proxy; ball tracking would improve."},
-        {"key": "shot_arc_deg", "label": "Shot Arc", "unit": "°", "ideal_range": "45–55", "limitation": "Side-view compresses arc."},
-        {"key": "knee_angle", "label": "Knee Flexion", "unit": "°", "ideal_range": "140–165", "limitation": "MediaPipe 3D."},
-        {"key": "elbow_angle", "label": "Elbow Flexion", "unit": "°", "ideal_range": "165–178", "limitation": "Single-camera."},
-        {"key": "hip_rotation_deg", "label": "Hip Rotation", "unit": "°", "ideal_range": "5–15", "limitation": "View-dependent."},
+        {"key": "release_velocity_mps", "label": "Release Power", "unit": "index", "ideal_range": "7–9 (proxy)", "limitation": "2D pixel-ratio PROXY scaled into a plausible range — NOT a true velocity. No ball tracking or camera calibration; the 'm/s'-like number is not physically measured."},
+        {"key": "shot_arc_deg", "label": "Shot Arc (est.)", "unit": "°", "ideal_range": "45–55", "limitation": "Wrist-trajectory proxy, not ball trajectory; side-view compresses arc."},
+        {"key": "knee_angle", "label": "Knee Flexion", "unit": "°", "ideal_range": "140–165", "limitation": "MediaPipe 3D; coarse (~±5–15°) on a clean side view."},
+        {"key": "elbow_angle", "label": "Elbow Flexion", "unit": "°", "ideal_range": "165–178", "limitation": "Single-camera; coarse (~±5–15°)."},
+        {"key": "hip_rotation_deg", "label": "Hip Rotation (low-confidence)", "unit": "°", "ideal_range": "5–15", "limitation": "Depth-axis (yaw) from a single camera — low confidence; closer to noise than a reliable measurement."},
         {"key": "kinetic_sync_ms", "label": "Kinetic Sync", "unit": "ms", "ideal_range": "120–250", "limitation": "Frame-rate dependent."},
-        {"key": "balance_index", "label": "Balance Index", "unit": "/100", "ideal_range": "85–99", "limitation": "2D projection."},
-        {"key": "fluidity_score", "label": "Fluidity Score", "unit": "/100", "ideal_range": "75–99", "limitation": "Pose noise."},
+        {"key": "balance_index", "label": "Balance Index", "unit": "/100", "ideal_range": "85–99", "limitation": "2D projection proxy."},
+        {"key": "fluidity_score", "label": "Fluidity Score", "unit": "/100", "ideal_range": "75–99", "limitation": "Pose-noise sensitive proxy."},
     ],
 }
 
